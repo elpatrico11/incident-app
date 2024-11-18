@@ -1,4 +1,3 @@
-// server/server.js
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -12,28 +11,25 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// Importowanie tras
+// Importing routes
 const authRoutes = require("./routes/auth");
 const incidentRoutes = require("./routes/incidents");
 
-// Używanie tras
+// Using routes
 app.use("/api/auth", authRoutes);
 app.use("/api/incidents", incidentRoutes);
 
-// Domyślna trasa
+// Default route
 app.get("/", (req, res) => {
   res.send("API działa");
 });
 
-// Połączenie z MongoDB i uruchomienie serwera
+// MongoDB connection and server startup
 const PORT = process.env.PORT || 5000;
 const URI = process.env.MONGO_URI;
 
 mongoose
-  .connect(URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  .connect(URI)
   .then(() => {
     console.log("Połączono z MongoDB");
     app.listen(PORT, () => console.log(`Serwer działa na porcie ${PORT}`));
