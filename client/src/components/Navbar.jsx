@@ -25,6 +25,13 @@ const Navbar = () => {
             <Link to="/map" className="hover:text-gray-400">
               Mapa incydentów
             </Link>
+             <Link to="/login" className="hover:text-gray-400">
+              Logowanie
+            </Link>
+            <Link to="/register" className="hover:text-gray-400">
+              Rejestracja
+            </Link>
+
           </div>
           {/* Mobile menu button */}
           <div className="md:hidden">
