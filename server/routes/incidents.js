@@ -114,7 +114,7 @@ router.delete("/:id", authMiddleware, async (req, res) => {
       return res.status(401).json({ msg: "Brak uprawnień" });
     }
 
-    await incident.remove();
+    await Incident.findByIdAndDelete(req.params.id); // Use this line instead
 
     res.json({ msg: "Zgłoszenie usunięte" });
   } catch (err) {
