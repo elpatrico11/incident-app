@@ -4,8 +4,7 @@ const router = express.Router();
 const Incident = require("../models/Incident");
 const multer = require("multer");
 const path = require("path");
-
-// const authMiddleware = require('../middleware/auth'); // Usunięte dla POST i GET
+const optionalAuth = require("../middleware/optionalAuth"); // Importowanie opcjonalnego middleware
 
 // Konfiguracja multer
 const storage = multer.diskStorage({
@@ -19,8 +18,8 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// Tworzenie nowego zgłoszenia z przesyłaniem obrazków
-router.post("/", upload.array("images", 5), async (req, res) => {
+// Tworzenie nowego zgłoszenia z przesyłaniem obrazków (opcjonalna autoryzacja)
+router.post("/", optionalAuth, upload.array("images", 5), async (req, res) => {
   const { category, description, location } = req.body;
   const images = req.files.map(
     (file) => `${req.protocol}://${req.get("host")}/uploads/${file.filename}`
@@ -33,6 +32,10 @@ router.post("/", upload.array("images", 5), async (req, res) => {
       location,
       images,
     });
+
+    if (req.user) {
+      newIncident.user = req.user.id;
+    }
 
     const incident = await newIncident.save();
     res.json(incident);
@@ -59,7 +62,6 @@ router.get("/", async (req, res) => {
 
 // Pobieranie pojedynczego zgłoszenia (publiczne)
 router.get("/:id", async (req, res) => {
-  // Usunięto authMiddleware
   try {
     const incident = await Incident.findById(req.params.id).populate("user", [
       "firstName",
@@ -159,7 +161,7 @@ router.post("/:id/comments", authMiddleware, async (req, res) => {
     const incident = await Incident.findById(req.params.id);
 
     if (!incident) {
-      return res.status(404).json({ msg: "Zgłoszenie nie znalezione" });
+      return res.status(404).json({ msg: "Zgłoszenie nie znalezione." });
     }
 
     const newComment = {
@@ -170,7 +172,13 @@ router.post("/:id/comments", authMiddleware, async (req, res) => {
     incident.comments.unshift(newComment);
     await incident.save();
 
-    res.json(incident.comments);
+    const populatedComment = await incident.populate("comments.user", [
+      "firstName",
+      "lastName",
+      "email",
+    ]);
+
+    res.json(populatedComment.comments);
   } catch (err) {
     console.error(err.message);
     res.status(500).send("Błąd serwera");
@@ -179,11 +187,10 @@ router.post("/:id/comments", authMiddleware, async (req, res) => {
 
 // Pobieranie komentarzy dla incydentu (publiczne)
 router.get("/:id/comments", async (req, res) => {
-  // Usunięto authMiddleware
   try {
     const incident = await Incident.findById(req.params.id).populate(
       "comments.user",
-      ["firstName", "lastName"]
+      ["firstName", "lastName", "email"]
     );
 
     if (!incident) {
