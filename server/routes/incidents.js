@@ -155,7 +155,7 @@ router.put("/:id", authMiddleware, upload.single("image"), async (req, res) => {
       req.params.id,
       { $set: incidentFields },
       { new: true }
-    );
+    ).populate("user", ["firstName", "lastName", "email"]); // Optionally repopulate user
 
     res.json(incident);
   } catch (err) {
@@ -178,7 +178,8 @@ router.delete("/:id", authMiddleware, async (req, res) => {
       return res.status(401).json({ msg: "Brak uprawnień" });
     }
 
-    await incident.remove();
+    // Replace .remove() with .findByIdAndDelete()
+    await Incident.findByIdAndDelete(req.params.id);
 
     res.json({ msg: "Zgłoszenie usunięte" });
   } catch (err) {
