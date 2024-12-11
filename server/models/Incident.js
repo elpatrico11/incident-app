@@ -1,42 +1,33 @@
 // server/models/Incident.js
+
 const mongoose = require("mongoose");
 
 const IncidentSchema = new mongoose.Schema({
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
-  },
   category: {
     type: String,
     required: true,
-    enum: ["Vandalism", "Accident", "Safety Hazard", "Other"],
   },
   description: {
     type: String,
     required: true,
-    maxlength: 1000,
   },
   location: {
-    type: {
-      type: String, // Typ geograficzny
-      enum: ["Point"],
-      required: true,
-    },
-    coordinates: {
-      type: [Number], // [longitude, latitude]
-      required: true,
-    },
+    type: String,
+    required: true,
   },
   images: [
     {
-      type: String, // URL obrazka
+      type: String,
     },
   ],
   status: {
     type: String,
-    enum: ["Pending", "In Progress", "Resolved"],
-    default: "Pending",
+    enum: ["Open", "In Progress", "Closed"],
+    default: "Open",
+  },
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
   },
   createdAt: {
     type: Date,
@@ -44,7 +35,8 @@ const IncidentSchema = new mongoose.Schema({
   },
 });
 
-// Indeks przestrzenny
-IncidentSchema.index({ location: "2dsphere" });
+// Prevent OverwriteModelError by checking if the model already exists
+const Incident =
+  mongoose.models.Incident || mongoose.model("Incident", IncidentSchema);
 
-module.exports = mongoose.model("Incident", IncidentSchema);
+module.exports = Incident;

@@ -1,15 +1,16 @@
+// server/routes/incidents.js
 const express = require("express");
 const router = express.Router();
 const Incident = require("../models/Incident");
-const authMiddleware = require("../middleware/auth");
+// const authMiddleware = require('../middleware/auth'); // Usunięte dla POST i GET
 
-// Tworzenie nowego zgłoszenia
-router.post("/", authMiddleware, async (req, res) => {
+// Tworzenie nowego zgłoszenia bez uwierzytelniania
+router.post("/", async (req, res) => {
   const { category, description, location, images } = req.body;
 
   try {
     const newIncident = new Incident({
-      user: req.user.id,
+      // user: req.user ? req.user.id : null, // Opcjonalnie przypisanie użytkownika
       category,
       description,
       location,
@@ -24,8 +25,8 @@ router.post("/", authMiddleware, async (req, res) => {
   }
 });
 
-// Pobieranie wszystkich zgłoszeń
-router.get("/", authMiddleware, async (req, res) => {
+// Pobieranie wszystkich zgłoszeń bez uwierzytelniania
+router.get("/", async (req, res) => {
   try {
     const incidents = await Incident.find().populate("user", [
       "firstName",
@@ -39,7 +40,9 @@ router.get("/", authMiddleware, async (req, res) => {
   }
 });
 
-// Pobieranie pojedynczego zgłoszenia
+// Pobieranie pojedynczego zgłoszenia (pozostawione chronione)
+const authMiddleware = require("../middleware/auth");
+
 router.get("/:id", authMiddleware, async (req, res) => {
   try {
     const incident = await Incident.findById(req.params.id).populate("user", [
@@ -62,7 +65,7 @@ router.get("/:id", authMiddleware, async (req, res) => {
   }
 });
 
-// Aktualizacja zgłoszenia
+// Aktualizacja zgłoszenia (chronione)
 router.put("/:id", authMiddleware, async (req, res) => {
   const { category, description, location, images, status } = req.body;
 
@@ -82,7 +85,7 @@ router.put("/:id", authMiddleware, async (req, res) => {
     }
 
     // Sprawdzenie, czy użytkownik ma prawo edytować zgłoszenie
-    if (incident.user.toString() !== req.user.id) {
+    if (incident.user && incident.user.toString() !== req.user.id) {
       return res.status(401).json({ msg: "Brak uprawnień" });
     }
 
@@ -100,7 +103,7 @@ router.put("/:id", authMiddleware, async (req, res) => {
   }
 });
 
-// Usuwanie zgłoszenia
+// Usuwanie zgłoszenia (chronione)
 router.delete("/:id", authMiddleware, async (req, res) => {
   try {
     const incident = await Incident.findById(req.params.id);
@@ -110,11 +113,11 @@ router.delete("/:id", authMiddleware, async (req, res) => {
     }
 
     // Sprawdzenie, czy użytkownik ma prawo usunąć zgłoszenie
-    if (incident.user.toString() !== req.user.id) {
+    if (incident.user && incident.user.toString() !== req.user.id) {
       return res.status(401).json({ msg: "Brak uprawnień" });
     }
 
-    await Incident.findByIdAndDelete(req.params.id); // Use this line instead
+    await incident.remove();
 
     res.json({ msg: "Zgłoszenie usunięte" });
   } catch (err) {

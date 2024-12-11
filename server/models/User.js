@@ -1,32 +1,42 @@
-// server/models/User.js
 const mongoose = require("mongoose");
-const bcrypt = require("bcryptjs");
 
-const UserSchema = new mongoose.Schema({
-  firstName: {
-    type: String,
-    required: true,
-    trim: true,
-    maxlength: 50,
+const IncidentSchema = new mongoose.Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    // Usunięcie `required: true`, aby umożliwić zgłaszanie bez logowania
+    required: false,
   },
-  lastName: {
+  category: {
     type: String,
     required: true,
-    trim: true,
-    maxlength: 50,
+    enum: ["Vandalism", "Accident", "Safety Hazard", "Other"],
   },
-  email: {
+  description: {
     type: String,
     required: true,
-    unique: true,
-    trim: true,
-    lowercase: true,
-    maxlength: 100,
+    maxlength: 1000,
   },
-  password: {
+  location: {
+    type: {
+      type: String, // Typ geograficzny
+      enum: ["Point"],
+      required: true,
+    },
+    coordinates: {
+      type: [Number], // [longitude, latitude]
+      required: true,
+    },
+  },
+  images: [
+    {
+      type: String, // URL obrazka
+    },
+  ],
+  status: {
     type: String,
-    required: true,
-    minlength: 6,
+    enum: ["Pending", "In Progress", "Resolved"],
+    default: "Pending",
   },
   createdAt: {
     type: Date,
@@ -34,23 +44,7 @@ const UserSchema = new mongoose.Schema({
   },
 });
 
-// Middleware do haszowania hasła przed zapisaniem
-UserSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) {
-    return next();
-  }
+// Indeks geospatialny
+IncidentSchema.index({ location: "2dsphere" });
 
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    return next();
-  } catch (err) {
-    return next(err);
-  }
-});
-
-UserSchema.methods.comparePassword = async function (candidatePassword) {
-  return await bcrypt.compare(candidatePassword, this.password);
-};
-
-module.exports = mongoose.model("User", UserSchema);
+module.exports = mongoose.model("Incident", IncidentSchema);
