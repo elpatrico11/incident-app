@@ -1,5 +1,3 @@
-// src/components/EditIncidentPage.jsx
-
 import React, { useEffect, useState } from 'react';
 import {
   Container,
@@ -89,20 +87,20 @@ const EditIncidentPage = () => {
   }, [id, user]);
 
   useEffect(() => {
-  // Reset image preview and form data when the incident ID changes
-  setImagePreview(null);
-  setExistingImage(null);
-  setFormData({
-    category: '',
-    description: '',
-    latitude: '',
-    longitude: '',
-    status: 'Pending',
-    image: null,
-  });
-  setError('');
-  setSuccess('');
-}, [id]);
+    // Reset image preview and form data when the incident ID changes
+    setImagePreview(null);
+    setExistingImage(null);
+    setFormData({
+      category: '',
+      description: '',
+      latitude: '',
+      longitude: '',
+      status: 'Pending',
+      image: null,
+    });
+    setError('');
+    setSuccess('');
+  }, [id]);
 
   const handleChange = (e) => {
     const { name, files } = e.target;
@@ -131,12 +129,26 @@ const EditIncidentPage = () => {
       return;
     }
 
+    const lat = parseFloat(latitude);
+    const lng = parseFloat(longitude);
+
+    if (isNaN(lat) || isNaN(lng)) {
+      setError('Invalid latitude or longitude.');
+      return;
+    }
+
     const data = new FormData();
     data.append('category', category);
     data.append('description', description);
-    data.append('latitude', latitude);
-    data.append('longitude', longitude);
     data.append('status', status);
+
+    // Construct the location object in GeoJSON format
+    const location = {
+      type: 'Point',
+      coordinates: [lng, lat], // [lng, lat]
+    };
+    data.append('location', JSON.stringify(location)); // Append as JSON string
+
     if (image) {
       data.append('image', image); // Ensure this matches the server's expected field name
     }
@@ -151,7 +163,8 @@ const EditIncidentPage = () => {
       navigate(`/incidents/${response.data._id}`);
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.msg || 'Błąd podczas aktualizacji zgłoszenia.');
+      const serverMsg = err.response?.data?.msg;
+      setError(serverMsg || 'Błąd podczas aktualizacji zgłoszenia.');
     }
   };
 
@@ -206,7 +219,10 @@ const EditIncidentPage = () => {
           </Typography>
           <Box sx={{ height: '300px', width: '100%' }}>
             <MapContainer
-              center={[formData.latitude || 50.0647, formData.longitude || 19.9450]}
+              center={[
+                formData.latitude ? parseFloat(formData.latitude) : 50.0647,
+                formData.longitude ? parseFloat(formData.longitude) : 19.9450,
+              ]}
               zoom={13}
               style={{ height: '100%', width: '100%' }}
             >
@@ -218,13 +234,13 @@ const EditIncidentPage = () => {
                 setLocation={(latlng) =>
                   setFormData({
                     ...formData,
-                    latitude: latlng.lat,
-                    longitude: latlng.lng,
+                    latitude: latlng.lat.toString(),
+                    longitude: latlng.lng.toString(),
                   })
                 }
               />
               {formData.latitude && formData.longitude && (
-                <Marker position={[formData.latitude, formData.longitude]} />
+                <Marker position={[parseFloat(formData.latitude), parseFloat(formData.longitude)]} />
               )}
             </MapContainer>
           </Box>
