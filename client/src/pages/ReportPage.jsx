@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
+import useAuthStore from '../store/useAuthStore';
 import {
   Container,
   Typography,
@@ -23,6 +24,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
 });
 
+// Kategorie zgłoszeń
 const categories = [
   { value: 'Vandalism', label: 'Wandalizm' },
   { value: 'Accident', label: 'Wypadek' },
@@ -30,49 +32,71 @@ const categories = [
   { value: 'Other', label: 'Inne' },
 ];
 
+// Komponent do wyboru lokalizacji na mapie
+const LocationSelector = ({ setLocation }) => {
+  useMapEvents({
+    click(e) {
+      setLocation(e.latlng);
+    },
+  });
+
+  return null;
+};
+
 const ReportPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuthStore(); // Pobieranie informacji o użytkowniku z Zustand
   const [formData, setFormData] = useState({
     category: '',
     description: '',
-    location: null,
+    location: null, // { lat: ..., lng: ... }
     images: [],
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  // Obsługa zmiany wartości w formularzu
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
+  // Obsługa zmiany obrazów
   const handleImageChange = (e) => {
     const files = e.target.files;
     setFormData({ ...formData, images: files });
   };
 
+  // Obsługa wysyłania formularza
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
 
-    if (!formData.category || !formData.description || !formData.location) {
+    const { category, description, location, images } = formData;
+
+    if (!category || !description || !location) {
       setError('Proszę wypełnić wszystkie wymagane pola.');
       return;
     }
 
     const data = new FormData();
-    data.append('category', formData.category);
-    data.append('description', formData.description);
+    data.append('category', category);
+    data.append('description', description);
     data.append('location[type]', 'Point');
-    data.append('location[coordinates][0]', formData.location.lng);
-    data.append('location[coordinates][1]', formData.location.lat);
-    for (let i = 0; i < formData.images.length; i++) {
-      data.append('images', formData.images[i]);
+    data.append('location[coordinates][0]', location.lng);
+    data.append('location[coordinates][1]', location.lat);
+    for (let i = 0; i < images.length; i++) {
+      data.append('images', images[i]);
+    }
+
+    // Jeśli użytkownik jest zalogowany, dodaj jego ID do danych
+    if (user && user._id) {
+      data.append('user', user._id);
     }
 
     try {
-      await api.post('/incidents', data, {
+      const response = await api.post('/incidents', data, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -84,24 +108,12 @@ const ReportPage = () => {
         location: null,
         images: [],
       });
-      // Opcjonalnie przekieruj użytkownika
-      // navigate('/incidents');
+      // Opcjonalnie przekieruj użytkownika do szczegółów zgłoszenia
+      navigate(`/incidents/${response.data._id}`);
     } catch (err) {
       console.error(err);
       setError(err.response?.data?.msg || 'Błąd podczas tworzenia zgłoszenia.');
     }
-  };
-
-  const LocationSelector = () => {
-    useMapEvents({
-      click(e) {
-        setFormData({ ...formData, location: e.latlng });
-      },
-    });
-
-    return formData.location ? (
-      <Marker position={formData.location} />
-    ) : null;
   };
 
   return (
@@ -113,6 +125,7 @@ const ReportPage = () => {
       {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
       <Box component="form" noValidate onSubmit={handleSubmit}>
         <Grid container spacing={2}>
+          {/* Kategoria */}
           <Grid item xs={12} sm={6}>
             <TextField
               select
@@ -130,6 +143,7 @@ const ReportPage = () => {
               ))}
             </TextField>
           </Grid>
+          {/* Opis */}
           <Grid item xs={12}>
             <TextField
               name="description"
@@ -142,6 +156,7 @@ const ReportPage = () => {
               required
             />
           </Grid>
+          {/* Mapa do wyboru lokalizacji */}
           <Grid item xs={12}>
             <Typography variant="subtitle1" gutterBottom>
               Lokalizacja (kliknij na mapie, aby wybrać)
@@ -152,7 +167,10 @@ const ReportPage = () => {
                   attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
-                <LocationSelector />
+                <LocationSelector setLocation={(latlng) => setFormData({ ...formData, location: latlng })} />
+                {formData.location && (
+                  <Marker position={formData.location} />
+                )}
               </MapContainer>
             </Box>
             {formData.location && (
@@ -161,9 +179,10 @@ const ReportPage = () => {
               </Typography>
             )}
           </Grid>
+          {/* Dodawanie obrazów */}
           <Grid item xs={12}>
             <Button variant="contained" component="label">
-              Dodaj Obrazki
+              Dodaj Obrazy
               <input
                 type="file"
                 hidden
@@ -191,6 +210,7 @@ const ReportPage = () => {
             </Box>
           </Grid>
         </Grid>
+        {/* Przycisk do zgłaszania incydentu */}
         <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }}>
           Zgłoś Incydent
         </Button>
