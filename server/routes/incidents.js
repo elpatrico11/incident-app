@@ -1,4 +1,3 @@
-// server/routes/incidents.js
 const express = require("express");
 const router = express.Router();
 const Incident = require("../models/Incident");
@@ -21,6 +20,22 @@ const upload = multer({ storage: storage });
 // Tworzenie nowego zgłoszenia z przesyłaniem obrazków (opcjonalna autoryzacja)
 router.post("/", optionalAuth, upload.array("images", 5), async (req, res) => {
   const { category, description, location } = req.body;
+
+  // Parse location if it's a JSON string
+  let parsedLocation;
+  try {
+    parsedLocation = JSON.parse(location);
+    if (
+      parsedLocation.type !== "Point" ||
+      !Array.isArray(parsedLocation.coordinates) ||
+      parsedLocation.coordinates.length !== 2
+    ) {
+      return res.status(400).json({ msg: "Invalid location format" });
+    }
+  } catch (err) {
+    return res.status(400).json({ msg: "Invalid location JSON" });
+  }
+
   const images = req.files.map(
     (file) => `${req.protocol}://${req.get("host")}/uploads/${file.filename}`
   );
@@ -29,7 +44,7 @@ router.post("/", optionalAuth, upload.array("images", 5), async (req, res) => {
     const newIncident = new Incident({
       category,
       description,
-      location,
+      location: parsedLocation, // Use parsed location
       images,
     });
 
@@ -89,13 +104,31 @@ const authMiddleware = require("../middleware/auth");
 router.put("/:id", authMiddleware, upload.single("image"), async (req, res) => {
   const { category, description, location, images, status } = req.body;
 
-  // Budowanie obiektu z polami do aktualizacji
+  // Initialize an object to hold the fields to update
   const incidentFields = {};
+
   if (category) incidentFields.category = category;
   if (description) incidentFields.description = description;
-  if (location) incidentFields.location = location;
-  if (images) incidentFields.images = images;
   if (status) incidentFields.status = status;
+
+  // Parse the location field if it exists
+  if (location) {
+    try {
+      const parsedLocation = JSON.parse(location);
+      // Validate GeoJSON structure
+      if (
+        parsedLocation.type === "Point" &&
+        Array.isArray(parsedLocation.coordinates) &&
+        parsedLocation.coordinates.length === 2
+      ) {
+        incidentFields.location = parsedLocation;
+      } else {
+        return res.status(400).json({ msg: "Invalid location format" });
+      }
+    } catch (err) {
+      return res.status(400).json({ msg: "Invalid location JSON" });
+    }
+  }
 
   // Handle image upload if a new image is provided
   if (req.file) {
