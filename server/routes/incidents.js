@@ -2,15 +2,32 @@
 const express = require("express");
 const router = express.Router();
 const Incident = require("../models/Incident");
+const multer = require("multer");
+const path = require("path");
+
 // const authMiddleware = require('../middleware/auth'); // Usunięte dla POST i GET
 
-// Tworzenie nowego zgłoszenia bez uwierzytelniania
-router.post("/", async (req, res) => {
-  const { category, description, location, images } = req.body;
+// Konfiguracja multer
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/"); // Folder do przechowywania obrazków
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + path.extname(file.originalname)); // Unikalna nazwa pliku
+  },
+});
+
+const upload = multer({ storage: storage });
+
+// Tworzenie nowego zgłoszenia z przesyłaniem obrazków
+router.post("/", upload.array("images", 5), async (req, res) => {
+  const { category, description, location } = req.body;
+  const images = req.files.map(
+    (file) => `${req.protocol}://${req.get("host")}/uploads/${file.filename}`
+  );
 
   try {
     const newIncident = new Incident({
-      // user: req.user ? req.user.id : null, // Opcjonalnie przypisanie użytkownika
       category,
       description,
       location,
