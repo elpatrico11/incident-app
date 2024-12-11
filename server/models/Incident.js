@@ -1,33 +1,20 @@
 // server/models/Incident.js
-
 const mongoose = require("mongoose");
 
-const IncidentSchema = new mongoose.Schema({
-  category: {
-    type: String,
-    required: true,
-  },
-  description: {
-    type: String,
-    required: true,
-  },
-  location: {
-    type: String,
-    required: true,
-  },
-  images: [
-    {
-      type: String,
-    },
-  ],
-  status: {
-    type: String,
-    enum: ["Open", "In Progress", "Closed"],
-    default: "Open",
-  },
+// Import the User model
+const User = require("./User"); // Adjust the path if necessary
+
+// Define the Comment Schema
+const CommentSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
+    required: true,
+  },
+  text: {
+    type: String,
+    required: true,
+    maxlength: 500,
   },
   createdAt: {
     type: Date,
@@ -35,8 +22,53 @@ const IncidentSchema = new mongoose.Schema({
   },
 });
 
-// Prevent OverwriteModelError by checking if the model already exists
-const Incident =
-  mongoose.models.Incident || mongoose.model("Incident", IncidentSchema);
+// Define the Incident Schema
+const IncidentSchema = new mongoose.Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: false, // Made optional to allow adding incidents without login
+  },
+  category: {
+    type: String,
+    required: true,
+    enum: ["Vandalism", "Accident", "Safety Hazard", "Other"],
+  },
+  description: {
+    type: String,
+    required: true,
+    maxlength: 1000,
+  },
+  location: {
+    type: {
+      type: String, // GeoJSON type
+      enum: ["Point"],
+      required: true,
+    },
+    coordinates: {
+      type: [Number], // [longitude, latitude]
+      required: true,
+    },
+  },
+  images: [
+    {
+      type: String, // Image URL
+    },
+  ],
+  status: {
+    type: String,
+    enum: ["Pending", "In Progress", "Resolved"],
+    default: "Pending",
+  },
+  comments: [CommentSchema], // Embed comments
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+});
 
-module.exports = Incident;
+// Geospatial index for location queries
+IncidentSchema.index({ location: "2dsphere" });
+
+// Export the Incident model
+module.exports = mongoose.model("Incident", IncidentSchema);

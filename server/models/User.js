@@ -1,42 +1,33 @@
+// server/models/User.js
 const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
 
-const IncidentSchema = new mongoose.Schema({
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    // Usunięcie `required: true`, aby umożliwić zgłaszanie bez logowania
-    required: false,
-  },
-  category: {
+// Define the User Schema
+const UserSchema = new mongoose.Schema({
+  firstName: {
     type: String,
     required: true,
-    enum: ["Vandalism", "Accident", "Safety Hazard", "Other"],
+    trim: true,
+    maxlength: 50,
   },
-  description: {
+  lastName: {
     type: String,
     required: true,
-    maxlength: 1000,
+    trim: true,
+    maxlength: 50,
   },
-  location: {
-    type: {
-      type: String, // Typ geograficzny
-      enum: ["Point"],
-      required: true,
-    },
-    coordinates: {
-      type: [Number], // [longitude, latitude]
-      required: true,
-    },
-  },
-  images: [
-    {
-      type: String, // URL obrazka
-    },
-  ],
-  status: {
+  email: {
     type: String,
-    enum: ["Pending", "In Progress", "Resolved"],
-    default: "Pending",
+    required: true,
+    unique: true,
+    trim: true,
+    lowercase: true,
+    maxlength: 100,
+  },
+  password: {
+    type: String,
+    required: true,
+    minlength: 6,
   },
   createdAt: {
     type: Date,
@@ -44,7 +35,25 @@ const IncidentSchema = new mongoose.Schema({
   },
 });
 
-// Indeks geospatialny
-IncidentSchema.index({ location: "2dsphere" });
+// Middleware to hash the password before saving
+UserSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) {
+    return next();
+  }
 
-module.exports = mongoose.model("Incident", IncidentSchema);
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    return next();
+  } catch (err) {
+    return next(err);
+  }
+});
+
+// Method to compare passwords
+UserSchema.methods.comparePassword = async function (candidatePassword) {
+  return await bcrypt.compare(candidatePassword, this.password);
+};
+
+// Export the User model
+module.exports = mongoose.model("User", UserSchema);

@@ -57,10 +57,9 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Pobieranie pojedynczego zgłoszenia (pozostawione chronione)
-const authMiddleware = require("../middleware/auth");
-
-router.get("/:id", authMiddleware, async (req, res) => {
+// Pobieranie pojedynczego zgłoszenia (publiczne)
+router.get("/:id", async (req, res) => {
+  // Usunięto authMiddleware
   try {
     const incident = await Incident.findById(req.params.id).populate("user", [
       "firstName",
@@ -83,6 +82,8 @@ router.get("/:id", authMiddleware, async (req, res) => {
 });
 
 // Aktualizacja zgłoszenia (chronione)
+const authMiddleware = require("../middleware/auth");
+
 router.put("/:id", authMiddleware, async (req, res) => {
   const { category, description, location, images, status } = req.body;
 
@@ -142,6 +143,56 @@ router.delete("/:id", authMiddleware, async (req, res) => {
     if (err.kind === "ObjectId") {
       return res.status(404).json({ msg: "Zgłoszenie nie znalezione" });
     }
+    res.status(500).send("Błąd serwera");
+  }
+});
+
+// Dodawanie komentarza do incydentu (chronione)
+router.post("/:id/comments", authMiddleware, async (req, res) => {
+  const { text } = req.body;
+
+  if (!text) {
+    return res.status(400).json({ msg: "Komentarz jest wymagany" });
+  }
+
+  try {
+    const incident = await Incident.findById(req.params.id);
+
+    if (!incident) {
+      return res.status(404).json({ msg: "Zgłoszenie nie znalezione" });
+    }
+
+    const newComment = {
+      user: req.user.id,
+      text,
+    };
+
+    incident.comments.unshift(newComment);
+    await incident.save();
+
+    res.json(incident.comments);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Błąd serwera");
+  }
+});
+
+// Pobieranie komentarzy dla incydentu (publiczne)
+router.get("/:id/comments", async (req, res) => {
+  // Usunięto authMiddleware
+  try {
+    const incident = await Incident.findById(req.params.id).populate(
+      "comments.user",
+      ["firstName", "lastName"]
+    );
+
+    if (!incident) {
+      return res.status(404).json({ msg: "Zgłoszenie nie znalezione" });
+    }
+
+    res.json(incident.comments);
+  } catch (err) {
+    console.error(err.message);
     res.status(500).send("Błąd serwera");
   }
 });
