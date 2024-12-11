@@ -3,6 +3,10 @@ const express = require("express");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const authMiddleware = require("../middleware/auth");
+const dotenv = require("dotenv");
+
+dotenv.config();
 
 // Rejestracja użytkownika
 router.post("/register", async (req, res) => {
@@ -36,9 +40,10 @@ router.post("/register", async (req, res) => {
       payload,
       process.env.JWT_SECRET,
       { expiresIn: "1h" },
-      (err, token) => {
+      async (err, token) => {
         if (err) throw err;
-        res.json({ token });
+        const userData = await User.findById(user.id).select("-password");
+        res.json({ token, user: userData }); // Zwraca token i dane użytkownika
       }
     );
   } catch (err) {
@@ -75,9 +80,10 @@ router.post("/login", async (req, res) => {
       payload,
       process.env.JWT_SECRET,
       { expiresIn: "1h" },
-      (err, token) => {
+      async (err, token) => {
         if (err) throw err;
-        res.json({ token });
+        const userData = await User.findById(user.id).select("-password");
+        res.json({ token, user: userData }); // Zwraca token i dane użytkownika
       }
     );
   } catch (err) {
@@ -87,8 +93,6 @@ router.post("/login", async (req, res) => {
 });
 
 // Pobieranie danych zalogowanego użytkownika
-const authMiddleware = require("../middleware/auth");
-
 router.get("/me", authMiddleware, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
