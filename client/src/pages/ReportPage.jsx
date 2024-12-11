@@ -1,4 +1,5 @@
-import React, { useState, useContext } from 'react';
+// src/pages/ReportPage.jsx
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import {
@@ -47,11 +48,7 @@ const ReportPage = () => {
 
   const handleImageChange = (e) => {
     const files = e.target.files;
-    const urls = [];
-    for (let i = 0; i < files.length; i++) {
-      urls.push(URL.createObjectURL(files[i]));
-    }
-    setFormData({ ...formData, images: urls });
+    setFormData({ ...formData, images: files });
   };
 
   const handleSubmit = async (e) => {
@@ -64,18 +61,22 @@ const ReportPage = () => {
       return;
     }
 
-    const incidentData = {
-      category: formData.category,
-      description: formData.description,
-      location: {
-        type: 'Point',
-        coordinates: [formData.location.lng, formData.location.lat],
-      },
-      images: formData.images,
-    };
+    const data = new FormData();
+    data.append('category', formData.category);
+    data.append('description', formData.description);
+    data.append('location[type]', 'Point');
+    data.append('location[coordinates][0]', formData.location.lng);
+    data.append('location[coordinates][1]', formData.location.lat);
+    for (let i = 0; i < formData.images.length; i++) {
+      data.append('images', formData.images[i]);
+    }
 
     try {
-      await api.post('/incidents', incidentData);
+      await api.post('/incidents', data, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       setSuccess('Zgłoszenie zostało pomyślnie utworzone.');
       setFormData({
         category: '',
@@ -172,10 +173,10 @@ const ReportPage = () => {
               />
             </Button>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', mt: 2 }}>
-              {formData.images.map((src, index) => (
+              {Array.from(formData.images).map((file, index) => (
                 <img
                   key={index}
-                  src={src}
+                  src={URL.createObjectURL(file)}
                   alt={`Uploaded ${index}`}
                   style={{
                     width: '100px',
@@ -184,7 +185,7 @@ const ReportPage = () => {
                     marginRight: '10px',
                     marginBottom: '10px',
                   }}
-                  loading="lazy" // Dodanie lazy loading
+                  loading="lazy"
                 />
               ))}
             </Box>
