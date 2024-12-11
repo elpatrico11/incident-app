@@ -1,3 +1,4 @@
+// src/pages/RegisterPage.jsx
 import * as React from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -16,6 +17,9 @@ import { styled } from '@mui/material/styles';
 import AppTheme from '../assets/shared-theme/AppTheme';
 import { GoogleIcon, FacebookIcon, SitemarkIcon } from '../assets/CustomIcons';
 import ColorModeSelect from '../assets/shared-theme/ColorModeSelect';
+import useAuthStore from '../store/useAuthStore';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { Alert } from '@mui/material';
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -66,6 +70,10 @@ export default function SignUp(props) {
   const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
   const [nameError, setNameError] = React.useState(false);
   const [nameErrorMessage, setNameErrorMessage] = React.useState('');
+  const [formError, setFormError] = React.useState('');
+
+  const navigate = useNavigate();
+  const register = useAuthStore((state) => state.register);
 
   const validateInputs = () => {
     const email = document.getElementById('email');
@@ -104,18 +112,23 @@ export default function SignUp(props) {
     return isValid;
   };
 
-  const handleSubmit = (event) => {
-    if (nameError || emailError || passwordError) {
-      event.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (!validateInputs()) {
       return;
     }
     const data = new FormData(event.currentTarget);
-    console.log({
-      name: data.get('name'),
-      lastName: data.get('lastName'),
-      email: data.get('email'),
-      password: data.get('password'),
-    });
+    const name = data.get('name');
+    const lastName = data.get('lastName');
+    const email = data.get('email');
+    const password = data.get('password');
+
+    try {
+      await register(name, lastName, email, password);
+      navigate('/'); // Przekierowanie po pomyślnej rejestracji
+    } catch (error) {
+      setFormError(error.response?.data?.msg || 'Błąd podczas rejestracji');
+    }
   };
 
   return (
@@ -132,6 +145,7 @@ export default function SignUp(props) {
           >
             Sign up
           </Typography>
+          {formError && <Alert severity="error">{formError}</Alert>}
           <Box
             component="form"
             onSubmit={handleSubmit}
@@ -163,7 +177,7 @@ export default function SignUp(props) {
                 variant="outlined"
                 error={emailError}
                 helperText={emailErrorMessage}
-                color={passwordError ? 'error' : 'primary'}
+                color={emailError ? 'error' : 'primary'}
               />
             </FormControl>
             <FormControl>
@@ -190,7 +204,6 @@ export default function SignUp(props) {
               type="submit"
               fullWidth
               variant="contained"
-              onClick={validateInputs}
             >
               Sign up
             </Button>
@@ -218,7 +231,8 @@ export default function SignUp(props) {
             <Typography sx={{ textAlign: 'center' }}>
               Already have an account?{' '}
               <Link
-                href="/material-ui/getting-started/templates/sign-in/"
+                component={RouterLink}
+                to="/login"
                 variant="body2"
                 sx={{ alignSelf: 'center' }}
               >

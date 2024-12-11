@@ -1,7 +1,6 @@
 // src/pages/IncidentDetailPage.jsx
-import React, { useEffect, useState, useContext } from 'react';
-import { TextField, Button, List, ListItem, ListItemAvatar, Avatar, ListItemText } from '@mui/material';
-import { AuthContext } from '../context/AuthContext';
+import { Link as RouterLink } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '../utils/api';
 import {
@@ -9,28 +8,30 @@ import {
   Typography,
   Box,
   CircularProgress,
-  Alert,
   Grid,
+  Link,
+  Alert,
+  List,
+  ListItem,
+  ListItemAvatar,
+  Avatar,
+  ListItemText,
+  Button,
+  TextField,
 } from '@mui/material';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
-
-// Custom marker icon
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
-  iconUrl: require('leaflet/dist/images/marker-icon.png'),
-  shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
-});
+import useAuthStore from '../store/useAuthStore';
 
 const IncidentDetailPage = () => {
   const { id } = useParams();
   const [incident, setIncident] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const { user } = useContext(AuthContext);
+  const { user } = useAuthStore();
   const [comment, setComment] = useState('');
   const [comments, setComments] = useState([]);
+  const [commentError, setCommentError] = useState('');
 
   useEffect(() => {
     const fetchIncident = async () => {
@@ -54,6 +55,7 @@ const IncidentDetailPage = () => {
         setComments(response.data);
       } catch (err) {
         console.error(err);
+        setError('Błąd podczas pobierania komentarzy.');
       }
     };
 
@@ -62,15 +64,19 @@ const IncidentDetailPage = () => {
 
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
-    if (!comment.trim()) return;
+    if (!comment.trim()) {
+      setCommentError('Komentarz nie może być pusty.');
+      return;
+    }
 
     try {
       const response = await api.post(`/incidents/${id}/comments`, { text: comment });
       setComments(response.data);
       setComment('');
+      setCommentError('');
     } catch (err) {
       console.error(err);
-      alert('Błąd podczas dodawania komentarza');
+      setCommentError(err.response?.data?.msg || 'Błąd podczas dodawania komentarza');
     }
   };
 
@@ -151,7 +157,7 @@ const IncidentDetailPage = () => {
         <Typography variant="h6">Komentarze</Typography>
         <List>
           {comments.map((comment, index) => (
-            <ListItem key={index}>
+            <ListItem key={index} alignItems="flex-start">
               <ListItemAvatar>
                 <Avatar>
                   {comment.user && comment.user.firstName
@@ -166,19 +172,27 @@ const IncidentDetailPage = () => {
             </ListItem>
           ))}
         </List>
-        {user && (
-          <form onSubmit={handleCommentSubmit}>
+        {user ? (
+          <Box component="form" onSubmit={handleCommentSubmit} sx={{ mt: 2 }}>
             <TextField
               fullWidth
               label="Dodaj komentarz"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              sx={{ mt: 2 }}
+              error={!!commentError}
+              helperText={commentError}
             />
-            <Button type="submit" variant="contained" sx={{ mt: 2 }}>
+            <Button type="submit" variant="contained" sx={{ mt: 1 }}>
               Dodaj
             </Button>
-          </form>
+          </Box>
+        ) : (
+          <Typography variant="body2" sx={{ mt: 2 }}>
+            <Link component={RouterLink} to="/login">
+              Zaloguj się
+            </Link>{' '}
+            aby dodać komentarz.
+          </Typography>
         )}
       </Box>
     </Container>

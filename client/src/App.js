@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -9,8 +9,15 @@ import ReportPage from "./pages/ReportPage";
 import IncidentsPage from "./pages/IncidentsPage";
 import MapPage from "./pages/MapPage";
 import IncidentDetailPage from "./pages/IncidentDetailPage";
+import useAuthStore from "./store/useAuthStore";
 
 const App = () => {
+  const initializeUser = useAuthStore((state) => state.initializeUser);
+
+  useEffect(() => {
+    initializeUser();
+  }, [initializeUser]);
+
   return (
     <div className="bg-gray-800 text-white min-h-screen flex flex-col">
       <Navbar />

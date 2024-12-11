@@ -1,9 +1,13 @@
+// src/components/Navbar.jsx
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, MenuItem, MenuItems, MenuButton } from '@headlessui/react';
-import { FaBars, FaTimes } from 'react-icons/fa';
+import { Menu } from '@headlessui/react';
+import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
+import useAuthStore from '../store/useAuthStore';
 
 const Navbar = () => {
+  const { user, logout } = useAuthStore();
+
   return (
     <nav className="bg-gray-900 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -11,7 +15,7 @@ const Navbar = () => {
           {/* Logo */}
           <div className="flex-shrink-0">
             <Link to="/" className="text-xl font-bold">
-              IncidentApp
+              MyApp
             </Link>
           </div>
           {/* Menu */}
@@ -25,28 +29,40 @@ const Navbar = () => {
             <Link to="/map" className="hover:text-gray-400">
               Mapa incydentów
             </Link>
-             <Link to="/login" className="hover:text-gray-400">
-              Logowanie
-            </Link>
-            <Link to="/register" className="hover:text-gray-400">
-              Rejestracja
-            </Link>
-
+            {user ? (
+              <>
+                <Link to="/profile" className="hover:text-gray-400">
+                  Profil
+                </Link>
+                <button onClick={logout} className="hover:text-gray-400">
+                  Wyloguj się
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" className="hover:text-gray-400">
+                  Logowanie
+                </Link>
+                <Link to="/register" className="hover:text-gray-400">
+                  Rejestracja
+                </Link>
+              </>
+            )}
           </div>
           {/* Mobile menu button */}
           <div className="md:hidden">
             <Menu>
               {({ open }) => (
                 <>
-                  <MenuButton className="text-gray-400 hover:text-white focus:outline-none">
+                  <Menu.Button className="text-gray-400 hover:text-white focus:outline-none">
                     {open ? (
-                      <FaTimes className="h-6 w-6" aria-hidden="true" />
+                      <XMarkIcon className="h-6 w-6" aria-hidden="true" />
                     ) : (
-                      <FaBars className="h-6 w-6" aria-hidden="true" />
+                      <Bars3Icon className="h-6 w-6" aria-hidden="true" />
                     )}
-                  </MenuButton>
-                  <MenuItems className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1">
-                    <MenuItem>
+                  </Menu.Button>
+                  <Menu.Items className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1">
+                    <Menu.Item>
                       {({ active }) => (
                         <Link
                           to="/report"
@@ -57,8 +73,8 @@ const Navbar = () => {
                           Dodaj zgłoszenie
                         </Link>
                       )}
-                    </MenuItem>
-                    <MenuItem>
+                    </Menu.Item>
+                    <Menu.Item>
                       {({ active }) => (
                         <Link
                           to="/incidents"
@@ -69,8 +85,8 @@ const Navbar = () => {
                           Przeglądaj incydenty
                         </Link>
                       )}
-                    </MenuItem>
-                    <MenuItem>
+                    </Menu.Item>
+                    <Menu.Item>
                       {({ active }) => (
                         <Link
                           to="/map"
@@ -81,8 +97,63 @@ const Navbar = () => {
                           Mapa incydentów
                         </Link>
                       )}
-                    </MenuItem>
-                  </MenuItems>
+                    </Menu.Item>
+                    {user ? (
+                      <>
+                        <Menu.Item>
+                          {({ active }) => (
+                            <Link
+                              to="/profile"
+                              className={`block px-4 py-2 text-sm ${
+                                active ? 'bg-gray-700' : ''
+                              }`}
+                            >
+                              Profil
+                            </Link>
+                          )}
+                        </Menu.Item>
+                        <Menu.Item>
+                          {({ active }) => (
+                            <button
+                              onClick={logout}
+                              className={`block w-full text-left px-4 py-2 text-sm ${
+                                active ? 'bg-gray-700' : ''
+                              }`}
+                            >
+                              Wyloguj się
+                            </button>
+                          )}
+                        </Menu.Item>
+                      </>
+                    ) : (
+                      <>
+                        <Menu.Item>
+                          {({ active }) => (
+                            <Link
+                              to="/login"
+                              className={`block px-4 py-2 text-sm ${
+                                active ? 'bg-gray-700' : ''
+                              }`}
+                            >
+                              Logowanie
+                            </Link>
+                          )}
+                        </Menu.Item>
+                        <Menu.Item>
+                          {({ active }) => (
+                            <Link
+                              to="/register"
+                              className={`block px-4 py-2 text-sm ${
+                                active ? 'bg-gray-700' : ''
+                              }`}
+                            >
+                              Rejestracja
+                            </Link>
+                          )}
+                        </Menu.Item>
+                      </>
+                    )}
+                  </Menu.Items>
                 </>
               )}
             </Menu>

@@ -1,3 +1,4 @@
+// src/pages/LoginPage.jsx
 import * as React from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -17,6 +18,9 @@ import ForgotPassword from './ForgotPassword';
 import { GoogleIcon, FacebookIcon, SitemarkIcon } from '../assets/CustomIcons';
 import AppTheme from '../assets/shared-theme/AppTheme';
 import ColorModeSelect from '../assets/shared-theme/ColorModeSelect';
+import useAuthStore from '../store/useAuthStore';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { Alert } from '@mui/material';
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -66,6 +70,7 @@ export default function SignIn(props) {
   const [passwordError, setPasswordError] = React.useState(false);
   const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
   const [open, setOpen] = React.useState(false);
+  const [formError, setFormError] = React.useState('');
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -75,16 +80,24 @@ export default function SignIn(props) {
     setOpen(false);
   };
 
-  const handleSubmit = (event) => {
-    if (emailError || passwordError) {
-      event.preventDefault();
+  const navigate = useNavigate();
+  const login = useAuthStore((state) => state.login);
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (!validateInputs()) {
       return;
     }
     const data = new FormData(event.currentTarget);
-    console.log({
-      email: data.get('email'),
-      password: data.get('password'),
-    });
+    const email = data.get('email');
+    const password = data.get('password');
+
+    try {
+      await login(email, password);
+      navigate('/'); // Przekierowanie po pomyślnym logowaniu
+    } catch (error) {
+      setFormError(error.response?.data?.msg || 'Błąd podczas logowania');
+    }
   };
 
   const validateInputs = () => {
@@ -128,6 +141,7 @@ export default function SignIn(props) {
           >
             Sign in
           </Typography>
+          {formError && <Alert severity="error">{formError}</Alert>}
           <Box
             component="form"
             onSubmit={handleSubmit}
@@ -149,7 +163,6 @@ export default function SignIn(props) {
                 name="email"
                 placeholder="your@email.com"
                 autoComplete="email"
-                autoFocus
                 required
                 fullWidth
                 variant="outlined"
@@ -166,7 +179,6 @@ export default function SignIn(props) {
                 type="password"
                 id="password"
                 autoComplete="current-password"
-                autoFocus
                 required
                 fullWidth
                 variant="outlined"
@@ -182,7 +194,6 @@ export default function SignIn(props) {
               type="submit"
               fullWidth
               variant="contained"
-              onClick={validateInputs}
             >
               Sign in
             </Button>
@@ -216,8 +227,9 @@ export default function SignIn(props) {
             </Button>
             <Typography sx={{ textAlign: 'center' }}>
               Don&apos;t have an account?{' '}
-              <Link 
-                href="/material-ui/getting-started/templates/sign-in/"
+              <Link
+                component={RouterLink}
+                to="/register"
                 variant="body2"
                 sx={{ alignSelf: 'center' }}
               >
