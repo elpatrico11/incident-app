@@ -68,8 +68,10 @@ export default function SignUp(props) {
   const [emailErrorMessage, setEmailErrorMessage] = React.useState('');
   const [passwordError, setPasswordError] = React.useState(false);
   const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
-  const [nameError, setNameError] = React.useState(false);
-  const [nameErrorMessage, setNameErrorMessage] = React.useState('');
+  const [firstNameError, setFirstNameError] = React.useState(false);
+  const [firstNameErrorMessage, setFirstNameErrorMessage] = React.useState('');
+  const [lastNameError, setLastNameError] = React.useState(false);
+  const [lastNameErrorMessage, setLastNameErrorMessage] = React.useState('');
   const [formError, setFormError] = React.useState('');
 
   const navigate = useNavigate();
@@ -78,7 +80,8 @@ export default function SignUp(props) {
   const validateInputs = () => {
     const email = document.getElementById('email');
     const password = document.getElementById('password');
-    const name = document.getElementById('name');
+    const firstName = document.getElementById('firstName');
+    const lastName = document.getElementById('lastName');
 
     let isValid = true;
 
@@ -100,13 +103,22 @@ export default function SignUp(props) {
       setPasswordErrorMessage('');
     }
 
-    if (!name.value || name.value.length < 1) {
-      setNameError(true);
-      setNameErrorMessage('Name is required.');
+    if (!firstName.value || firstName.value.trim().length < 1) {
+      setFirstNameError(true);
+      setFirstNameErrorMessage('First name is required.');
       isValid = false;
     } else {
-      setNameError(false);
-      setNameErrorMessage('');
+      setFirstNameError(false);
+      setFirstNameErrorMessage('');
+    }
+
+    if (!lastName.value || lastName.value.trim().length < 1) {
+      setLastNameError(true);
+      setLastNameErrorMessage('Last name is required.');
+      isValid = false;
+    } else {
+      setLastNameError(false);
+      setLastNameErrorMessage('');
     }
 
     return isValid;
@@ -118,13 +130,13 @@ export default function SignUp(props) {
       return;
     }
     const data = new FormData(event.currentTarget);
-    const name = data.get('name');
+    const firstName = data.get('firstName');
     const lastName = data.get('lastName');
     const email = data.get('email');
     const password = data.get('password');
 
     try {
-      await register(name, lastName, email, password);
+      await register(firstName, lastName, email, password);
       navigate('/'); // Przekierowanie po pomyślnej rejestracji
     } catch (error) {
       setFormError(error.response?.data?.msg || 'Błąd podczas rejestracji');
@@ -152,17 +164,31 @@ export default function SignUp(props) {
             sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
           >
             <FormControl>
-              <FormLabel htmlFor="name">Full name</FormLabel>
+              <FormLabel htmlFor="firstName">First Name</FormLabel>
               <TextField
-                autoComplete="name"
-                name="name"
+                autoComplete="given-name"
+                name="firstName"
                 required
                 fullWidth
-                id="name"
-                placeholder="Jon Snow"
-                error={nameError}
-                helperText={nameErrorMessage}
-                color={nameError ? 'error' : 'primary'}
+                id="firstName"
+                placeholder="Jon"
+                error={firstNameError}
+                helperText={firstNameErrorMessage}
+                color={firstNameError ? 'error' : 'primary'}
+              />
+            </FormControl>
+            <FormControl>
+              <FormLabel htmlFor="lastName">Last Name</FormLabel>
+              <TextField
+                autoComplete="family-name"
+                name="lastName"
+                required
+                fullWidth
+                id="lastName"
+                placeholder="Snow"
+                error={lastNameError}
+                helperText={lastNameErrorMessage}
+                color={lastNameError ? 'error' : 'primary'}
               />
             </FormControl>
             <FormControl>
@@ -219,14 +245,6 @@ export default function SignUp(props) {
               startIcon={<GoogleIcon />}
             >
               Sign up with Google
-            </Button>
-            <Button
-              fullWidth
-              variant="outlined"
-              onClick={() => alert('Sign up with Facebook')}
-              startIcon={<FacebookIcon />}
-            >
-              Sign up with Facebook
             </Button>
             <Typography sx={{ textAlign: 'center' }}>
               Already have an account?{' '}
