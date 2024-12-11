@@ -12,6 +12,8 @@ import IncidentDetailPage from "./pages/IncidentDetailPage";
 import useAuthStore from "./store/useAuthStore";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ProfilePage from "./pages/ProfilePage";
+import MyIncidentPage from "./pages/MyIncidentPage";
+import EditIncidentPage from "./pages/EditIncidentPage";
 
 const App = () => {
   const initializeUser = useAuthStore((state) => state.initializeUser);
@@ -37,6 +39,22 @@ const App = () => {
             element={
               <ProtectedRoute>
                 <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/my-incidents"
+            element={
+              <ProtectedRoute>
+                <MyIncidentPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/incidents/:id/edit"
+            element={
+              <ProtectedRoute>
+                <EditIncidentPage />
               </ProtectedRoute>
             }
           />
