@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../utils/api';
+import { Link } from 'react-router-dom';
+
 import {
   Container,
   Typography,
@@ -67,7 +69,9 @@ const IncidentsPage = () => {
               )}
               <CardContent>
                 <Typography variant="h6" component="div">
-                  {incident.category}
+                  <Link to={`/incidents/${incident._id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                    {incident.category}
+                </Link>
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   {incident.description.length > 100

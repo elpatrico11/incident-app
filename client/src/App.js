@@ -8,6 +8,7 @@ import RegisterPage from "./pages/RegisterPage";
 import ReportPage from "./pages/ReportPage";
 import IncidentsPage from "./pages/IncidentsPage";
 import MapPage from "./pages/MapPage";
+import IncidentDetailPage from "./pages/IncidentDetailPage";
 
 const App = () => {
   return (
@@ -21,6 +22,8 @@ const App = () => {
           <Route path="/report" element={<ReportPage />} />
           <Route path="/incidents" element={<IncidentsPage />} />
           <Route path="/map" element={<MapPage />} />
+          <Route path="/incidents/:id" element={<IncidentDetailPage />} />
+
           {/* Dodaj kolejne trasy */}
         </Routes>
       </main>
