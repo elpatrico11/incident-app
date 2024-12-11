@@ -86,7 +86,7 @@ router.get("/:id", async (req, res) => {
 // Aktualizacja zgłoszenia (chronione)
 const authMiddleware = require("../middleware/auth");
 
-router.put("/:id", authMiddleware, async (req, res) => {
+router.put("/:id", authMiddleware, upload.single("image"), async (req, res) => {
   const { category, description, location, images, status } = req.body;
 
   // Budowanie obiektu z polami do aktualizacji
@@ -96,6 +96,14 @@ router.put("/:id", authMiddleware, async (req, res) => {
   if (location) incidentFields.location = location;
   if (images) incidentFields.images = images;
   if (status) incidentFields.status = status;
+
+  // Handle image upload if a new image is provided
+  if (req.file) {
+    const newImageUrl = `${req.protocol}://${req.get("host")}/uploads/${
+      req.file.filename
+    }`;
+    incidentFields.images = [newImageUrl]; // Replace existing images with the new one
+  }
 
   try {
     let incident = await Incident.findById(req.params.id);
