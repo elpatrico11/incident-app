@@ -103,4 +103,31 @@ router.get("/me", authMiddleware, async (req, res) => {
   }
 });
 
+// Aktualizacja profilu użytkownika
+router.put("/me", authMiddleware, async (req, res) => {
+  const { firstName, lastName } = req.body;
+
+  const updatedFields = {};
+  if (firstName) updatedFields.firstName = firstName;
+  if (lastName) updatedFields.lastName = lastName;
+
+  try {
+    let user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ msg: "Użytkownik nie znaleziony" });
+    }
+
+    user = await User.findByIdAndUpdate(
+      req.user.id,
+      { $set: updatedFields },
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    res.json(user);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Błąd serwera");
+  }
+});
+
 module.exports = router;
