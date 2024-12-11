@@ -10,6 +10,8 @@ import IncidentsPage from "./pages/IncidentsPage";
 import MapPage from "./pages/MapPage";
 import IncidentDetailPage from "./pages/IncidentDetailPage";
 import useAuthStore from "./store/useAuthStore";
+import ProtectedRoute from "./components/ProtectedRoute";
+import ProfilePage from "./pages/ProfilePage";
 
 const App = () => {
   const initializeUser = useAuthStore((state) => state.initializeUser);
@@ -30,6 +32,14 @@ const App = () => {
           <Route path="/incidents" element={<IncidentsPage />} />
           <Route path="/map" element={<MapPage />} />
           <Route path="/incidents/:id" element={<IncidentDetailPage />} />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Dodaj kolejne trasy */}
         </Routes>

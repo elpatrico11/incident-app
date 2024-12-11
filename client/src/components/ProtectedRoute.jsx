@@ -1,16 +1,16 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
+import useAuthStore from '../store/useAuthStore';
 
 const ProtectedRoute = ({ children }) => {
-  const { user, loading } = useContext(AuthContext);
+  const { user, loading } = useAuthStore();
 
   if (loading) {
-    return <div>Ładowanie...</div>;
+    return <div>Ładowanie...</div>; // Możesz zastąpić to spinnerem
   }
 
   if (!user) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" replace />;
   }
 
   return children;
