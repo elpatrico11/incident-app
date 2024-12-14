@@ -1,7 +1,9 @@
-// src/pages/ReportPage.jsx
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+// client/src/pages/ReportPage.jsx
+
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../utils/api';
+import { fetchCategories } from '../utils/categories';
 import useAuthStore from '../store/useAuthStore';
 import {
   Container,
@@ -12,11 +14,12 @@ import {
   Grid,
   Box,
   Alert,
+  CircularProgress
 } from '@mui/material';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 
-// Custom marker icon
+// Custom marker icon setup
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
@@ -24,15 +27,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
 });
 
-// Kategorie zgłoszeń
-const categories = [
-  { value: 'Vandalism', label: 'Wandalizm' },
-  { value: 'Accident', label: 'Wypadek' },
-  { value: 'Safety Hazard', label: 'Zagrożenie Bezpieczeństwa' },
-  { value: 'Other', label: 'Inne' },
-];
-
-// Komponent do wyboru lokalizacji na mapie
+// LocationSelector component
 const LocationSelector = ({ setLocation }) => {
   useMapEvents({
     click(e) {
@@ -45,29 +40,59 @@ const LocationSelector = ({ setLocation }) => {
 
 const ReportPage = () => {
   const navigate = useNavigate();
-  const { user } = useAuthStore(); // Pobieranie informacji o użytkowniku z Zustand
+  const location = useLocation(); // Hook to access the current location
+  const { user } = useAuthStore(); // Zustand store
   const [formData, setFormData] = useState({
-    category: '',
+    category: '', // Initialize as empty string to prevent uncontrolled issues
     description: '',
     location: null, // { lat: ..., lng: ... }
     images: [],
   });
+  const [categories, setCategories] = useState([]); // State to hold fetched categories
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [categoriesError, setCategoriesError] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // Obsługa zmiany wartości w formularzu
+  // Fetch categories on component mount
+  useEffect(() => {
+    const getCategories = async () => {
+      try {
+        const fetchedCategories = await fetchCategories();
+        setCategories(fetchedCategories);
+      } catch (err) {
+        setCategoriesError('Błąd podczas pobierania kategorii.');
+      }
+      setCategoriesLoading(false);
+    };
+    getCategories();
+  }, []);
+
+  // Extract the category from the query parameters after categories are fetched
+  useEffect(() => {
+    if (categories.length === 0) return; // Wait until categories are fetched
+    const params = new URLSearchParams(location.search);
+    const selectedCategory = params.get('category');
+
+    // Verify that the selectedCategory exists in categories array
+    if (selectedCategory && categories.some(cat => cat.value === selectedCategory)) {
+      setFormData((prev) => ({ ...prev, category: selectedCategory }));
+    }
+  }, [location.search, categories]);
+
+  // Handle form field changes
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData({ ...formData, [name]: value || '' }); // Ensure value is never undefined
   };
 
-  // Obsługa zmiany obrazów
+  // Handle image selection
   const handleImageChange = (e) => {
     const files = e.target.files;
     setFormData({ ...formData, images: files });
   };
 
-  // Obsługa wysyłania formularza
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -83,19 +108,28 @@ const ReportPage = () => {
     const data = new FormData();
     data.append('category', category);
     data.append('description', description);
-    data.append('location[type]', 'Point');
-    data.append('location[coordinates][0]', location.lng);
-    data.append('location[coordinates][1]', location.lat);
+    
+    // Send location as a JSON string
+    data.append('location', JSON.stringify({
+      type: 'Point',
+      coordinates: [location.lng, location.lat],
+    }));
+    
     for (let i = 0; i < images.length; i++) {
       data.append('images', images[i]);
     }
 
-    // Jeśli użytkownik jest zalogowany, dodaj jego ID do danych
+    // If the user is logged in, add their ID to the data
     if (user && user._id) {
       data.append('user', user._id);
     }
 
     try {
+      console.log('Submitting FormData:');
+      for (let pair of data.entries()) {
+        console.log(`${pair[0]}: ${pair[1]}`);
+      }
+
       const response = await api.post('/incidents', data, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -108,13 +142,31 @@ const ReportPage = () => {
         location: null,
         images: [],
       });
-      // Opcjonalnie przekieruj użytkownika do szczegółów zgłoszenia
+      // Optionally navigate to the incident details
       navigate(`/incidents/${response.data._id}`);
     } catch (err) {
-      console.error(err);
+      console.error('Error response:', err.response);
       setError(err.response?.data?.msg || 'Błąd podczas tworzenia zgłoszenia.');
     }
   };
+
+  // Show loading spinner if categories are being fetched
+  if (categoriesLoading) {
+    return (
+      <Container component="main" maxWidth="md" sx={{ mt: 4 }}>
+        <CircularProgress />
+      </Container>
+    );
+  }
+
+  // Show error if fetching categories failed
+  if (categoriesError) {
+    return (
+      <Container component="main" maxWidth="md" sx={{ mt: 4 }}>
+        <Alert severity="error">{categoriesError}</Alert>
+      </Container>
+    );
+  }
 
   return (
     <Container component="main" maxWidth="md" sx={{ mt: 4 }}>
@@ -136,6 +188,7 @@ const ReportPage = () => {
               fullWidth
               required
             >
+              <MenuItem value="">Wybierz kategorię</MenuItem>
               {categories.map((option) => (
                 <MenuItem key={option.value} value={option.value}>
                   {option.label}
@@ -167,7 +220,7 @@ const ReportPage = () => {
                   attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
-                <LocationSelector setLocation={(latlng) => setFormData({ ...formData, location: latlng })} />
+                <LocationSelector setLocation={(latlng) => setFormData((prev) => ({ ...prev, location: latlng }))} />
                 {formData.location && (
                   <Marker position={formData.location} />
                 )}
