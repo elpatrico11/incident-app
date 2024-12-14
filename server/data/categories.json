@@ -1,0 +1,127 @@
+[
+  {
+    "label": "Akty wandalizmu",
+    "value": "Akty wandalizmu",
+    "image": "/assets/categories/BLUE/akty-wandalizmu.png"
+  },
+  {
+    "label": "Dzikie wysypiska śmieci",
+    "value": "Dzikie wysypiska śmieci",
+    "image": "/assets/categories/BLUE/dzikie-wysypiska-smieci.png"
+  },
+  {
+    "label": "Grupowanie się małoletnich zagrożonych demoralizacją",
+    "value": "Grupowanie się małoletnich zagrożonych demoralizacją",
+    "image": "/assets/categories/BLUE/grupowanie_sie_maloletnich_zagrozonych_demoralizacja.png"
+  },
+  {
+    "label": "Kłusownictwo",
+    "value": "Kłusownictwo",
+    "image": "/assets/categories/BLUE/klusownictwo.png"
+  },
+  {
+    "label": "Miejsca niebezpieczne na wodach",
+    "value": "Miejsca niebezpieczne na wodach",
+    "image": "/assets/categories/BLUE/miejsca_niebezpieczne_na_wodach.png"
+  },
+  {
+    "label": "Miejsce niebezpiecznej działalności rozrywkowej",
+    "value": "Miejsce niebezpiecznej działalności rozrywkowej",
+    "image": "/assets/categories/BLUE/miejsce_niebezpiecznej_dzialalnosci_rozrywkowej.png"
+  },
+  {
+    "label": "Nielegalna wycinka drzew",
+    "value": "Nielegalna wycinka drzew",
+    "image": "/assets/categories/BLUE/nielegalna_wycinka_drzew.png"
+  },
+  {
+    "label": "Nielegalne rajdy samochodowe",
+    "value": "Nielegalne rajdy samochodowe",
+    "image": "/assets/categories/BLUE/nielegalne_rajdy_samochodowe-nowe.png"
+  },
+  {
+    "label": "Nieprawidłowe parkowanie",
+    "value": "Nieprawidłowe parkowanie",
+    "image": "/assets/categories/BLUE/nieprawidlowe_parkowanie.png"
+  },
+  {
+    "label": "Niestrzeżone przejście przez tory",
+    "value": "Niestrzeżone przejście przez tory",
+    "image": "/assets/categories/BLUE/niestrzezone_przejscie_przez_tory.png"
+  },
+  {
+    "label": "Niestrzeżony przejazd kolejowy",
+    "value": "Niestrzeżony przejazd kolejowy",
+    "image": "/assets/categories/BLUE/niestrzezony_przejazd_kolejowy.png"
+  },
+  {
+    "label": "Niewłaściwa infrastruktura drogowa",
+    "value": "Niewłaściwa infrastruktura drogowa",
+    "image": "/assets/categories/BLUE/niewlasciwa_infrastruktura_drogowa.png"
+  },
+  {
+    "label": "Niszczenie zieleni",
+    "value": "Niszczenie zieleni",
+    "image": "/assets/categories/BLUE/niszczenie_zieleni.png"
+  },
+  {
+    "label": "Osoba bezdomna wymagająca pomocy",
+    "value": "Osoba bezdomna wymagająca pomocy",
+    "image": "/assets/categories/BLUE/osoba_bezdomna_wymagajaca_pomocy.png"
+  },
+  {
+    "label": "Poruszanie się po terenach leśnych quadami",
+    "value": "Poruszanie się po terenach leśnych quadami",
+    "image": "/assets/categories/BLUE/poruszanie_sie_po_terenach_lesnych_quadami.png"
+  },
+  {
+    "label": "Przekraczanie dozwolonej prędkości",
+    "value": "Przekraczanie dozwolonej prędkości",
+    "image": "/assets/categories/BLUE/przekraczanie_dozwolonej_predkosci.png"
+  },
+  {
+    "label": "Spożywanie alkoholu w miejscach niedozwolonych",
+    "value": "Spożywanie alkoholu w miejscach niedozwolonych",
+    "image": "/assets/categories/BLUE/spozywanie_alkoholu_w_miejscach_niedozwolonych.png"
+  },
+  {
+    "label": "Używanie środków odurzających",
+    "value": "Używanie środków odurzających",
+    "image": "/assets/categories/BLUE/uzywanie_srodkow_odurzajacych.png"
+  },
+  {
+    "label": "Wałęsające się bezpańskie psy",
+    "value": "Wałęsające się bezpańskie psy",
+    "image": "/assets/categories/BLUE/walesajace_sie_bezpanskie_psy.png"
+  },
+  {
+    "label": "Wypalanie traw",
+    "value": "Wypalanie traw",
+    "image": "/assets/categories/BLUE/wypalanie_traw.png"
+  },
+  {
+    "label": "Zdarzenia drogowe z udziałem zwierząt leśnych",
+    "value": "Zdarzenia drogowe z udziałem zwierząt leśnych",
+    "image": "/assets/categories/BLUE/zdarzenia_drogowe_z_udzialem_zwierzat_lesnych.png"
+  },
+  {
+    "label": "Znęcanie się nad zwierzętami",
+    "value": "Znęcanie się nad zwierzętami",
+    "image": "/assets/categories/BLUE/znecanie_sie_nad_zwierzetami.png"
+  },
+  {
+    "label": "Zła organizacja ruchu drogowego",
+    "value": "Zła organizacja ruchu drogowego",
+    "image": "/assets/categories/BLUE/zla_organizacja_ruchu_drogowego.png"
+  },
+  {
+    "label": "Żebractwo",
+    "value": "Żebractwo",
+    "image": "/assets/categories/BLUE/zebractwo.png"
+  },
+  {
+    "label": "Inne",
+    "value": "Inne",
+    "image": "/assets/categories/BLUE/inne.png"
+  }
+]
