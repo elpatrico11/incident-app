@@ -14,6 +14,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import ProfilePage from "./pages/ProfilePage";
 import MyIncidentPage from "./pages/MyIncidentPage";
 import EditIncidentPage from "./pages/EditIncidentPage";
+import AdminPage from "./pages/AdminPage";
 
 const App = () => {
   const initializeUser = useAuthStore((state) => state.initializeUser);
@@ -58,8 +59,10 @@ const App = () => {
               </ProtectedRoute>
             }
           />
-
-          {/* Dodaj kolejne trasy */}
+          <Route element={<ProtectedRoute roles={["admin"]} />}>
+            <Route path="/admin" element={<AdminPage />} />
+            {/* Inne trasy dostępne tylko dla adminów */}
+          </Route>
         </Routes>
       </main>
       <Footer />
