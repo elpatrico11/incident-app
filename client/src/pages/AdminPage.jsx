@@ -30,7 +30,6 @@ const AdminPage = () => {
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [loadingIncidents, setLoadingIncidents] = useState(true);
   const [error, setError] = useState('');
-  const [statusUpdate, setStatusUpdate] = useState({});
 
   useEffect(() => {
     fetchUsers();
@@ -40,6 +39,7 @@ const AdminPage = () => {
   const fetchUsers = async () => {
     try {
       const response = await api.get('/admin/users');
+      console.log("Users fetched:", response.data); // Debugging
       setUsers(response.data);
     } catch (err) {
       console.error(err);
@@ -51,6 +51,7 @@ const AdminPage = () => {
   const fetchIncidents = async () => {
     try {
       const response = await api.get('/admin/incidents');
+      console.log("Incidents fetched:", response.data); // Debugging
       setIncidents(response.data);
     } catch (err) {
       console.error(err);
@@ -69,15 +70,15 @@ const AdminPage = () => {
     }
   };
 
-  const handleStatusChange = async (incidentId, newStatus) => {
-    try {
-      const response = await api.put(`/admin/incidents/${incidentId}/status`, { status: newStatus });
-      setIncidents(incidents.map(incident => incident._id === incidentId ? response.data : incident));
-    } catch (err) {
-      console.error(err);
-      setError('Błąd podczas aktualizacji statusu zgłoszenia.');
-    }
-  };
+const handleStatusChange = async (incidentId, newStatus) => {
+  try {
+    const response = await api.put(`/admin/incidents/${incidentId}/status`, { status: newStatus });
+    setIncidents(incidents.map(incident => incident._id === incidentId ? response.data : incident));
+  } catch (err) {
+    console.error(err);
+    setError('Błąd podczas aktualizacji statusu zgłoszenia.');
+  }
+};
 
   const handleDeleteUser = async (userId) => {
     if (!window.confirm("Czy na pewno chcesz usunąć tego użytkownika?")) return;
@@ -137,13 +138,13 @@ const AdminPage = () => {
             <TableBody>
               {users.map(user => (
                 <TableRow key={user._id}>
-                  <TableCell>{user.firstName}</TableCell>
-                  <TableCell>{user.lastName}</TableCell>
-                  <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.firstName || 'N/A'}</TableCell>
+                  <TableCell>{user.lastName || 'N/A'}</TableCell>
+                  <TableCell>{user.email || 'N/A'}</TableCell>
                   <TableCell>
                     <FormControl variant="standard" sx={{ minWidth: 120 }}>
                       <Select
-                        value={user.role}
+                        value={user.role || 'user'}
                         onChange={(e) => handleRoleChange(user._id, e.target.value)}
                       >
                         <MenuItem value="user">Użytkownik</MenuItem>
@@ -181,23 +182,23 @@ const AdminPage = () => {
                 {incident.images && incident.images.length > 0 && (
                   <img
                     src={incident.images[0]}
-                    alt={incident.category}
+                    alt={incident.category || 'Incydent'}
                     style={{ width: '100%', height: '200px', objectFit: 'cover' }}
                     loading="lazy"
                   />
                 )}
                 <CardContent>
                   <Typography variant="h5" component="div">
-                    {incident.category}
+                    {incident.category || 'Brak kategorii'}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    {incident.description.substring(0, 100)}...
+                    {incident.description ? `${incident.description.substring(0, 100)}...` : 'Brak opisu.'}
                   </Typography>
                   <Typography variant="caption" display="block" gutterBottom>
-                    Status: {incident.status}
+                    Status: {incident.status || 'N/A'}
                   </Typography>
                   <Typography variant="caption" display="block" gutterBottom>
-                    Zgłoszony przez: {incident.user.firstName} {incident.user.lastName}
+                    Zgłoszony przez: {incident.user ? `${incident.user.firstName} ${incident.user.lastName}` : 'N/A'}
                   </Typography>
                 </CardContent>
                 <CardActions>
@@ -207,7 +208,7 @@ const AdminPage = () => {
                   <FormControl variant="standard" sx={{ minWidth: 120, mt: 1 }}>
                     <InputLabel>Status</InputLabel>
                     <Select
-                      value={incident.status}
+                      value={incident.status || 'Pending'}
                       onChange={(e) => handleStatusChange(incident._id, e.target.value)}
                       label="Status"
                     >
