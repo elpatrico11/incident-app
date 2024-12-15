@@ -3,7 +3,9 @@ const router = express.Router();
 const Incident = require("../models/Incident");
 const multer = require("multer");
 const path = require("path");
-const optionalAuth = require("../middleware/optionalAuth"); // Importowanie opcjonalnego middleware
+const optionalAuth = require("../middleware/optionalAuth");
+const authMiddleware = require("../middleware/auth");
+const authorize = require("../middleware/authorize");
 
 // Konfiguracja multer
 const storage = multer.diskStorage({
@@ -67,6 +69,7 @@ router.get("/", async (req, res) => {
       "firstName",
       "lastName",
       "email",
+      "role",
     ]);
     res.json(incidents);
   } catch (err) {
@@ -82,6 +85,7 @@ router.get("/:id", async (req, res) => {
       "firstName",
       "lastName",
       "email",
+      "role",
     ]);
 
     if (!incident) {
@@ -99,97 +103,113 @@ router.get("/:id", async (req, res) => {
 });
 
 // Aktualizacja zgłoszenia (chronione)
-const authMiddleware = require("../middleware/auth");
+router.put(
+  "/:id",
+  authMiddleware,
+  authorize(["admin", "user"]), // Tylko admin lub użytkownik
+  upload.single("image"),
+  async (req, res) => {
+    const { category, description, location, status } = req.body;
 
-router.put("/:id", authMiddleware, upload.single("image"), async (req, res) => {
-  const { category, description, location, images, status } = req.body;
+    // Initialize an object to hold the fields to update
+    const incidentFields = {};
 
-  // Initialize an object to hold the fields to update
-  const incidentFields = {};
+    if (category) incidentFields.category = category;
+    if (description) incidentFields.description = description;
+    if (status) incidentFields.status = status;
 
-  if (category) incidentFields.category = category;
-  if (description) incidentFields.description = description;
-  if (status) incidentFields.status = status;
-
-  // Parse the location field if it exists
-  if (location) {
-    try {
-      const parsedLocation = JSON.parse(location);
-      // Validate GeoJSON structure
-      if (
-        parsedLocation.type === "Point" &&
-        Array.isArray(parsedLocation.coordinates) &&
-        parsedLocation.coordinates.length === 2
-      ) {
-        incidentFields.location = parsedLocation;
-      } else {
-        return res.status(400).json({ msg: "Invalid location format" });
+    // Parse the location field if it exists
+    if (location) {
+      try {
+        const parsedLocation = JSON.parse(location);
+        // Validate GeoJSON structure
+        if (
+          parsedLocation.type === "Point" &&
+          Array.isArray(parsedLocation.coordinates) &&
+          parsedLocation.coordinates.length === 2
+        ) {
+          incidentFields.location = parsedLocation;
+        } else {
+          return res.status(400).json({ msg: "Invalid location format" });
+        }
+      } catch (err) {
+        return res.status(400).json({ msg: "Invalid location JSON" });
       }
+    }
+
+    // Handle image upload if a new image is provided
+    if (req.file) {
+      const newImageUrl = `${req.protocol}://${req.get("host")}/uploads/${
+        req.file.filename
+      }`;
+      incidentFields.images = [newImageUrl]; // Replace existing images with the new one
+    }
+
+    try {
+      let incident = await Incident.findById(req.params.id);
+
+      if (!incident) {
+        return res.status(404).json({ msg: "Zgłoszenie nie znalezione" });
+      }
+
+      // Sprawdzenie, czy użytkownik ma prawo edytować zgłoszenie
+      if (
+        incident.user &&
+        incident.user.toString() !== req.user.id &&
+        req.user.role !== "admin"
+      ) {
+        return res.status(401).json({ msg: "Brak uprawnień" });
+      }
+
+      // Aktualizacja zgłoszenia
+      incident = await Incident.findByIdAndUpdate(
+        req.params.id,
+        { $set: incidentFields },
+        { new: true }
+      ).populate("user", ["firstName", "lastName", "email", "role"]); // Opcjonalnie ponownie populuj użytkownika
+
+      res.json(incident);
     } catch (err) {
-      return res.status(400).json({ msg: "Invalid location JSON" });
+      console.error(err.message);
+      res.status(500).send("Błąd serwera");
     }
   }
-
-  // Handle image upload if a new image is provided
-  if (req.file) {
-    const newImageUrl = `${req.protocol}://${req.get("host")}/uploads/${
-      req.file.filename
-    }`;
-    incidentFields.images = [newImageUrl]; // Replace existing images with the new one
-  }
-
-  try {
-    let incident = await Incident.findById(req.params.id);
-
-    if (!incident) {
-      return res.status(404).json({ msg: "Zgłoszenie nie znalezione" });
-    }
-
-    // Sprawdzenie, czy użytkownik ma prawo edytować zgłoszenie
-    if (incident.user && incident.user.toString() !== req.user.id) {
-      return res.status(401).json({ msg: "Brak uprawnień" });
-    }
-
-    // Aktualizacja zgłoszenia
-    incident = await Incident.findByIdAndUpdate(
-      req.params.id,
-      { $set: incidentFields },
-      { new: true }
-    ).populate("user", ["firstName", "lastName", "email"]); // Optionally repopulate user
-
-    res.json(incident);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send("Błąd serwera");
-  }
-});
+);
 
 // Usuwanie zgłoszenia (chronione)
-router.delete("/:id", authMiddleware, async (req, res) => {
-  try {
-    const incident = await Incident.findById(req.params.id);
+router.delete(
+  "/:id",
+  authMiddleware,
+  authorize(["admin", "user"]), // Tylko admin lub użytkownik
+  async (req, res) => {
+    try {
+      const incident = await Incident.findById(req.params.id);
 
-    if (!incident) {
-      return res.status(404).json({ msg: "Zgłoszenie nie znalezione" });
+      if (!incident) {
+        return res.status(404).json({ msg: "Zgłoszenie nie znalezione" });
+      }
+
+      // Sprawdzenie, czy użytkownik ma prawo usunąć zgłoszenie
+      if (
+        incident.user &&
+        incident.user.toString() !== req.user.id &&
+        req.user.role !== "admin"
+      ) {
+        return res.status(401).json({ msg: "Brak uprawnień" });
+      }
+
+      await Incident.findByIdAndDelete(req.params.id);
+
+      res.json({ msg: "Zgłoszenie usunięte" });
+    } catch (err) {
+      console.error(err.message);
+      if (err.kind === "ObjectId") {
+        return res.status(404).json({ msg: "Zgłoszenie nie znalezione" });
+      }
+      res.status(500).send("Błąd serwera");
     }
-
-    // Sprawdzenie, czy użytkownik ma prawo usunąć zgłoszenie
-    if (incident.user && incident.user.toString() !== req.user.id) {
-      return res.status(401).json({ msg: "Brak uprawnień" });
-    }
-
-    // Replace .remove() with .findByIdAndDelete()
-    await Incident.findByIdAndDelete(req.params.id);
-
-    res.json({ msg: "Zgłoszenie usunięte" });
-  } catch (err) {
-    console.error(err.message);
-    if (err.kind === "ObjectId") {
-      return res.status(404).json({ msg: "Zgłoszenie nie znalezione" });
-    }
-    res.status(500).send("Błąd serwera");
   }
-});
+);
 
 // Dodawanie komentarza do incydentu (chronione)
 router.post("/:id/comments", authMiddleware, async (req, res) => {
