@@ -41,13 +41,14 @@ const useAuthStore = create((set, get) => ({
   },
 
   // Rejestracja
-  register: async (firstName, lastName, email, password) => {
+  register: async (firstName, lastName, email, password, role) => {
     try {
       const response = await api.post("/auth/register", {
         firstName,
         lastName,
         email,
         password,
+        role, // Opcjonalnie: rola użytkownika
       });
       const { token, user } = response.data;
       localStorage.setItem("token", token);
@@ -59,6 +60,9 @@ const useAuthStore = create((set, get) => ({
       throw error;
     }
   },
+
+  // Aktualizacja danych użytkownika
+  setUser: (userData) => set({ user: userData }),
 
   // Wylogowanie
   logout: () => {
