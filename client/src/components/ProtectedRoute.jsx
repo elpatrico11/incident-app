@@ -1,8 +1,8 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 import useAuthStore from '../store/useAuthStore';
 
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = ({ roles = [] }) => {
   const { user, loading } = useAuthStore();
 
   if (loading) {
@@ -13,7 +13,11 @@ const ProtectedRoute = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
 
-  return children;
+  if (roles.length && !roles.includes(user.role)) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <Outlet />;
 };
 
 export default ProtectedRoute;
