@@ -3,9 +3,9 @@ const router = express.Router();
 const Incident = require("../models/Incident");
 const multer = require("multer");
 const path = require("path");
-const optionalAuth = require("../middleware/optionalAuth");
+const optionalAuth = require("../middleware/optionalAuth"); // Importowanie opcjonalnego middleware
 const authMiddleware = require("../middleware/auth");
-const authorize = require("../middleware/authorize");
+const authorize = require("../middleware/authorize"); // Importujemy authorize middleware
 
 // Konfiguracja multer
 const storage = multer.diskStorage({
@@ -265,5 +265,43 @@ router.get("/:id/comments", async (req, res) => {
     res.status(500).send("Błąd serwera");
   }
 });
+
+// **Nowa Trasa: Aktualizacja Statusu Incydentu**
+router.put(
+  "/:id/status",
+  authMiddleware,
+  authorize("admin"), // Tylko administratorzy mogą zmieniać status
+  async (req, res) => {
+    const { status } = req.body;
+
+    // Walidacja statusu
+    const validStatuses = ["Pending", "In Progress", "Resolved"];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ msg: "Nieprawidłowa wartość statusu" });
+    }
+
+    try {
+      let incident = await Incident.findById(req.params.id).populate("user", [
+        "firstName",
+        "lastName",
+        "email",
+        "role",
+      ]);
+
+      if (!incident) {
+        return res.status(404).json({ msg: "Zgłoszenie nie znalezione" });
+      }
+
+      // Aktualizacja statusu
+      incident.status = status;
+      await incident.save();
+
+      res.json(incident);
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send("Błąd serwera");
+    }
+  }
+);
 
 module.exports = router;
