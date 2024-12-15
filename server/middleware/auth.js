@@ -1,6 +1,8 @@
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
 
+dotenv.config();
+
 module.exports = function (req, res, next) {
   const token = req.header("Authorization");
 
@@ -16,7 +18,7 @@ module.exports = function (req, res, next) {
 
     // Weryfikacja tokenu
     const decoded = jwt.verify(actualToken, process.env.JWT_SECRET);
-    req.user = decoded.user;
+    req.user = decoded.user; // { id: user.id, role: user.role }
     next();
   } catch (err) {
     res.status(401).json({ msg: "Token nieprawidłowy" });
