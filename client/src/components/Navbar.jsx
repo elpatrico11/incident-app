@@ -23,6 +23,9 @@ const Navbar = () => {
             {user && (
               <>
                 <Link to="/my-incidents" className="hover:text-gray-400">Moje Zgłoszenia</Link>
+                {user.role === 'admin' && (
+                  <Link to="/admin" className="hover:text-gray-400">Panel Admina</Link>
+                )}
                 <Link to="/profile" className="hover:text-gray-400">Profil</Link>
                 <button onClick={logout} className="hover:text-gray-400">Wyloguj się</button>
               </>
@@ -88,6 +91,18 @@ const Navbar = () => {
                             </Link>
                           )}
                         </MenuItem>
+                        {user.role === 'admin' && (
+                          <MenuItem>
+                            {({ active }) => (
+                              <Link
+                                to="/admin"
+                                className={`block px-4 py-2 text-sm ${active ? 'bg-gray-700' : ''}`}
+                              >
+                                Panel Admina
+                              </Link>
+                            )}
+                          </MenuItem>
+                        )}
                         <MenuItem>
                           {({ active }) => (
                             <Link
