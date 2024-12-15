@@ -19,11 +19,13 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 const authRoutes = require("./routes/auth");
 const incidentRoutes = require("./routes/incidents");
 const categoryRoutes = require("./routes/categories");
+const adminRoutes = require("./routes/admin");
 
 // Using routes
 app.use("/api/auth", authRoutes);
 app.use("/api/incidents", incidentRoutes);
 app.use("/api/categories", categoryRoutes);
+app.use("/api/admin", adminRoutes);
 
 // Default route
 app.get("/", (req, res) => {
