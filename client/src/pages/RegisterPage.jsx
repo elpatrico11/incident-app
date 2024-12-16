@@ -15,7 +15,7 @@ import Stack from '@mui/material/Stack';
 import MuiCard from '@mui/material/Card';
 import { styled } from '@mui/material/styles';
 import AppTheme from '../assets/shared-theme/AppTheme';
-import { GoogleIcon, FacebookIcon, SitemarkIcon } from '../assets/CustomIcons';
+import { GoogleIcon, SitemarkIcon } from '../assets/CustomIcons';
 import ColorModeSelect from '../assets/shared-theme/ColorModeSelect';
 import useAuthStore from '../store/useAuthStore';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
