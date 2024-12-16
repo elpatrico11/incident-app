@@ -23,7 +23,7 @@ const IncidentsPage = () => {
     const fetchIncidents = async () => {
       try {
         const response = await api.get('/incidents');
-        setIncidents(response.data);
+        setIncidents(response.data.incidents);
       } catch (err) {
         console.error(err);
         setError('Błąd podczas pobierania zgłoszeń.');

@@ -51,8 +51,8 @@ const MapPage = () => {
     const fetchIncidents = async () => {
       try {
         const response = await api.get('/incidents');
-        setIncidents(response.data);
-        setFilteredIncidents(response.data);
+        setIncidents(response.data.incidents);
+        setFilteredIncidents(response.data.incidents);
       } catch (err) {
         console.error(err);
         setIncidentsError('Błąd podczas pobierania zgłoszeń.');
