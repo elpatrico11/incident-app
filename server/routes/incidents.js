@@ -67,13 +67,69 @@ router.post("/", optionalAuth, upload.array("images", 5), async (req, res) => {
 // Pobieranie wszystkich zgłoszeń bez uwierzytelniania
 router.get("/", async (req, res) => {
   try {
-    const incidents = await Incident.find().populate("user", [
-      "firstName",
-      "lastName",
-      "email",
-      "role",
-    ]);
-    res.json(incidents);
+    const {
+      page = 1,
+      limit = 10,
+      sort = "date_desc",
+      status,
+      category,
+      search,
+    } = req.query;
+
+    console.log("GET /admin/incidents", req.query);
+
+    const query = {};
+
+    // Filtrowanie statusu
+    if (status && status !== "All") {
+      query.status = status;
+    }
+
+    // Filtrowanie kategorii
+    if (category && category !== "All") {
+      query.category = category;
+    }
+
+    // Wyszukiwanie po opisie
+    if (search) {
+      query.description = { $regex: search, $options: "i" };
+    }
+
+    // Sortowanie
+    let sortCriteria = {};
+    switch (sort) {
+      case "date_desc":
+        sortCriteria = { createdAt: -1 };
+        break;
+      case "date_asc":
+        sortCriteria = { createdAt: 1 };
+        break;
+      case "status_asc":
+        sortCriteria = { status: 1 };
+        break;
+      case "status_desc":
+        sortCriteria = { status: -1 };
+        break;
+      default:
+        sortCriteria = { createdAt: -1 };
+    }
+
+    console.log("Query:", query);
+    console.log("Sort Criteria:", sortCriteria);
+
+    const totalIncidents = await Incident.countDocuments(query);
+    const totalPages = Math.ceil(totalIncidents / limit);
+    const incidents = await Incident.find(query)
+      .populate("user", ["firstName", "lastName", "email", "role"])
+      .sort(sortCriteria)
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit));
+
+    console.log("Total Incidents:", totalIncidents);
+    console.log("Total Pages:", totalPages);
+    console.log("Incidents Returned:", incidents.length);
+
+    res.json({ incidents, totalPages });
   } catch (err) {
     console.error(err.message);
     res.status(500).send("Błąd serwera");
