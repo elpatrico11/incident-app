@@ -2,18 +2,31 @@ const express = require("express");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
-const authMiddleware = require("../middleware/auth");
-const authorize = require("../middleware/authorize"); // Importujemy authorize middleware
 const dotenv = require("dotenv");
+const { check, validationResult } = require("express-validator");
 
+// Wczytanie zmiennych środowiskowych
 dotenv.config();
 
-// Rejestracja użytkownika
+// Rejestracja użytkownika - trasa NIE CHRONIONA
 router.post(
   "/register",
-  authMiddleware,
-  authorize("admin"),
+  [
+    check("firstName", "Imię jest wymagane").not().isEmpty(),
+    check("lastName", "Nazwisko jest wymagane").not().isEmpty(),
+    check("email", "Proszę podać poprawny adres email").isEmail(),
+    check("password", "Hasło musi mieć przynajmniej 6 znaków").isLength({
+      min: 6,
+    }),
+  ],
   async (req, res) => {
+    // Sprawdzenie błędów walidacji
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      // Zwrócenie błędów walidacji
+      return res.status(400).json({ errors: errors.array() });
+    }
+
     const { firstName, lastName, email, password, role } = req.body;
 
     try {
@@ -32,9 +45,10 @@ router.post(
         role: role || "user", // Jeśli rola nie jest podana, ustawiamy na 'user'
       });
 
+      // Zapisanie użytkownika do bazy danych
       await user.save();
 
-      // Tworzenie tokenu JWT
+      // Tworzenie payloadu dla JWT
       const payload = {
         user: {
           id: user.id,
@@ -42,12 +56,14 @@ router.post(
         },
       };
 
+      // Signowanie tokenu JWT
       jwt.sign(
         payload,
         process.env.JWT_SECRET,
         { expiresIn: "1h" },
         async (err, token) => {
           if (err) throw err;
+          // Pobranie danych użytkownika bez hasła
           const userData = await User.findById(user.id).select("-password");
           res.json({ token, user: userData }); // Zwraca token i dane użytkownika
         }
@@ -59,48 +75,69 @@ router.post(
   }
 );
 
-// Logowanie użytkownika
-router.post("/login", async (req, res) => {
-  const { email, password } = req.body;
-
-  try {
-    // Sprawdzenie, czy użytkownik istnieje
-    let user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ msg: "Nieprawidłowe dane logowania" });
+// Logowanie użytkownika - trasa NIE CHRONIONA
+router.post(
+  "/login",
+  [
+    check("email", "Proszę podać poprawny adres email").isEmail(),
+    check("password", "Hasło jest wymagane").exists(),
+  ],
+  async (req, res) => {
+    // Sprawdzenie błędów walidacji
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      // Zwrócenie błędów walidacji
+      return res.status(400).json({ errors: errors.array() });
     }
 
-    // Sprawdzenie hasła
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      return res.status(400).json({ msg: "Nieprawidłowe dane logowania" });
-    }
+    const { email, password } = req.body;
 
-    // Tworzenie tokenu JWT
-    const payload = {
-      user: {
-        id: user.id,
-        role: user.role, // Dodajemy rolę do payload
-      },
-    };
-
-    jwt.sign(
-      payload,
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" },
-      async (err, token) => {
-        if (err) throw err;
-        const userData = await User.findById(user.id).select("-password");
-        res.json({ token, user: userData }); // Zwraca token i dane użytkownika
+    try {
+      // Sprawdzenie, czy użytkownik istnieje
+      let user = await User.findOne({ email });
+      if (!user) {
+        console.log("Nie znaleziono użytkownika o podanym emailu:", email); // Logowanie
+        return res.status(400).json({ msg: "Nieprawidłowe dane logowania" });
       }
-    );
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send("Błąd serwera");
-  }
-});
 
-// Pobieranie danych zalogowanego użytkownika
+      // Sprawdzenie hasła
+      const isMatch = await user.comparePassword(password);
+      if (!isMatch) {
+        console.log("Nieprawidłowe hasło dla użytkownika:", email); // Logowanie
+        return res.status(400).json({ msg: "Nieprawidłowe dane logowania" });
+      }
+
+      // Tworzenie payloadu dla JWT
+      const payload = {
+        user: {
+          id: user.id,
+          role: user.role, // Dodajemy rolę do payload
+        },
+      };
+
+      // Signowanie tokenu JWT
+      jwt.sign(
+        payload,
+        process.env.JWT_SECRET,
+        { expiresIn: "1h" },
+        async (err, token) => {
+          if (err) throw err;
+          // Pobranie danych użytkownika bez hasła
+          const userData = await User.findById(user.id).select("-password");
+          res.json({ token, user: userData }); // Zwraca token i dane użytkownika
+        }
+      );
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send("Błąd serwera");
+    }
+  }
+);
+
+// Middleware autoryzacyjny
+const authMiddleware = require("../middleware/auth");
+
+// Pobieranie danych zalogowanego użytkownika - trasa CHRONIONA
 router.get("/me", authMiddleware, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
@@ -111,7 +148,7 @@ router.get("/me", authMiddleware, async (req, res) => {
   }
 });
 
-// Aktualizacja profilu użytkownika
+// Aktualizacja profilu użytkownika - trasa CHRONIONA
 router.put("/me", authMiddleware, async (req, res) => {
   const { firstName, lastName } = req.body;
 
@@ -138,7 +175,7 @@ router.put("/me", authMiddleware, async (req, res) => {
   }
 });
 
-// Tworzenie początkowego administratora (opcjonalnie)
+// Tworzenie początkowego administratora (opcjonalnie) - trasa NIE CHRONIONA
 router.post("/create-admin", async (req, res) => {
   const { firstName, lastName, email, password } = req.body;
 
@@ -156,6 +193,7 @@ router.post("/create-admin", async (req, res) => {
       role: "admin",
     });
 
+    // Zapisanie użytkownika do bazy danych (password będzie hashowane przez middleware)
     await admin.save();
 
     res.json({ msg: "Administrator utworzony pomyślnie" });
