@@ -1,5 +1,6 @@
+// src/App.js
 import React, { useEffect } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import HomePage from "./pages/HomePage";
@@ -35,34 +36,19 @@ const App = () => {
           <Route path="/incidents" element={<IncidentsPage />} />
           <Route path="/map" element={<MapPage />} />
           <Route path="/incidents/:id" element={<IncidentDetailPage />} />
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <ProfilePage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/my-incidents"
-            element={
-              <ProtectedRoute>
-                <MyIncidentPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/incidents/:id/edit"
-            element={
-              <ProtectedRoute>
-                <EditIncidentPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route element={<ProtectedRoute roles={["admin"]} />}>
-            <Route path="/admin" element={<AdminPage />} />
-            {/* Inne trasy dostępne tylko dla adminów */}
+
+          <Route element={<ProtectedRoute />}>
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/my-incidents" element={<MyIncidentPage />} />
+            <Route path="/incidents/:id/edit" element={<EditIncidentPage />} />
           </Route>
+
+          <Route element={<ProtectedRoute roles={["admin"]} />}>
+            <Route path="/admin/*" element={<AdminPage />} />
+          </Route>
+
+          {/* Redirect dla nieznanych tras */}
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </main>
       <Footer />

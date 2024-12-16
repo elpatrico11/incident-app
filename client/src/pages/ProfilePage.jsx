@@ -1,3 +1,4 @@
+// src/pages/ProfilePage.js
 import React, { useState } from 'react';
 import {
   Container,
@@ -30,11 +31,13 @@ const ProfilePage = () => {
     setSuccess('');
 
     try {
+      console.log('Submitting Profile Update:', formData); // Debugging
       const response = await api.put('/auth/me', formData);
+      console.log('Profile Update Response:', response.data); // Debugging
       setUser(response.data);
       setSuccess('Profil został zaktualizowany pomyślnie.');
     } catch (err) {
-      console.error(err);
+      console.error('Error updating profile:', err);
       setError(err.response?.data?.msg || 'Błąd podczas aktualizacji profilu.');
     }
   };

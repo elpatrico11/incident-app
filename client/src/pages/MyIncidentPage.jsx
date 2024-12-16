@@ -1,3 +1,4 @@
+// src/pages/MyIncidentsPage.js
 import React, { useEffect, useState } from 'react';
 import {
   Container,
@@ -30,14 +31,12 @@ const MyIncidentsPage = () => {
   useEffect(() => {
     const fetchMyIncidents = async () => {
       try {
-        const response = await api.get('/incidents'); // Pobiera wszystkie incydenty
-        // Filtruj incydenty, które należą do zalogowanego użytkownika
-        const myIncidents = response.data.filter(
-          (incident) => incident.user && incident.user._id === user._id
-        );
-        setIncidents(myIncidents);
+        console.log('Fetching incidents for user:', user);
+        const response = await api.get('/incidents/my'); // Użyj dedykowanego endpointu
+        console.log('Incidents fetched:', response.data);
+        setIncidents(response.data);
       } catch (err) {
-        console.error(err);
+        console.error('Error fetching incidents:', err);
         setError('Błąd podczas pobierania Twoich zgłoszeń.');
       }
       setLoading(false);
@@ -53,12 +52,13 @@ const MyIncidentsPage = () => {
 
   const handleDelete = async () => {
     try {
+      console.log('Deleting incident:', incidentToDelete);
       await api.delete(`/incidents/${incidentToDelete._id}`);
       setIncidents(incidents.filter((inc) => inc._id !== incidentToDelete._id));
       setDeleteDialogOpen(false);
       setIncidentToDelete(null);
     } catch (err) {
-      console.error(err);
+      console.error('Error deleting incident:', err);
       setError('Błąd podczas usuwania zgłoszenia.');
       setDeleteDialogOpen(false);
       setIncidentToDelete(null);
@@ -136,7 +136,7 @@ const MyIncidentsPage = () => {
           ))}
         </Grid>
       )}
-      {/* Dialog Usuwania */}
+      {/* Delete Confirmation Dialog */}
       <Dialog
         open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}

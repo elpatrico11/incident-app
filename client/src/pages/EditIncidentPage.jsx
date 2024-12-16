@@ -7,6 +7,11 @@ import {
   Button,
   Alert,
   Grid,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  CircularProgress,
 } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
@@ -22,6 +27,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
 });
 
+// Komponent do wyboru lokalizacji na mapie
 const LocationSelector = ({ setLocation }) => {
   useMapEvents({
     click(e) {
@@ -35,6 +41,7 @@ const EditIncidentPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuthStore();
+
   const [formData, setFormData] = useState({
     category: '',
     description: '',
@@ -44,10 +51,31 @@ const EditIncidentPage = () => {
     image: null,
   });
   const [existingImage, setExistingImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null); // New state for image preview
+  const [imagePreview, setImagePreview] = useState(null); // Stan dla podglądu obrazu
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  const [categories, setCategories] = useState([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [categoriesError, setCategoriesError] = useState('');
+
+  // Pobranie kategorii z backendu
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await api.get('/categories');
+        setCategories(response.data);
+      } catch (err) {
+        console.error('Error fetching categories:', err);
+        setCategoriesError('Błąd podczas pobierania kategorii.');
+      }
+      setCategoriesLoading(false);
+    };
+
+    fetchCategories();
+  }, []);
+
+  // Pobranie incydentu do edycji
   useEffect(() => {
     const fetchIncident = async () => {
       try {
@@ -61,7 +89,7 @@ const EditIncidentPage = () => {
           user: incidentUser,
         } = response.data;
 
-        if (incidentUser && incidentUser._id !== user._id) {
+        if (incidentUser && incidentUser._id !== user._id && user.role !== 'admin') {
           setError('Nie masz uprawnień do edycji tego zgłoszenia.');
           return;
         }
@@ -86,29 +114,13 @@ const EditIncidentPage = () => {
     }
   }, [id, user]);
 
-  useEffect(() => {
-    // Reset image preview and form data when the incident ID changes
-    setImagePreview(null);
-    setExistingImage(null);
-    setFormData({
-      category: '',
-      description: '',
-      latitude: '',
-      longitude: '',
-      status: 'Pending',
-      image: null,
-    });
-    setError('');
-    setSuccess('');
-  }, [id]);
-
   const handleChange = (e) => {
     const { name, files } = e.target;
     if (files && files.length > 0) {
       const file = files[0];
       setFormData({ ...formData, [name]: file });
 
-      // Generate a preview of the selected image
+      // Generowanie podglądu wybranego obrazu
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
@@ -133,7 +145,7 @@ const EditIncidentPage = () => {
     const lng = parseFloat(longitude);
 
     if (isNaN(lat) || isNaN(lng)) {
-      setError('Invalid latitude or longitude.');
+      setError('Nieprawidłowe wartości szerokości lub długości geograficznej.');
       return;
     }
 
@@ -142,15 +154,15 @@ const EditIncidentPage = () => {
     data.append('description', description);
     data.append('status', status);
 
-    // Construct the location object in GeoJSON format
+    // Konstrukcja obiektu lokalizacji w formacie GeoJSON
     const location = {
       type: 'Point',
       coordinates: [lng, lat], // [lng, lat]
     };
-    data.append('location', JSON.stringify(location)); // Append as JSON string
+    data.append('location', JSON.stringify(location)); // Dodanie jako string JSON
 
     if (image) {
-      data.append('image', image); // Ensure this matches the server's expected field name
+      data.append('image', image); // Upewnij się, że nazwa pola zgadza się z backendem
     }
 
     try {
@@ -167,6 +179,22 @@ const EditIncidentPage = () => {
       setError(serverMsg || 'Błąd podczas aktualizacji zgłoszenia.');
     }
   };
+
+  if (categoriesLoading || (formData.category === '' && !categoriesError)) {
+    return (
+      <Container sx={{ mt: 4, textAlign: 'center' }}>
+        <CircularProgress />
+      </Container>
+    );
+  }
+
+  if (categoriesError) {
+    return (
+      <Container sx={{ mt: 4 }}>
+        <Alert severity="error">{categoriesError}</Alert>
+      </Container>
+    );
+  }
 
   if (error) {
     return (
@@ -188,20 +216,22 @@ const EditIncidentPage = () => {
         encType="multipart/form-data"
         sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
       >
-        <TextField
-          label="Kategoria"
-          name="category"
-          value={formData.category}
-          onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-          required
-          select
-          SelectProps={{ native: true }}
-        >
-          <option value="Vandalism">Wandalizm</option>
-          <option value="Accident">Wypadek</option>
-          <option value="Safety Hazard">Zagrożenie Bezpieczeństwa</option>
-          <option value="Other">Inne</option>
-        </TextField>
+        <FormControl fullWidth required>
+          <InputLabel id="category-label">Kategoria</InputLabel>
+          <Select
+            labelId="category-label"
+            name="category"
+            value={formData.category}
+            label="Kategoria"
+            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+          >
+            {categories.map((cat) => (
+              <MenuItem key={cat.value} value={cat.value}>
+                {cat.label}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
 
         <TextField
           label="Opis"
@@ -227,7 +257,7 @@ const EditIncidentPage = () => {
               style={{ height: '100%', width: '100%' }}
             >
               <TileLayer
-                attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
+                attribution='&copy; OpenStreetMap contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
               <LocationSelector
@@ -246,13 +276,13 @@ const EditIncidentPage = () => {
           </Box>
         </Grid>
 
-        {/* Image Preview Section */}
+        {/* Sekcja Podglądu Obrazu */}
         {imagePreview ? (
           <Box>
             <Typography variant="subtitle1">Podgląd Obrazu:</Typography>
             <img
               src={imagePreview}
-              alt="Preview"
+              alt="Podgląd"
               style={{ width: '100%', height: '150px', objectFit: 'cover' }}
             />
             <Button variant="contained" component="label" sx={{ mt: 2 }}>
@@ -271,7 +301,7 @@ const EditIncidentPage = () => {
             <Typography variant="subtitle1">Obecny Obraz:</Typography>
             <img
               src={existingImage}
-              alt="Incident"
+              alt="Incydent"
               style={{ width: '100%', height: '150px', objectFit: 'cover' }}
             />
             <Button variant="contained" component="label" sx={{ mt: 2 }}>

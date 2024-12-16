@@ -1,237 +1,38 @@
-import React, { useEffect, useState } from 'react';
-import {
-  Container,
-  Typography,
-  CircularProgress,
-  Alert,
-  Grid,
-  Card,
-  CardContent,
-  CardActions,
-  Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-} from '@mui/material';
-import { Link } from 'react-router-dom';
-import api from '../utils/api';
+import React from 'react';
+import { Link, Routes, Route, Navigate } from 'react-router-dom';
+import UserManagement from './admin/UserManagement';
+import IncidentManagement from './admin/IncidentManagement';
+import Reports from './admin/Reports'; 
 
 const AdminPage = () => {
-  const [users, setUsers] = useState([]);
-  const [incidents, setIncidents] = useState([]);
-  const [loadingUsers, setLoadingUsers] = useState(true);
-  const [loadingIncidents, setLoadingIncidents] = useState(true);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    fetchUsers();
-    fetchIncidents();
-  }, []);
-
-  const fetchUsers = async () => {
-    try {
-      const response = await api.get('/admin/users');
-      console.log("Users fetched:", response.data); // Debugging
-      setUsers(response.data);
-    } catch (err) {
-      console.error(err);
-      setError('Błąd podczas pobierania użytkowników.');
-    }
-    setLoadingUsers(false);
-  };
-
-  const fetchIncidents = async () => {
-    try {
-      const response = await api.get('/admin/incidents');
-      console.log("Incidents fetched:", response.data); // Debugging
-      setIncidents(response.data);
-    } catch (err) {
-      console.error(err);
-      setError('Błąd podczas pobierania zgłoszeń.');
-    }
-    setLoadingIncidents(false);
-  };
-
-  const handleRoleChange = async (userId, newRole) => {
-    try {
-      const response = await api.put(`/admin/users/${userId}`, { role: newRole });
-      setUsers(users.map(user => user._id === userId ? response.data : user));
-    } catch (err) {
-      console.error(err);
-      setError('Błąd podczas aktualizacji roli użytkownika.');
-    }
-  };
-
-const handleStatusChange = async (incidentId, newStatus) => {
-  try {
-    const response = await api.put(`/admin/incidents/${incidentId}/status`, { status: newStatus });
-    setIncidents(incidents.map(incident => incident._id === incidentId ? response.data : incident));
-  } catch (err) {
-    console.error(err);
-    setError('Błąd podczas aktualizacji statusu zgłoszenia.');
-  }
-};
-
-  const handleDeleteUser = async (userId) => {
-    if (!window.confirm("Czy na pewno chcesz usunąć tego użytkownika?")) return;
-    try {
-      await api.delete(`/admin/users/${userId}`);
-      setUsers(users.filter(user => user._id !== userId));
-    } catch (err) {
-      console.error(err);
-      setError('Błąd podczas usuwania użytkownika.');
-    }
-  };
-
-  const handleDeleteIncident = async (incidentId) => {
-    if (!window.confirm("Czy na pewno chcesz usunąć to zgłoszenie?")) return;
-    try {
-      await api.delete(`/admin/incidents/${incidentId}`);
-      setIncidents(incidents.filter(incident => incident._id !== incidentId));
-    } catch (err) {
-      console.error(err);
-      setError('Błąd podczas usuwania zgłoszenia.');
-    }
-  };
-
-  if (loadingUsers || loadingIncidents) {
-    return (
-      <Container sx={{ mt: 4, textAlign: 'center' }}>
-        <CircularProgress />
-      </Container>
-    );
-  }
-
   return (
-    <Container sx={{ mt: 4 }}>
-      <Typography variant="h4" gutterBottom>
+    <div className="container mx-auto mt-8 px-4">
+      <h2 className="text-4xl mb-6 text-center text-white">
         Panel Administratora
-      </Typography>
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      </h2>
       
-      {/* Zarządzanie Użytkownikami */}
-      <Typography variant="h5" gutterBottom>
-        Zarządzanie Użytkownikami
-      </Typography>
-      {users.length === 0 ? (
-        <Typography variant="body1">Brak użytkowników.</Typography>
-      ) : (
-        <TableContainer component={Paper} sx={{ mb: 4 }}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Imię</TableCell>
-                <TableCell>Nazwisko</TableCell>
-                <TableCell>Email</TableCell>
-                <TableCell>Rola</TableCell>
-                <TableCell>Akcje</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {users.map(user => (
-                <TableRow key={user._id}>
-                  <TableCell>{user.firstName || 'N/A'}</TableCell>
-                  <TableCell>{user.lastName || 'N/A'}</TableCell>
-                  <TableCell>{user.email || 'N/A'}</TableCell>
-                  <TableCell>
-                    <FormControl variant="standard" sx={{ minWidth: 120 }}>
-                      <Select
-                        value={user.role || 'user'}
-                        onChange={(e) => handleRoleChange(user._id, e.target.value)}
-                      >
-                        <MenuItem value="user">Użytkownik</MenuItem>
-                        <MenuItem value="admin">Administrator</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="outlined"
-                      color="error"
-                      onClick={() => handleDeleteUser(user._id)}
-                    >
-                      Usuń
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
-
-      {/* Zarządzanie Zgłoszeniami */}
-      <Typography variant="h5" gutterBottom>
-        Zarządzanie Zgłoszeniami
-      </Typography>
-      {incidents.length === 0 ? (
-        <Typography variant="body1">Brak zgłoszeń.</Typography>
-      ) : (
-        <Grid container spacing={4}>
-          {incidents.map(incident => (
-            <Grid item key={incident._id} xs={12} sm={6} md={4}>
-              <Card>
-                {incident.images && incident.images.length > 0 && (
-                  <img
-                    src={incident.images[0]}
-                    alt={incident.category || 'Incydent'}
-                    style={{ width: '100%', height: '200px', objectFit: 'cover' }}
-                    loading="lazy"
-                  />
-                )}
-                <CardContent>
-                  <Typography variant="h5" component="div">
-                    {incident.category || 'Brak kategorii'}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {incident.description ? `${incident.description.substring(0, 100)}...` : 'Brak opisu.'}
-                  </Typography>
-                  <Typography variant="caption" display="block" gutterBottom>
-                    Status: {incident.status || 'N/A'}
-                  </Typography>
-                  <Typography variant="caption" display="block" gutterBottom>
-                    Zgłoszony przez: {incident.user ? `${incident.user.firstName} ${incident.user.lastName}` : 'N/A'}
-                  </Typography>
-                </CardContent>
-                <CardActions>
-                  <Button size="small" component={Link} to={`/incidents/${incident._id}`}>
-                    Szczegóły
-                  </Button>
-                  <FormControl variant="standard" sx={{ minWidth: 120, mt: 1 }}>
-                    <InputLabel>Status</InputLabel>
-                    <Select
-                      value={incident.status || 'Pending'}
-                      onChange={(e) => handleStatusChange(incident._id, e.target.value)}
-                      label="Status"
-                    >
-                      <MenuItem value="Pending">Oczekujące</MenuItem>
-                      <MenuItem value="In Progress">W Trakcie</MenuItem>
-                      <MenuItem value="Resolved">Zamknięte</MenuItem>
-                    </Select>
-                  </FormControl>
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    onClick={() => handleDeleteIncident(incident._id)}
-                    sx={{ mt: 1 }}
-                  >
-                    Usuń
-                  </Button>
-                </CardActions>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      )}
-    </Container>
+      {/* Nawigacja do podsekcji */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 justify-center">
+        <Link to="users" className="btn btn-primary w-full">
+          Zarządzanie Użytkownikami
+        </Link>
+        <Link to="incidents" className="btn btn-secondary w-full">
+          Zarządzanie Zgłoszeniami
+        </Link>
+        <Link to="reports" className="btn btn-accent w-full">
+          Raporty
+        </Link>
+      </div>
+      
+      {/* Zagnieżdżone trasy */}
+      <Routes>
+        <Route path="/" element={<Navigate to="users" replace />} />
+        <Route path="users/*" element={<UserManagement />} />
+        <Route path="incidents/*" element={<IncidentManagement />} />
+        <Route path="reports/*" element={<Reports />} />
+        {/* Dodaj więcej tras w razie potrzeby */}
+      </Routes>
+    </div>
   );
 };
 
