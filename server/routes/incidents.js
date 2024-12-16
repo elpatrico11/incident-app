@@ -19,7 +19,6 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// Tworzenie nowego zgłoszenia z przesyłaniem obrazków (opcjonalna autoryzacja)
 router.post("/", optionalAuth, upload.array("images", 5), async (req, res) => {
   const { category, description, location } = req.body;
 
@@ -52,6 +51,9 @@ router.post("/", optionalAuth, upload.array("images", 5), async (req, res) => {
 
     if (req.user) {
       newIncident.user = req.user.id;
+      console.log("Assigning incident to user:", req.user.id); // Debugging
+    } else {
+      console.log("Incident created without user association"); // Debugging
     }
 
     const incident = await newIncident.save();
@@ -71,6 +73,19 @@ router.get("/", async (req, res) => {
       "email",
       "role",
     ]);
+    res.json(incidents);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Błąd serwera");
+  }
+});
+
+router.get("/my", authMiddleware, async (req, res) => {
+  try {
+    const incidents = await Incident.find({ user: req.user.id }).populate(
+      "user",
+      ["firstName", "lastName", "email", "role"]
+    );
     res.json(incidents);
   } catch (err) {
     console.error(err.message);

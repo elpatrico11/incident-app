@@ -115,21 +115,23 @@ router.delete("/users/:id", async (req, res) => {
   try {
     let user = await User.findById(req.params.id);
     if (!user) {
-      return res.status(404).json({ msg: "Użytkownik nie znaleziony" });
+      return res.status(404).json({ msg: "Użytkownik nie znaleziony." });
     }
 
-    // Opcjonalnie: Sprawdzenie, czy admin nie usuwa samego siebie
+    // Sprawdzenie, czy admin próbuje usunąć swoje własne konto
     if (user.id === req.user.id) {
-      return res.status(400).json({ msg: "Nie możesz usunąć samego siebie" });
+      return res
+        .status(400)
+        .json({ msg: "Nie możesz usunąć swojego własnego konta." });
     }
 
     await User.findByIdAndDelete(req.params.id);
 
-    res.json({ msg: "Użytkownik usunięty" });
+    res.json({ msg: "Użytkownik usunięty." });
   } catch (err) {
     console.error(err.message);
     if (err.kind === "ObjectId") {
-      return res.status(404).json({ msg: "Użytkownik nie znaleziony" });
+      return res.status(404).json({ msg: "Użytkownik nie znaleziony." });
     }
     res.status(500).send("Błąd serwera");
   }
@@ -137,12 +139,23 @@ router.delete("/users/:id", async (req, res) => {
 
 /**
  * @route   GET /api/admin/incidents
- * @desc    Pobranie wszystkich zgłoszeń
+ * @desc    Pobranie wszystkich zgłoszeń z opcjonalnym filtrowaniem
  * @access  Admin
  */
 router.get("/incidents", async (req, res) => {
   try {
-    const incidents = await Incident.find().populate("user", [
+    const { status, category } = req.query;
+    let filter = {};
+
+    if (status && status !== "All") {
+      filter.status = status;
+    }
+
+    if (category && category !== "All") {
+      filter.category = category;
+    }
+
+    const incidents = await Incident.find(filter).populate("user", [
       "firstName",
       "lastName",
       "email",
@@ -220,6 +233,54 @@ router.delete("/incidents/:id", async (req, res) => {
     if (err.kind === "ObjectId") {
       return res.status(404).json({ msg: "Zgłoszenie nie znalezione" });
     }
+    res.status(500).send("Błąd serwera");
+  }
+});
+
+/**
+ * @route   GET /api/admin/reports
+ * @desc    Pobranie danych raportowych
+ * @access  Admin
+ */
+router.get("/reports", async (req, res) => {
+  try {
+    // Przykład: Liczba zgłoszeń według statusu
+    const statusCount = await Incident.aggregate([
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          status: "$_id",
+          count: 1,
+          _id: 0,
+        },
+      },
+    ]);
+
+    // Przykład: Liczba zgłoszeń według kategorii
+    const categoryCount = await Incident.aggregate([
+      {
+        $group: {
+          _id: "$category",
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          category: "$_id",
+          count: 1,
+          _id: 0,
+        },
+      },
+    ]);
+
+    res.json({ statusCount, categoryCount });
+  } catch (err) {
+    console.error(err.message);
     res.status(500).send("Błąd serwera");
   }
 });
