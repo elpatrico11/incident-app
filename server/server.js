@@ -20,12 +20,14 @@ const authRoutes = require("./routes/auth");
 const incidentRoutes = require("./routes/incidents");
 const categoryRoutes = require("./routes/categories");
 const adminRoutes = require("./routes/admin");
+const adminReportsRoutes = require("./routes/adminReports");
 
 // Using routes
 app.use("/api/auth", authRoutes);
 app.use("/api/incidents", incidentRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/admin/reports", adminReportsRoutes); // Mount adminReports routes at /admin/reports
 
 // Default route
 app.get("/", (req, res) => {

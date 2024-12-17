@@ -11,9 +11,7 @@ module.exports = async function (req, res, next) {
     const token = authHeader.split(" ")[1];
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      console.log("Decoded token in optionalAuth:", decoded); // Debugging
       req.user = await User.findById(decoded.user.id).select("-password");
-      console.log("Authenticated user in optionalAuth:", req.user); // Debugging
     } catch (err) {
       console.error("Invalid token in optionalAuth");
       // Nie ustawiamy req.user, kontynuujemy bez autoryzacji

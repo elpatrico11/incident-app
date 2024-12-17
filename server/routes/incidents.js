@@ -20,7 +20,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 router.post("/", optionalAuth, upload.array("images", 5), async (req, res) => {
-  const { category, description, location } = req.body;
+  const { category, description, location, status, severity } = req.body;
 
   // Parse location if it's a JSON string
   let parsedLocation;
@@ -45,19 +45,26 @@ router.post("/", optionalAuth, upload.array("images", 5), async (req, res) => {
     const newIncident = new Incident({
       category,
       description,
-      location: parsedLocation, // Use parsed location
+      location: parsedLocation,
       images,
+      status: status || "Pending",
+      severity: severity || "Low",
     });
+
+    // If status is 'Resolved', set resolvedAt
+    if (newIncident.status === "Resolved") {
+      newIncident.resolvedAt = new Date();
+    }
 
     if (req.user) {
       newIncident.user = req.user.id;
-      console.log("Assigning incident to user:", req.user.id); // Debugging
+      console.log("Assigning incident to user:", req.user.id);
     } else {
-      console.log("Incident created without user association"); // Debugging
+      console.log("Incident created without user association");
     }
 
     const incident = await newIncident.save();
-    res.json(incident);
+    res.json(incident); // `incident` includes `createdAt` and `updatedAt`
   } catch (err) {
     console.error(err.message);
     res.status(500).send("Błąd serwera");
@@ -163,7 +170,13 @@ router.get("/:id", async (req, res) => {
       return res.status(404).json({ msg: "Zgłoszenie nie znalezione" });
     }
 
-    res.json(incident);
+    const formattedIncident = incident.toObject();
+    formattedIncident.createdAt = incident.createdAt.toLocaleString("pl-PL", {
+      dateStyle: "short",
+      timeStyle: "short",
+    });
+
+    res.json(formattedIncident);
   } catch (err) {
     console.error(err.message);
     if (err.kind === "ObjectId") {

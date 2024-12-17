@@ -200,6 +200,15 @@ router.put(
       }
 
       incident.status = status;
+
+      // If status is 'Resolved', set resolvedAt
+      if (status === "Resolved") {
+        incident.resolvedAt = new Date();
+      } else {
+        // If status is changed from 'Resolved' to something else, unset resolvedAt
+        incident.resolvedAt = null;
+      }
+
       await incident.save();
 
       // Opcjonalnie: Wysyłanie powiadomienia email o zmianie statusu
@@ -233,54 +242,6 @@ router.delete("/incidents/:id", async (req, res) => {
     if (err.kind === "ObjectId") {
       return res.status(404).json({ msg: "Zgłoszenie nie znalezione" });
     }
-    res.status(500).send("Błąd serwera");
-  }
-});
-
-/**
- * @route   GET /api/admin/reports
- * @desc    Pobranie danych raportowych
- * @access  Admin
- */
-router.get("/reports", async (req, res) => {
-  try {
-    // Przykład: Liczba zgłoszeń według statusu
-    const statusCount = await Incident.aggregate([
-      {
-        $group: {
-          _id: "$status",
-          count: { $sum: 1 },
-        },
-      },
-      {
-        $project: {
-          status: "$_id",
-          count: 1,
-          _id: 0,
-        },
-      },
-    ]);
-
-    // Przykład: Liczba zgłoszeń według kategorii
-    const categoryCount = await Incident.aggregate([
-      {
-        $group: {
-          _id: "$category",
-          count: { $sum: 1 },
-        },
-      },
-      {
-        $project: {
-          category: "$_id",
-          count: 1,
-          _id: 0,
-        },
-      },
-    ]);
-
-    res.json({ statusCount, categoryCount });
-  } catch (err) {
-    console.error(err.message);
     res.status(500).send("Błąd serwera");
   }
 });
