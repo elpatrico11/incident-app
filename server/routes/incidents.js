@@ -83,8 +83,6 @@ router.get("/", async (req, res) => {
       search,
     } = req.query;
 
-    console.log("GET /admin/incidents", req.query);
-
     const query = {};
 
     // Filtrowanie statusu
@@ -121,9 +119,6 @@ router.get("/", async (req, res) => {
         sortCriteria = { createdAt: -1 };
     }
 
-    console.log("Query:", query);
-    console.log("Sort Criteria:", sortCriteria);
-
     const totalIncidents = await Incident.countDocuments(query);
     const totalPages = Math.ceil(totalIncidents / limit);
     const incidents = await Incident.find(query)
@@ -131,10 +126,6 @@ router.get("/", async (req, res) => {
       .sort(sortCriteria)
       .skip((page - 1) * limit)
       .limit(parseInt(limit));
-
-    console.log("Total Incidents:", totalIncidents);
-    console.log("Total Pages:", totalPages);
-    console.log("Incidents Returned:", incidents.length);
 
     res.json({ incidents, totalPages });
   } catch (err) {
