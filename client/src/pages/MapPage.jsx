@@ -1,4 +1,3 @@
-// client/src/pages/MapPage.jsx
 
 import React, { useEffect, useState } from 'react';
 import api from '../utils/api';
@@ -20,7 +19,7 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, GeoJSON } from 'react-leaflet';
 import L from 'leaflet';
 import { useNavigate } from 'react-router-dom';
 
@@ -37,16 +36,14 @@ const MapPage = () => {
   const [filteredIncidents, setFilteredIncidents] = useState([]);
   const [incidentsLoading, setIncidentsLoading] = useState(true);
   const [incidentsError, setIncidentsError] = useState('');
-  
   const [categories, setCategories] = useState([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [categoriesError, setCategoriesError] = useState('');
-  
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [boundary, setBoundary] = useState(null);
   const navigate = useNavigate();
 
-  // Fetch incidents on mount
   useEffect(() => {
     const fetchIncidents = async () => {
       try {
@@ -59,11 +56,9 @@ const MapPage = () => {
       }
       setIncidentsLoading(false);
     };
-
     fetchIncidents();
   }, []);
 
-  // Fetch categories on mount
   useEffect(() => {
     const getCategories = async () => {
       try {
@@ -75,11 +70,20 @@ const MapPage = () => {
       }
       setCategoriesLoading(false);
     };
-
     getCategories();
   }, []);
 
-  // Handle category filter change
+  useEffect(() => {
+    fetch('/assets/geo/bielsko-biala-boundary.geojson')
+      .then((response) => response.json())
+      .then((data) => {
+        setBoundary(data);
+      })
+      .catch((error) => {
+        console.error('Error loading boundary GeoJSON:', error);
+      });
+  }, []);
+
   const handleFilterChange = (e) => {
     const selectedCategory = e.target.value;
     setCategoryFilter(selectedCategory);
@@ -93,16 +97,7 @@ const MapPage = () => {
     }
   };
 
-  // Handle category selection from drawer
-  const handleCategorySelect = (category) => {
-    console.log(`Selected category: ${category}`);
-    setDrawerOpen(false);
-    // Navigate to ReportPage with the selected category as a query parameter
-    navigate(`/report?category=${encodeURIComponent(category)}`);
-  };
-
-  // Show loading spinner if data is being fetched
-  if (incidentsLoading || categoriesLoading) {
+  if (incidentsLoading || categoriesLoading || !boundary) {
     return (
       <Container sx={{ mt: 4 }}>
         <CircularProgress />
@@ -110,7 +105,6 @@ const MapPage = () => {
     );
   }
 
-  // Show error if fetching incidents failed
   if (incidentsError) {
     return (
       <Container sx={{ mt: 4 }}>
@@ -119,7 +113,6 @@ const MapPage = () => {
     );
   }
 
-  // Show error if fetching categories failed
   if (categoriesError) {
     return (
       <Container sx={{ mt: 4 }}>
@@ -161,31 +154,49 @@ const MapPage = () => {
       </Box>
       <Box sx={{ height: '600px', width: '100%', mb: 2 }}>
         <MapContainer
-          center={[50.0647, 19.945]}
+          center={[49.8224, 19.0444]} // Default coordinates
           zoom={13}
           style={{ height: '100%', width: '100%' }}
+          whenCreated={(map) => {
+            if (boundary) {
+              const geoJsonLayer = L.geoJSON(boundary);
+              map.fitBounds(geoJsonLayer.getBounds());
+            }
+          }}
         >
           <TileLayer
             attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          {filteredIncidents.map((incident) => (
-            <Marker
-              key={incident._id}
-              position={[
-                incident.location.coordinates[1],
-                incident.location.coordinates[0],
-              ]}
-            >
-              <Popup>
-                <Typography variant="h6">{incident.category}</Typography>
-                <Typography variant="body2">{incident.description}</Typography>
-                <Typography variant="caption">
-                  Status: {incident.status}
-                </Typography>
-              </Popup>
-            </Marker>
-          ))}
+          {boundary && (
+            <GeoJSON
+              data={boundary}
+              style={{
+                color: 'blue',
+                weight: 2,
+                fillOpacity: 0.1,
+              }}
+            />
+          )}
+          {filteredIncidents
+            .filter((incident) => incident.location && incident.location.coordinates) // Ensure valid incidents
+            .map((incident) => (
+              <Marker
+                key={incident._id}
+                position={[
+                  incident.location.coordinates[1],
+                  incident.location.coordinates[0],
+                ]}
+              >
+                <Popup>
+                  <Typography variant="h6">{incident.category}</Typography>
+                  <Typography variant="body2">{incident.description}</Typography>
+                  <Typography variant="caption">
+                    Status: {incident.status}
+                  </Typography>
+                </Popup>
+              </Marker>
+            ))}
         </MapContainer>
       </Box>
       <Fab
@@ -238,11 +249,11 @@ const MapPage = () => {
                       borderColor: '#0000b4',
                       backgroundColor: '#0000b4',
                       '& .category-label': {
-                        color: '#fff', // Turn text white on hover
+                        color: '#fff',
                       },
                     },
                   }}
-                  onClick={() => handleCategorySelect(category.value)}
+                  onClick={() => navigate(`/report?category=${category.value}`)}
                 >
                   <img
                     src={category.image}

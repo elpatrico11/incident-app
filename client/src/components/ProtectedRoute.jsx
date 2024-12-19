@@ -6,8 +6,6 @@ import useAuthStore from '../store/useAuthStore';
 const ProtectedRoute = ({ roles = [] }) => {
   const { user, loading } = useAuthStore();
 
-  console.log('ProtectedRoute - user:', user);
-  console.log('ProtectedRoute - loading:', loading);
 
   if (loading) {
     return <div>Ładowanie...</div>; // Możesz zastąpić to spinnerem

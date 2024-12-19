@@ -14,10 +14,12 @@ import {
   Grid,
   Box,
   Alert,
-  CircularProgress
+  CircularProgress,
+  Snackbar,
 } from '@mui/material';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, GeoJSON, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
+import * as turf from '@turf/turf';
 
 // Custom marker icon setup
 delete L.Icon.Default.prototype._getIconUrl;
@@ -27,11 +29,27 @@ L.Icon.Default.mergeOptions({
   shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
 });
 
-// LocationSelector component
-const LocationSelector = ({ setLocation }) => {
+// Boundary GeoJSON import (adjust the path if necessary)
+const boundaryGeoJSONUrl = '/assets/geo/bielsko-biala-boundary.geojson';
+
+// LocationSelector component with boundary checking
+const LocationSelector = ({ setLocation, boundary, setBoundaryError }) => {
   useMapEvents({
     click(e) {
-      setLocation(e.latlng);
+      if (!boundary) return;
+
+      const { lat, lng } = e.latlng;
+      const point = turf.point([lng, lat]);
+      const polygon = turf.polygon(boundary.features[0].geometry.coordinates);
+
+      const isInside = turf.booleanPointInPolygon(point, polygon);
+
+      if (isInside) {
+        setLocation(e.latlng);
+        setBoundaryError('');
+      } else {
+        setBoundaryError('Proszę wybrać lokalizację wewnątrz Bielska-Białej.');
+      }
     },
   });
 
@@ -42,17 +60,29 @@ const ReportPage = () => {
   const navigate = useNavigate();
   const location = useLocation(); // Hook to access the current location
   const { user } = useAuthStore(); // Zustand store
+
+  // Form state
   const [formData, setFormData] = useState({
-    category: '', // Initialize as empty string to prevent uncontrolled issues
+    category: '',
     description: '',
     location: null, // { lat: ..., lng: ... }
     images: [],
   });
+
+  // Boundary state
+  const [boundary, setBoundary] = useState(null);
+  const [boundaryLoading, setBoundaryLoading] = useState(true);
+  const [boundaryError, setBoundaryError] = useState('');
+
+  // Categories state
   const [categories, setCategories] = useState([]); // State to hold fetched categories
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [categoriesError, setCategoriesError] = useState('');
+
+  // Submission and form state
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   // Fetch categories on component mount
   useEffect(() => {
@@ -66,6 +96,26 @@ const ReportPage = () => {
       setCategoriesLoading(false);
     };
     getCategories();
+  }, []);
+
+  // Fetch boundary GeoJSON on component mount
+  useEffect(() => {
+    const fetchBoundary = async () => {
+      try {
+        const response = await fetch(boundaryGeoJSONUrl);
+        if (!response.ok) {
+          throw new Error('Nie udało się załadować danych granicy.');
+        }
+        const data = await response.json();
+        setBoundary(data);
+      } catch (err) {
+        console.error('Error loading boundary GeoJSON:', err);
+        setBoundaryError('Nie udało się załadować granicy miasta.');
+      }
+      setBoundaryLoading(false);
+    };
+
+    fetchBoundary();
   }, []);
 
   // Extract the category from the query parameters after categories are fetched
@@ -100,21 +150,33 @@ const ReportPage = () => {
 
     const { category, description, location, images } = formData;
 
+    // Basic validation
     if (!category || !description || !location) {
       setError('Proszę wypełnić wszystkie wymagane pola.');
       return;
     }
 
+    // Additional validation: Ensure location is within boundary
+    if (boundary) {
+      const point = turf.point([location.lng, location.lat]);
+      const polygon = turf.polygon(boundary.features[0].geometry.coordinates);
+      const isInside = turf.booleanPointInPolygon(point, polygon);
+      if (!isInside) {
+        setError('Wybrana lokalizacja znajduje się poza obszarem Bielska-Białej.');
+        return;
+      }
+    }
+
     const data = new FormData();
     data.append('category', category);
     data.append('description', description);
-    
+
     // Send location as a JSON string
     data.append('location', JSON.stringify({
       type: 'Point',
       coordinates: [location.lng, location.lat],
     }));
-    
+
     for (let i = 0; i < images.length; i++) {
       data.append('images', images[i]);
     }
@@ -150,8 +212,13 @@ const ReportPage = () => {
     }
   };
 
-  // Show loading spinner if categories are being fetched
-  if (categoriesLoading) {
+  // Handle Snackbar close
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
+  };
+
+  // Show loading spinner if categories or boundary are being fetched
+  if (categoriesLoading || boundaryLoading) {
     return (
       <Container component="main" maxWidth="md" sx={{ mt: 4 }}>
         <CircularProgress />
@@ -164,6 +231,15 @@ const ReportPage = () => {
     return (
       <Container component="main" maxWidth="md" sx={{ mt: 4 }}>
         <Alert severity="error">{categoriesError}</Alert>
+      </Container>
+    );
+  }
+
+  // Show error if fetching boundary failed
+  if (!boundary && boundaryError) {
+    return (
+      <Container component="main" maxWidth="md" sx={{ mt: 4 }}>
+        <Alert severity="error">{boundaryError}</Alert>
       </Container>
     );
   }
@@ -215,12 +291,39 @@ const ReportPage = () => {
               Lokalizacja (kliknij na mapie, aby wybrać)
             </Typography>
             <Box sx={{ height: '300px', width: '100%' }}>
-              <MapContainer center={[50.0647, 19.9450]} zoom={13} style={{ height: '100%', width: '100%' }}>
+              <MapContainer
+                center={[49.8224, 19.0444]} // Bielsko-Biała coordinates
+                zoom={10}
+                style={{ height: '100%', width: '100%' }}
+              >
                 <TileLayer
                   attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
-                <LocationSelector setLocation={(latlng) => setFormData((prev) => ({ ...prev, location: latlng }))} />
+                {/* Display Boundary */}
+                {boundary && (
+                  <GeoJSON
+                    data={boundary}
+                    style={{
+                      color: 'blue',
+                      weight: 2,
+                      fillOpacity: 0.1,
+                    }}
+                  />
+                )}
+                {/* Location Selector with Boundary Checking */}
+                <LocationSelector
+                  setLocation={(latlng) => {
+                    setFormData((prev) => ({ ...prev, location: latlng }));
+                    setBoundaryError('');
+                  }}
+                  boundary={boundary}
+                  setBoundaryError={(msg) => {
+                    setBoundaryError(msg);
+                    setSnackbarOpen(true);
+                  }}
+                />
+                {/* Display Marker if Location is Selected */}
                 {formData.location && (
                   <Marker position={formData.location} />
                 )}
@@ -268,6 +371,13 @@ const ReportPage = () => {
           Zgłoś Incydent
         </Button>
       </Box>
+      {/* Snackbar for Boundary Errors */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={4000}
+        onClose={handleSnackbarClose}
+        message={boundaryError}
+      />
     </Container>
   );
 };

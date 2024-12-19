@@ -14,7 +14,6 @@ const useAuthStore = create((set, get) => ({
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       try {
         const response = await api.get("/auth/me");
-        console.log("User fetched:", response.data); // Debugging
         set({ user: response.data, loading: false });
       } catch (error) {
         console.error("Błąd podczas pobierania użytkownika:", error);
@@ -57,7 +56,6 @@ const useAuthStore = create((set, get) => ({
       localStorage.setItem("token", token);
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       set({ user, error: null });
-      console.log("User registered:", user); // Debugging
     } catch (error) {
       console.error("Błąd podczas rejestracji:", error);
       set({ error: error.response?.data?.msg || "Błąd podczas rejestracji" });

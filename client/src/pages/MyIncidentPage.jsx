@@ -31,9 +31,7 @@ const MyIncidentsPage = () => {
   useEffect(() => {
     const fetchMyIncidents = async () => {
       try {
-        console.log('Fetching incidents for user:', user);
         const response = await api.get('/incidents/my'); // Użyj dedykowanego endpointu
-        console.log('Incidents fetched:', response.data);
         setIncidents(response.data);
       } catch (err) {
         console.error('Error fetching incidents:', err);
