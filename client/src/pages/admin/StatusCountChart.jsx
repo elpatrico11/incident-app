@@ -1,11 +1,20 @@
-// src/components/Reports/StatusCountChart.js
+// frontend/src/components/Reports/StatusCountChart.js
 
 import React from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Typography } from '@mui/material';
 
-// Define a color palette (reuse COLORS from Reports.js or define new)
-const COLORS = ['#68d391', '#63b3ed', '#f6ad55', '#ed64a6', '#fc8181'];
+const COLORS = [
+  '#68d391', // Green
+  '#63b3ed', // Blue
+  '#f6ad55', // Orange
+  '#ed64a6', // Pink
+  '#fc8181', // Red
+  '#9f7aea', // Purple
+  '#38b2ac', // Teal
+  '#f56565', // Light Red
+  '#ed8936', // Dark Orange
+];
 
 const StatusCountChart = ({ statusCount }) => {
   return (
@@ -14,7 +23,7 @@ const StatusCountChart = ({ statusCount }) => {
         Liczba Zgłoszeń według Statusu
       </Typography>
       {statusCount && statusCount.length > 0 ? (
-        <ResponsiveContainer width="100%" height={250}>
+        <ResponsiveContainer width="100%" height={300}>
           <PieChart>
             <Pie
               data={statusCount}
@@ -22,8 +31,8 @@ const StatusCountChart = ({ statusCount }) => {
               nameKey="status"
               cx="50%"
               cy="50%"
-              outerRadius={80}
-              label
+              outerRadius={100}
+              label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
             >
               {statusCount.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -32,8 +41,11 @@ const StatusCountChart = ({ statusCount }) => {
             <Tooltip
               contentStyle={{ backgroundColor: '#2d3748', border: 'none', color: '#a0aec0' }}
               labelStyle={{ color: '#a0aec0' }}
+              formatter={(value, name) => [`Liczba: ${value}`, name]}
             />
-            <Legend />
+            <Legend
+              wrapperStyle={{ color: '#a0aec0' }}
+            />
           </PieChart>
         </ResponsiveContainer>
       ) : (
