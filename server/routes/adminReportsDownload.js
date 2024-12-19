@@ -12,12 +12,10 @@ const statusTranslations = {
 
 router.use(authMiddleware, authorize("admin"));
 
-router.get("/", async (req, res) => {
+router.get("/download", async (req, res) => {
   try {
-    // Total number of incidents
     const totalIncidents = await Incident.countDocuments();
 
-    // Average Resolution Time (in hours)
     const avgResolutionTimeResult = await Incident.aggregate([
       {
         $match: { status: "Resolved", resolvedAt: { $exists: true } },
@@ -27,7 +25,7 @@ router.get("/", async (req, res) => {
           resolutionTime: {
             $divide: [
               { $subtract: ["$resolvedAt", "$createdAt"] },
-              1000 * 60 * 60, // Convert milliseconds to hours
+              1000 * 60 * 60, //milliseconds to hours
             ],
           },
         },
@@ -45,7 +43,6 @@ router.get("/", async (req, res) => {
         ? avgResolutionTimeResult[0].averageResolutionTime.toFixed(2)
         : 0;
 
-    // Reports by Category
     const reportsByCategory = await Incident.aggregate([
       {
         $group: {
@@ -65,7 +62,6 @@ router.get("/", async (req, res) => {
       },
     ]);
 
-    // Status Count with Polish translations
     const statusCountRaw = await Incident.aggregate([
       {
         $group: {
@@ -87,7 +83,6 @@ router.get("/", async (req, res) => {
       count: item.count,
     }));
 
-    // Average Incidents Per Day and Total Per Day
     const incidentsPerDayAggregation = await Incident.aggregate([
       {
         $group: {
@@ -110,18 +105,51 @@ router.get("/", async (req, res) => {
       count: item.count,
     }));
 
-    const responsePayload = {
-      totalIncidents,
-      averageResolutionTime,
-      reportsByCategory,
-      statusCount,
-      averagePerDay,
-      totalIncidentsPerDay,
-    };
+    // Construct CSV content
+    let csvContent = "";
 
-    res.json(responsePayload);
+    // Add BOM for UTF-8 to ensure proper encoding in Excel
+    csvContent += "\uFEFF";
+
+    // 1. Main Metrics
+    csvContent +=
+      "Total Incidents,Average Resolution Time (h),Average Incidents Per Day\n";
+    csvContent += `${totalIncidents},${averageResolutionTime},${averagePerDay}\n\n`;
+
+    // 2. Reports by Category
+    csvContent += "Reports by Category\n";
+    csvContent += "Category,Count\n";
+    reportsByCategory.forEach((item) => {
+      // Escape double quotes by doubling them
+      const category = `"${item.category.replace(/"/g, '""')}"`;
+      csvContent += `${category},${item.count}\n`;
+    });
+    csvContent += "\n";
+
+    // 3. Status Count
+    csvContent += "Status Count\n";
+    csvContent += "Status,Count\n";
+    statusCount.forEach((item) => {
+      const status = `"${item.status.replace(/"/g, '""')}"`;
+      csvContent += `${status},${item.count}\n`;
+    });
+    csvContent += "\n";
+
+    // 4. Total Incidents Per Day
+    csvContent += "Total Incidents Per Day\n";
+    csvContent += "Date,Count\n";
+    totalIncidentsPerDay.forEach((item) => {
+      csvContent += `${item.date},${item.count}\n`;
+    });
+
+    // Set headers for CSV download
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", "attachment; filename=raporty.csv");
+
+    // Send the CSV content
+    res.send(csvContent);
   } catch (err) {
-    console.error("Error in /api/admin/reports:", err.message);
+    console.error("Error in /api/admin/reports/download:", err.message);
     res.status(500).send("Błąd serwera");
   }
 });
