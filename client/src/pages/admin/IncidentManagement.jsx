@@ -70,7 +70,6 @@ const IncidentManagement = () => {
       }
 
       const response = await api.get(endpoint);
-      console.log("API Response:", response.data); // Debugowanie
 
       setAllIncidents(response.data.incidents || []);
       setTotalPages(response.data.totalPages || 1);
