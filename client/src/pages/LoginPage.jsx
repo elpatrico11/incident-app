@@ -1,5 +1,3 @@
-// src/pages/LoginPage.jsx
-
 import React, { useState } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -16,7 +14,7 @@ import Stack from '@mui/material/Stack';
 import MuiCard from '@mui/material/Card';
 import { styled } from '@mui/material/styles';
 import ForgotPassword from './ForgotPassword';
-import { GoogleIcon, FacebookIcon, SitemarkIcon } from '../assets/CustomIcons';
+import { GoogleIcon, SitemarkIcon } from '../assets/CustomIcons';
 import AppTheme from '../assets/shared-theme/AppTheme';
 import ColorModeSelect from '../assets/shared-theme/ColorModeSelect';
 import useAuthStore from '../store/useAuthStore';
@@ -72,7 +70,7 @@ export default function SignIn(props) {
   const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
   const [open, setOpen] = React.useState(false);
   const [formError, setFormError] = React.useState('');
-  const [rememberMe, setRememberMe] = useState(false); // New state for "Remember me"
+  const [rememberMe, setRememberMe] = useState(false);
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -95,7 +93,7 @@ export default function SignIn(props) {
     const password = data.get('password');
 
     try {
-      await login(email, password, rememberMe); // Pass rememberMe
+      await login(email, password, rememberMe);
       navigate('/'); // Redirect after successful login
     } catch (error) {
       setFormError(error.response?.data?.msg || 'Error during login');
@@ -225,14 +223,6 @@ export default function SignIn(props) {
             >
               Sign in with Google
             </Button>
-            <Button
-              fullWidth
-              variant="outlined"
-              onClick={() => alert('Sign in with Facebook')}
-              startIcon={<FacebookIcon />}
-            >
-              Sign in with Facebook
-            </Button>
             <Typography sx={{ textAlign: 'center' }}>
               Don&apos;t have an account?{' '}
               <Link
@@ -242,6 +232,15 @@ export default function SignIn(props) {
                 sx={{ alignSelf: 'center' }}
               >
                 Sign up
+              </Link>
+              {' '}or{' '}
+              <Link
+                component={RouterLink}
+                to="/resend-verification"
+                variant="body2"
+                sx={{ alignSelf: 'center' }}
+              >
+                Resend link
               </Link>
             </Typography>
           </Box>

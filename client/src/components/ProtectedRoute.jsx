@@ -7,7 +7,7 @@ const ProtectedRoute = ({ roles = [] }) => {
 
 
   if (loading) {
-    return <div>Ładowanie...</div>; // Możesz zastąpić to spinnerem
+    return <div>Ładowanie...</div>; 
   }
 
   if (!user) {

@@ -2,10 +2,8 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
-import Checkbox from '@mui/material/Checkbox';
 import CssBaseline from '@mui/material/CssBaseline';
 import Divider from '@mui/material/Divider';
-import FormControlLabel from '@mui/material/FormControlLabel';
 import FormLabel from '@mui/material/FormLabel';
 import FormControl from '@mui/material/FormControl';
 import Link from '@mui/material/Link';
@@ -18,7 +16,7 @@ import AppTheme from '../assets/shared-theme/AppTheme';
 import { GoogleIcon, SitemarkIcon } from '../assets/CustomIcons';
 import ColorModeSelect from '../assets/shared-theme/ColorModeSelect';
 import useAuthStore from '../store/useAuthStore';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom'; 
 import { Alert } from '@mui/material';
 
 const Card = styled(MuiCard)(({ theme }) => ({
@@ -73,9 +71,9 @@ export default function SignUp(props) {
   const [lastNameError, setLastNameError] = React.useState(false);
   const [lastNameErrorMessage, setLastNameErrorMessage] = React.useState('');
   const [formError, setFormError] = React.useState('');
-  const [rememberMe, setRememberMe] = React.useState(false); // New state for "Remember me"
+  const [formSuccess, setFormSuccess] = React.useState('');
 
-  const navigate = useNavigate();
+
   const register = useAuthStore((state) => state.register);
 
   const validateInputs = () => {
@@ -127,6 +125,8 @@ export default function SignUp(props) {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setFormError('');
+    setFormSuccess('');
     if (!validateInputs()) {
       return;
     }
@@ -137,8 +137,8 @@ export default function SignUp(props) {
     const password = data.get('password');
 
     try {
-      await register(firstName, lastName, email, password, rememberMe); // Pass rememberMe
-      navigate('/'); // Redirect after successful registration
+      await register(firstName, lastName, email, password);
+      setFormSuccess("Registration successful! Please check your email to verify your account.");
     } catch (error) {
       // Handle error response from backend
       if (error.response && error.response.data && error.response.data.errors) {
@@ -162,9 +162,11 @@ export default function SignUp(props) {
             setLastNameErrorMessage(err.msg);
           }
         });
-      } else {
+      } else if (error.response && error.response.data && error.response.data.msg) {
         // Handle general form errors
-        setFormError(error.response?.data?.msg || 'Error during registration');
+        setFormError(error.response.data.msg);
+      } else {
+        setFormError('Error during registration');
       }
     }
   };
@@ -184,6 +186,7 @@ export default function SignUp(props) {
             Sign up
           </Typography>
           {formError && <Alert severity="error">{formError}</Alert>}
+          {formSuccess && <Alert severity="success">{formSuccess}</Alert>}
           <Box
             component="form"
             onSubmit={handleSubmit}
@@ -248,16 +251,6 @@ export default function SignUp(props) {
                 color={passwordError ? 'error' : 'primary'}
               />
             </FormControl>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  color="primary"
-                />
-              }
-              label="Remember me"
-            />
             <Button
               type="submit"
               fullWidth
