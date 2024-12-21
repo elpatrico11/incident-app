@@ -1,4 +1,4 @@
-// src/pages/RegisterPage.jsx
+
 import * as React from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -73,6 +73,7 @@ export default function SignUp(props) {
   const [lastNameError, setLastNameError] = React.useState(false);
   const [lastNameErrorMessage, setLastNameErrorMessage] = React.useState('');
   const [formError, setFormError] = React.useState('');
+  const [rememberMe, setRememberMe] = React.useState(false); // New state for "Remember me"
 
   const navigate = useNavigate();
   const register = useAuthStore((state) => state.register);
@@ -136,10 +137,35 @@ export default function SignUp(props) {
     const password = data.get('password');
 
     try {
-      await register(firstName, lastName, email, password);
-      navigate('/'); // Przekierowanie po pomyślnej rejestracji
+      await register(firstName, lastName, email, password, rememberMe); // Pass rememberMe
+      navigate('/'); // Redirect after successful registration
     } catch (error) {
-      setFormError(error.response?.data?.msg || 'Błąd podczas rejestracji');
+      // Handle error response from backend
+      if (error.response && error.response.data && error.response.data.errors) {
+        // Handle validation errors
+        const backendErrors = error.response.data.errors;
+        backendErrors.forEach((err) => {
+          if (err.param === 'email') {
+            setEmailError(true);
+            setEmailErrorMessage(err.msg);
+          }
+          if (err.param === 'password') {
+            setPasswordError(true);
+            setPasswordErrorMessage(err.msg);
+          }
+          if (err.param === 'firstName') {
+            setFirstNameError(true);
+            setFirstNameErrorMessage(err.msg);
+          }
+          if (err.param === 'lastName') {
+            setLastNameError(true);
+            setLastNameErrorMessage(err.msg);
+          }
+        });
+      } else {
+        // Handle general form errors
+        setFormError(error.response?.data?.msg || 'Error during registration');
+      }
     }
   };
 
@@ -223,8 +249,14 @@ export default function SignUp(props) {
               />
             </FormControl>
             <FormControlLabel
-              control={<Checkbox value="allowExtraEmails" color="primary" />}
-              label="I want to receive updates via email."
+              control={
+                <Checkbox
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  color="primary"
+                />
+              }
+              label="Remember me"
             />
             <Button
               type="submit"

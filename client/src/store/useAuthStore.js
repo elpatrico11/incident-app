@@ -1,4 +1,3 @@
-// src/store/useAuthStore.js
 import { create } from "zustand";
 import api from "../utils/api";
 
@@ -7,17 +6,19 @@ const useAuthStore = create((set, get) => ({
   loading: true,
   error: null,
 
-  // Inicjalizacja użytkownika po załadowaniu aplikacji
+  // Initialize user by checking both localStorage and sessionStorage
   initializeUser: async () => {
-    const token = localStorage.getItem("token");
+    const token =
+      localStorage.getItem("token") || sessionStorage.getItem("token");
     if (token) {
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       try {
         const response = await api.get("/auth/me");
         set({ user: response.data, loading: false });
       } catch (error) {
-        console.error("Błąd podczas pobierania użytkownika:", error);
+        console.error("Error fetching user:", error);
         localStorage.removeItem("token");
+        sessionStorage.removeItem("token");
         delete api.defaults.headers.common["Authorization"];
         set({ user: null, loading: false });
       }
@@ -26,52 +27,78 @@ const useAuthStore = create((set, get) => ({
     }
   },
 
-  // Logowanie
-  login: async (email, password) => {
+  // Login with rememberMe option
+  login: async (email, password, rememberMe) => {
     try {
-      const response = await api.post("/auth/login", { email, password });
+      const response = await api.post("/auth/login", {
+        email,
+        password,
+        rememberMe,
+      });
       const { token, user } = response.data;
-      localStorage.setItem("token", token);
+
+      // Store token based on rememberMe
+      if (rememberMe) {
+        localStorage.setItem("token", token);
+      } else {
+        sessionStorage.setItem("token", token);
+      }
+
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       set({ user, error: null });
       console.log("User logged in:", user); // Debugging
     } catch (error) {
-      console.error("Błąd podczas logowania:", error);
-      set({ error: error.response?.data?.msg || "Błąd podczas logowania" });
+      console.error("Login error:", error);
+      set({ error: error.response?.data?.msg || "Error during login" });
       throw error;
     }
   },
 
-  // Rejestracja
-  register: async (firstName, lastName, email, password, role) => {
+  // Register with rememberMe option
+  register: async (
+    firstName,
+    lastName,
+    email,
+    password,
+    rememberMe = false
+  ) => {
     try {
       const response = await api.post("/auth/register", {
         firstName,
         lastName,
         email,
         password,
-        role, // Opcjonalnie: rola użytkownika
+        rememberMe, // Pass rememberMe to backend
       });
       const { token, user } = response.data;
-      localStorage.setItem("token", token);
+
+      // Store token based on rememberMe
+      if (rememberMe) {
+        localStorage.setItem("token", token);
+      } else {
+        sessionStorage.setItem("token", token);
+      }
+
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       set({ user, error: null });
+      console.log("User registered and logged in:", user); // Debugging
     } catch (error) {
-      console.error("Błąd podczas rejestracji:", error);
-      set({ error: error.response?.data?.msg || "Błąd podczas rejestracji" });
+      console.error("Registration error:", error);
+      set({ error: error.response?.data?.msg || "Error during registration" });
       throw error;
     }
   },
 
-  // Aktualizacja danych użytkownika
+  // Update user data
   setUser: (userData) => {
     console.log("Setting user:", userData); // Debugging
     set({ user: userData });
   },
 
-  // Wylogowanie
+  // Logout and clear both storages
   logout: () => {
     localStorage.removeItem("token");
+    sessionStorage.removeItem("token");
     delete api.defaults.headers.common["Authorization"];
     set({ user: null, error: null });
   },

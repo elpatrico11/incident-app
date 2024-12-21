@@ -1,4 +1,5 @@
 // src/App.js
+
 import React, { useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
@@ -16,13 +17,30 @@ import ProfilePage from "./pages/ProfilePage";
 import MyIncidentPage from "./pages/MyIncidentPage";
 import EditIncidentPage from "./pages/EditIncidentPage";
 import AdminPage from "./pages/AdminPage";
+import CircularProgress from "@mui/material/CircularProgress"; // Import MUI spinner
+import Box from "@mui/material/Box"; // Import Box for centering
 
 const App = () => {
   const initializeUser = useAuthStore((state) => state.initializeUser);
+  const loading = useAuthStore((state) => state.loading); // Access the loading state
 
   useEffect(() => {
     initializeUser();
   }, [initializeUser]);
+
+  if (loading) {
+    // Render a loading spinner while initializing
+    return (
+      <Box
+        className="bg-gray-800 text-white min-h-screen flex items-center justify-center"
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+      >
+        <CircularProgress color="inherit" />
+      </Box>
+    );
+  }
 
   return (
     <div className="bg-gray-800 text-white min-h-screen flex flex-col">
@@ -37,17 +55,19 @@ const App = () => {
           <Route path="/map" element={<MapPage />} />
           <Route path="/incidents/:id" element={<IncidentDetailPage />} />
 
+          {/* Protected Routes for Authenticated Users */}
           <Route element={<ProtectedRoute />}>
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/my-incidents" element={<MyIncidentPage />} />
             <Route path="/incidents/:id/edit" element={<EditIncidentPage />} />
           </Route>
 
+          {/* Protected Routes for Admin Users */}
           <Route element={<ProtectedRoute roles={["admin"]} />}>
             <Route path="/admin/*" element={<AdminPage />} />
           </Route>
 
-          {/* Redirect dla nieznanych tras */}
+          {/* Redirect for Unknown Routes */}
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </main>

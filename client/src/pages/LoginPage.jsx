@@ -1,5 +1,6 @@
 // src/pages/LoginPage.jsx
-import * as React from 'react';
+
+import React, { useState } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Checkbox from '@mui/material/Checkbox';
@@ -71,6 +72,7 @@ export default function SignIn(props) {
   const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
   const [open, setOpen] = React.useState(false);
   const [formError, setFormError] = React.useState('');
+  const [rememberMe, setRememberMe] = useState(false); // New state for "Remember me"
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -93,10 +95,10 @@ export default function SignIn(props) {
     const password = data.get('password');
 
     try {
-      await login(email, password);
-      navigate('/'); // Przekierowanie po pomyślnym logowaniu
+      await login(email, password, rememberMe); // Pass rememberMe
+      navigate('/'); // Redirect after successful login
     } catch (error) {
-      setFormError(error.response?.data?.msg || 'Błąd podczas logowania');
+      setFormError(error.response?.data?.msg || 'Error during login');
     }
   };
 
@@ -186,7 +188,13 @@ export default function SignIn(props) {
               />
             </FormControl>
             <FormControlLabel
-              control={<Checkbox value="remember" color="primary" />}
+              control={
+                <Checkbox
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  color="primary"
+                />
+              }
               label="Remember me"
             />
             <ForgotPassword open={open} handleClose={handleClose} />
