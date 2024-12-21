@@ -15,8 +15,12 @@ import ProfilePage from "./pages/ProfilePage";
 import MyIncidentPage from "./pages/MyIncidentPage";
 import EditIncidentPage from "./pages/EditIncidentPage";
 import AdminPage from "./pages/AdminPage";
+import UserManagement from "./pages/admin/UserManagement";
+import EditUser from "./pages/admin/EditUser";
+import IncidentManagement from "./pages/admin/IncidentManagement";
+import Reports from "./pages/admin/Reports";
 import CircularProgress from "@mui/material/CircularProgress";
-import Box from "@mui/material/Box"; // Import Box for centering
+import Box from "@mui/material/Box";
 import VerifyEmail from "./pages/VerifyEmail";
 import ResendVerification from "./pages/ResendVerification";
 
@@ -56,16 +60,26 @@ const App = () => {
           <Route path="/incidents" element={<IncidentsPage />} />
           <Route path="/map" element={<MapPage />} />
           <Route path="/incidents/:id" element={<IncidentDetailPage />} />
+
           {/* Protected Routes for Authenticated Users */}
           <Route element={<ProtectedRoute />}>
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/my-incidents" element={<MyIncidentPage />} />
             <Route path="/incidents/:id/edit" element={<EditIncidentPage />} />
           </Route>
+
           {/* Protected Routes for Admin Users */}
           <Route element={<ProtectedRoute roles={["admin"]} />}>
-            <Route path="/admin/*" element={<AdminPage />} />
+            <Route path="/admin" element={<AdminPage />}>
+              {/* Nested Admin Routes */}
+              <Route index element={<Navigate to="users" replace />} />
+              <Route path="users" element={<UserManagement />} />
+              <Route path="users/:id/edit" element={<EditUser />} />
+              <Route path="incidents" element={<IncidentManagement />} />
+              <Route path="reports" element={<Reports />} />
+            </Route>
           </Route>
+
           {/* Redirect for Unknown Routes */}
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>

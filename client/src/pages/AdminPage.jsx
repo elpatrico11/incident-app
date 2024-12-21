@@ -1,37 +1,29 @@
 import React from 'react';
-import { Link, Routes, Route, Navigate } from 'react-router-dom';
-import UserManagement from './admin/UserManagement';
-import IncidentManagement from './admin/IncidentManagement';
-import Reports from './admin/Reports'; 
+import { Link, Outlet } from 'react-router-dom';
 
 const AdminPage = () => {
   return (
     <div className="container mx-auto mt-8 px-4">
+      {/* Panel Title */}
       <h2 className="text-4xl mb-6 text-center text-white">
         Panel Administratora
       </h2>
       
-      {/* Nawigacja do podsekcji */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 justify-center">
-        <Link to="users" className="btn btn-primary w-full">
+      {/* Navigation Buttons */}
+      <div className="flex justify-center space-x-4 mb-8">
+        <Link to="users" className="btn btn-primary flex justify-center items-center w-1/4 h-12">
           Zarządzanie Użytkownikami
         </Link>
-        <Link to="incidents" className="btn btn-secondary w-full">
+        <Link to="incidents" className="btn btn-secondary flex justify-center items-center w-1/4 h-12">
           Zarządzanie Zgłoszeniami
         </Link>
-        <Link to="reports" className="btn btn-accent w-full">
+        <Link to="reports" className="btn btn-accent flex justify-center items-center w-1/4 h-12">
           Raporty
         </Link>
       </div>
       
-      {/* Zagnieżdżone trasy */}
-      <Routes>
-        <Route path="/" element={<Navigate to="users" replace />} />
-        <Route path="users/*" element={<UserManagement />} />
-        <Route path="incidents/*" element={<IncidentManagement />} />
-        <Route path="reports/*" element={<Reports />} />
-        {/* Dodaj więcej tras w razie potrzeby */}
-      </Routes>
+      {/* Render Selected Admin Section */}
+      <Outlet />
     </div>
   );
 };
