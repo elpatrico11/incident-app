@@ -1,3 +1,5 @@
+// server/routes/auth.js
+
 const express = require("express");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
@@ -5,150 +7,162 @@ const User = require("../models/User");
 const dotenv = require("dotenv");
 const { check, validationResult } = require("express-validator");
 
-// Wczytanie zmiennych środowiskowych
+// Load environment variables
 dotenv.config();
 
-// Rejestracja użytkownika - trasa NIE CHRONIONA
+// Registration Route - UNPROTECTED
 router.post(
   "/register",
   [
-    check("firstName", "Imię jest wymagane").not().isEmpty(),
-    check("lastName", "Nazwisko jest wymagane").not().isEmpty(),
-    check("email", "Proszę podać poprawny adres email").isEmail(),
-    check("password", "Hasło musi mieć przynajmniej 6 znaków").isLength({
+    check("firstName", "First name is required").not().isEmpty(),
+    check("lastName", "Last name is required").not().isEmpty(),
+    check("email", "Please provide a valid email").isEmail(),
+    check("password", "Password must be at least 6 characters").isLength({
       min: 6,
     }),
+    check("rememberMe").optional().isBoolean(), // Validate rememberMe
+    check("role")
+      .optional()
+      .isIn(["user", "admin"])
+      .withMessage("Invalid role."), // Ensure role is valid if provided
   ],
   async (req, res) => {
-    // Sprawdzenie błędów walidacji
+    // Validate input
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      // Zwrócenie błędów walidacji
+      // Return validation errors
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { firstName, lastName, email, password, role } = req.body;
+    const { firstName, lastName, email, password, role, rememberMe } = req.body;
 
     try {
-      // Sprawdzenie, czy użytkownik już istnieje
+      // Check if user already exists
       let user = await User.findOne({ email });
       if (user) {
-        return res.status(400).json({ msg: "Użytkownik już istnieje" });
+        return res.status(400).json({ msg: "User already exists" });
       }
 
-      // Tworzenie nowego użytkownika
+      // Create new user
       user = new User({
         firstName,
         lastName,
         email,
         password,
-        role: role || "user", // Jeśli rola nie jest podana, ustawiamy na 'user'
+        role: role || "user", // Default role is 'user'
       });
 
-      // Zapisanie użytkownika do bazy danych
+      // Save user to the database
       await user.save();
 
-      // Tworzenie payloadu dla JWT
+      // Create payload for JWT
       const payload = {
         user: {
           id: user.id,
-          role: user.role, // Dodajemy rolę do payload
+          role: user.role, // Include role in payload
         },
       };
 
-      // Signowanie tokenu JWT
+      // Set token expiration based on rememberMe
+      const expiresIn = rememberMe ? "7d" : "1h"; // 7 days vs 1 hour
+
+      // Sign JWT
       jwt.sign(
         payload,
         process.env.JWT_SECRET,
-        { expiresIn: "1h" },
+        { expiresIn },
         async (err, token) => {
           if (err) throw err;
-          // Pobranie danych użytkownika bez hasła
+          // Fetch user data without password
           const userData = await User.findById(user.id).select("-password");
-          res.json({ token, user: userData }); // Zwraca token i dane użytkownika
+          res.json({ token, user: userData }); // Return token and user data
         }
       );
     } catch (err) {
       console.error(err.message);
-      res.status(500).send("Błąd serwera");
+      res.status(500).send("Server error");
     }
   }
 );
 
-// Logowanie użytkownika - trasa NIE CHRONIONA
+// Login Route - UNPROTECTED
 router.post(
   "/login",
   [
-    check("email", "Proszę podać poprawny adres email").isEmail(),
-    check("password", "Hasło jest wymagane").exists(),
+    check("email", "Please provide a valid email").isEmail(),
+    check("password", "Password is required").exists(),
+    check("rememberMe").optional().isBoolean(), // Validate rememberMe
   ],
   async (req, res) => {
-    // Sprawdzenie błędów walidacji
+    // Validate input
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      // Zwrócenie błędów walidacji
+      // Return validation errors
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { email, password } = req.body;
+    const { email, password, rememberMe } = req.body;
 
     try {
-      // Sprawdzenie, czy użytkownik istnieje
+      // Check if user exists
       let user = await User.findOne({ email });
       if (!user) {
-        console.log("Nie znaleziono użytkownika o podanym emailu:", email); // Logowanie
-        return res.status(400).json({ msg: "Nieprawidłowe dane logowania" });
+        console.log("User not found with email:", email); // Logging
+        return res.status(400).json({ msg: "Invalid credentials" });
       }
 
-      // Sprawdzenie hasła
+      // Check password
       const isMatch = await user.comparePassword(password);
       if (!isMatch) {
-        console.log("Nieprawidłowe hasło dla użytkownika:", email); // Logowanie
-        return res.status(400).json({ msg: "Nieprawidłowe dane logowania" });
+        console.log("Invalid password for user:", email); // Logging
+        return res.status(400).json({ msg: "Invalid credentials" });
       }
 
-      // Tworzenie payloadu dla JWT
+      // Create payload for JWT
       const payload = {
         user: {
           id: user.id,
-          role: user.role, // Dodajemy rolę do payload
+          role: user.role, // Include role in payload
         },
       };
 
-      // Signowanie tokenu JWT
+      // Set token expiration based on rememberMe
+      const expiresIn = rememberMe ? "7d" : "1h"; // 7 days vs 1 hour
+
+      // Sign JWT
       jwt.sign(
         payload,
         process.env.JWT_SECRET,
-        { expiresIn: "1h" },
+        { expiresIn },
         async (err, token) => {
           if (err) throw err;
-          // Pobranie danych użytkownika bez hasła
+          // Fetch user data without password
           const userData = await User.findById(user.id).select("-password");
-          res.json({ token, user: userData }); // Zwraca token i dane użytkownika
+          res.json({ token, user: userData }); // Return token and user data
         }
       );
     } catch (err) {
       console.error(err.message);
-      res.status(500).send("Błąd serwera");
+      res.status(500).send("Server error");
     }
   }
 );
 
-// Middleware autoryzacyjny
+// Authorization Middleware
 const authMiddleware = require("../middleware/auth");
 
-// Pobieranie danych zalogowanego użytkownika - trasa CHRONIONA
+// Get Logged-in User Data - PROTECTED
 router.get("/me", authMiddleware, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
     res.json(user);
   } catch (err) {
     console.error(err.message);
-    res.status(500).send("Błąd serwera");
+    res.status(500).send("Server error");
   }
 });
 
-// Aktualizacja profilu użytkownika - trasa CHRONIONA
+// Update User Profile - PROTECTED
 router.put("/me", authMiddleware, async (req, res) => {
   const { firstName, lastName } = req.body;
 
@@ -159,7 +173,7 @@ router.put("/me", authMiddleware, async (req, res) => {
   try {
     let user = await User.findById(req.user.id);
     if (!user) {
-      return res.status(404).json({ msg: "Użytkownik nie znaleziony" });
+      return res.status(404).json({ msg: "User not found" });
     }
 
     user = await User.findByIdAndUpdate(
@@ -171,18 +185,18 @@ router.put("/me", authMiddleware, async (req, res) => {
     res.json(user);
   } catch (err) {
     console.error(err.message);
-    res.status(500).send("Błąd serwera");
+    res.status(500).send("Server error");
   }
 });
 
-// Tworzenie początkowego administratora (opcjonalnie) - trasa NIE CHRONIONA
+// Create Initial Admin (Optional) - UNPROTECTED
 router.post("/create-admin", async (req, res) => {
-  const { firstName, lastName, email, password } = req.body;
+  const { firstName, lastName, email, password, rememberMe } = req.body;
 
   try {
     let admin = await User.findOne({ email });
     if (admin) {
-      return res.status(400).json({ msg: "Administrator już istnieje" });
+      return res.status(400).json({ msg: "Administrator already exists" });
     }
 
     admin = new User({
@@ -193,13 +207,35 @@ router.post("/create-admin", async (req, res) => {
       role: "admin",
     });
 
-    // Zapisanie użytkownika do bazy danych (password będzie hashowane przez middleware)
+    // Save admin to the database (password will be hashed by middleware)
     await admin.save();
 
-    res.json({ msg: "Administrator utworzony pomyślnie" });
+    // Create payload for JWT
+    const payload = {
+      user: {
+        id: admin.id,
+        role: admin.role, // Include role in payload
+      },
+    };
+
+    // Set token expiration based on rememberMe (default to 7 days for admin)
+    const expiresIn = rememberMe ? "7d" : "1h";
+
+    // Sign JWT
+    jwt.sign(
+      payload,
+      process.env.JWT_SECRET,
+      { expiresIn },
+      async (err, token) => {
+        if (err) throw err;
+        // Fetch admin data without password
+        const adminData = await User.findById(admin.id).select("-password");
+        res.json({ token, user: adminData }); // Return token and admin data
+      }
+    );
   } catch (err) {
     console.error(err.message);
-    res.status(500).send("Błąd serwera");
+    res.status(500).send("Server error");
   }
 });
 
