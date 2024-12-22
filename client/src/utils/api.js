@@ -20,4 +20,21 @@ api.interceptors.request.use(
   }
 );
 
+export const authService = {
+  register: async (firstName, lastName, email, password, captchaToken) => {
+    try {
+      const response = await api.post("/auth/register", {
+        firstName,
+        lastName,
+        email,
+        password,
+        captcha: captchaToken, // Make sure to send the token with this exact name
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+};
+
 export default api;

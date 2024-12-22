@@ -54,37 +54,46 @@ const useAuthStore = create((set, get) => ({
     }
   },
 
-  // Register with rememberMe option
-  register: async (
-    firstName,
-    lastName,
-    email,
-    password,
-    rememberMe = false
-  ) => {
+  // Updated register function with captcha
+  register: async (firstName, lastName, email, password, captcha) => {
     try {
+      if (!captcha) {
+        throw new Error("reCAPTCHA verification is required");
+      }
+
       const response = await api.post("/auth/register", {
         firstName,
         lastName,
         email,
         password,
-        rememberMe, // Pass rememberMe to backend
+        captcha, // Add captcha token to the request
       });
-      const { token, user } = response.data;
 
-      // Store token based on rememberMe
-      if (rememberMe) {
-        localStorage.setItem("token", token);
-      } else {
-        sessionStorage.setItem("token", token);
+      // If registration is successful but requires email verification,
+      // don't set the user or token yet
+      if (response.data.msg?.includes("verification")) {
+        set({ error: null });
+        return response.data; // Return the response for handling in the component
       }
 
-      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-      set({ user, error: null });
-      console.log("User registered and logged in:", user); // Debugging
+      // If registration includes immediate login (depends on your backend)
+      const { token, user } = response.data;
+      if (token) {
+        sessionStorage.setItem("token", token); // Store in session storage by default for new registrations
+        api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+        set({ user, error: null });
+        console.log("User registered and logged in:", user); // Debugging
+      }
+
+      return response.data;
     } catch (error) {
       console.error("Registration error:", error);
-      set({ error: error.response?.data?.msg || "Error during registration" });
+      const errorMessage =
+        error.response?.data?.msg ||
+        error.response?.data?.errors?.[0]?.msg ||
+        error.message ||
+        "Error during registration";
+      set({ error: errorMessage });
       throw error;
     }
   },

@@ -1,4 +1,3 @@
-
 import * as React from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -18,6 +17,7 @@ import ColorModeSelect from '../assets/shared-theme/ColorModeSelect';
 import useAuthStore from '../store/useAuthStore';
 import { Link as RouterLink } from 'react-router-dom'; 
 import { Alert } from '@mui/material';
+import ReCAPTCHA from 'react-google-recaptcha'; // Import ReCAPTCHA
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -73,8 +73,10 @@ export default function SignUp(props) {
   const [formError, setFormError] = React.useState('');
   const [formSuccess, setFormSuccess] = React.useState('');
 
-
   const register = useAuthStore((state) => state.register);
+
+  // New State for reCAPTCHA
+  const [captchaValue, setCaptchaValue] = React.useState(null);
 
   const validateInputs = () => {
     const email = document.getElementById('email');
@@ -120,11 +122,23 @@ export default function SignUp(props) {
       setLastNameErrorMessage('');
     }
 
+    // Check if reCAPTCHA is completed
+    if (!captchaValue) {
+      setFormError('Please complete the reCAPTCHA.');
+      isValid = false;
+    }
+
     return isValid;
   };
 
+
   const handleSubmit = async (event) => {
-    event.preventDefault();
+        event.preventDefault();
+        if (!captchaValue) {
+        setFormError('Please complete the reCAPTCHA verification');
+        return;
+      }
+
     setFormError('');
     setFormSuccess('');
     if (!validateInputs()) {
@@ -137,8 +151,9 @@ export default function SignUp(props) {
     const password = data.get('password');
 
     try {
-      await register(firstName, lastName, email, password);
+      await register(firstName, lastName, email, password, captchaValue);
       setFormSuccess("Registration successful! Please check your email to verify your account.");
+      setCaptchaValue(null); // Reset reCAPTCHA
     } catch (error) {
       // Handle error response from backend
       if (error.response && error.response.data && error.response.data.errors) {
@@ -161,6 +176,9 @@ export default function SignUp(props) {
             setLastNameError(true);
             setLastNameErrorMessage(err.msg);
           }
+          if (err.param === 'captcha') {
+            setFormError(err.msg);
+          }
         });
       } else if (error.response && error.response.data && error.response.data.msg) {
         // Handle general form errors
@@ -168,6 +186,14 @@ export default function SignUp(props) {
       } else {
         setFormError('Error during registration');
       }
+    }
+  };
+
+  // Handle reCAPTCHA change
+  const handleCaptchaChange = (value) => {
+    setCaptchaValue(value);
+    if (value) {
+      setFormError('');
     }
   };
 
@@ -251,6 +277,13 @@ export default function SignUp(props) {
                 color={passwordError ? 'error' : 'primary'}
               />
             </FormControl>
+
+            {/* Add reCAPTCHA */}
+            <ReCAPTCHA
+              sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY} // Use environment variable
+              onChange={handleCaptchaChange}
+            />
+
             <Button
               type="submit"
               fullWidth
