@@ -1,10 +1,9 @@
-// client/src/pages/ReportPage.jsx
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../utils/api';
 import { fetchCategories } from '../utils/categories';
 import useAuthStore from '../store/useAuthStore';
+import imageCompression from 'browser-image-compression';
 import {
   Container,
   Typography,
@@ -16,10 +15,13 @@ import {
   Alert,
   CircularProgress,
   Snackbar,
+  IconButton,
 } from '@mui/material';
+import { Delete as DeleteIcon } from '@mui/icons-material';
 import { MapContainer, TileLayer, Marker, GeoJSON, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import * as turf from '@turf/turf';
+import ReCAPTCHA from 'react-google-recaptcha';
 
 // Custom marker icon setup
 delete L.Icon.Default.prototype._getIconUrl;
@@ -29,7 +31,16 @@ L.Icon.Default.mergeOptions({
   shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
 });
 
-// Boundary GeoJSON import (adjust the path if necessary)
+// Image compression options
+const compressionOptions = {
+  maxSizeMB: 1,
+  maxWidthOrHeight: 1920,
+  useWebWorker: true,
+   fileType: 'image/png', // Explicitly set the output format
+  initialQuality: 0.8
+};
+
+// Boundary GeoJSON import
 const boundaryGeoJSONUrl = '/assets/geo/bielsko-biala-boundary.geojson';
 
 // LocationSelector component with boundary checking
@@ -58,33 +69,40 @@ const LocationSelector = ({ setLocation, boundary, setBoundaryError }) => {
 
 const ReportPage = () => {
   const navigate = useNavigate();
-  const location = useLocation(); // Hook to access the current location
-  const { user } = useAuthStore(); // Zustand store
+  const location = useLocation();
+  const { user } = useAuthStore();
 
   // Form state
   const [formData, setFormData] = useState({
     category: '',
     description: '',
-    location: null, // { lat: ..., lng: ... }
-    images: [],
+    location: null,
+    image: null, // Changed from images: []
   });
 
-  // Boundary state
-  const [boundary, setBoundary] = useState(null);
-  const [boundaryLoading, setBoundaryLoading] = useState(true);
-  const [boundaryError, setBoundaryError] = useState('');
-
-  // Categories state
-  const [categories, setCategories] = useState([]); // State to hold fetched categories
-  const [categoriesLoading, setCategoriesLoading] = useState(true);
-  const [categoriesError, setCategoriesError] = useState('');
-
-  // Submission and form state
+  // UI state
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [boundaryError, setBoundaryError] = useState('');
 
-  // Fetch categories on component mount
+  // Data loading state
+  const [boundary, setBoundary] = useState(null);
+  const [boundaryLoading, setBoundaryLoading] = useState(true);
+  const [categories, setCategories] = useState([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [categoriesError, setCategoriesError] = useState('');
+
+  // reCAPTCHA state
+  const [captchaValue, setCaptchaValue] = useState(null);
+  const [captchaError, setCaptchaError] = useState('');
+  const captchaRef = useRef(null);
+
+  // Image preview state
+  const [preview, setPreview] = useState(null); // Changed from previews: []
+
+  // Fetch categories on mount
   useEffect(() => {
     const getCategories = async () => {
       try {
@@ -92,141 +110,200 @@ const ReportPage = () => {
         setCategories(fetchedCategories);
       } catch (err) {
         setCategoriesError('Błąd podczas pobierania kategorii.');
+        console.error('Error fetching categories:', err);
+      } finally {
+        setCategoriesLoading(false);
       }
-      setCategoriesLoading(false);
     };
     getCategories();
   }, []);
 
-  // Fetch boundary GeoJSON on component mount
+  // Fetch boundary GeoJSON on mount
   useEffect(() => {
     const fetchBoundary = async () => {
       try {
         const response = await fetch(boundaryGeoJSONUrl);
-        if (!response.ok) {
-          throw new Error('Nie udało się załadować danych granicy.');
-        }
+        if (!response.ok) throw new Error('Failed to load boundary data');
         const data = await response.json();
         setBoundary(data);
       } catch (err) {
         console.error('Error loading boundary GeoJSON:', err);
         setBoundaryError('Nie udało się załadować granicy miasta.');
+      } finally {
+        setBoundaryLoading(false);
       }
-      setBoundaryLoading(false);
     };
-
     fetchBoundary();
   }, []);
 
-  // Extract the category from the query parameters after categories are fetched
+  // Set initial category from URL params
   useEffect(() => {
-    if (categories.length === 0) return; // Wait until categories are fetched
-    const params = new URLSearchParams(location.search);
-    const selectedCategory = params.get('category');
-
-    // Verify that the selectedCategory exists in categories array
-    if (selectedCategory && categories.some(cat => cat.value === selectedCategory)) {
-      setFormData((prev) => ({ ...prev, category: selectedCategory }));
+    if (categories.length > 0) {
+      const params = new URLSearchParams(location.search);
+      const selectedCategory = params.get('category');
+      if (selectedCategory && categories.some(cat => cat.value === selectedCategory)) {
+        setFormData(prev => ({ ...prev, category: selectedCategory }));
+      }
     }
   }, [location.search, categories]);
 
-  // Handle form field changes
+  // Clean up image preview on unmount
+  useEffect(() => {
+    return () => {
+      if (preview) URL.revokeObjectURL(preview.url);
+    };
+  }, [preview]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value || '' }); // Ensure value is never undefined
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // Handle image selection
-  const handleImageChange = (e) => {
-    const files = e.target.files;
-    setFormData({ ...formData, images: files });
+  const compressImage = async (file) => {
+    try {
+      const compressedFile = await imageCompression(file, compressionOptions);
+      return compressedFile;
+    } catch (error) {
+      console.error('Error compressing image:', error);
+      return file;
+    }
   };
 
-  // Handle form submission
+ const handleImageChange = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  console.log('Selected file:', {
+    name: file.name,
+    type: file.type,
+    size: file.size
+  });
+
+  setIsSubmitting(true);
+  try {
+    const compressedFile = await compressImage(file);
+    console.log('Compressed file:', {
+      name: compressedFile.name,
+      type: compressedFile.type,
+      size: compressedFile.size
+    });
+
+    // Extract the file extension from the MIME type
+    const extension = compressedFile.type.split('/')[1]; // e.g., 'png'
+
+    // Generate a new filename with the correct extension
+    const newFileName = `${Date.now()}.${extension}`;
+
+    // Create a new File object with the updated filename
+    const renamedFile = new File([compressedFile], newFileName, { type: compressedFile.type });
+
+    const newPreview = {
+      url: URL.createObjectURL(renamedFile),
+      name: renamedFile.name
+    };
+
+    // Revoke previous preview if it exists to free up memory
+    if (preview) {
+      URL.revokeObjectURL(preview.url);
+    }
+
+    setPreview(newPreview);
+    setFormData(prev => ({
+      ...prev,
+      image: renamedFile
+    }));
+  } catch (err) {
+    console.error('Error processing image:', err);
+    setError('Błąd podczas przetwarzania zdjęcia. Szczegóły: ' + err.message);
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
+  const handleRemoveImage = () => {
+    if (preview) {
+      URL.revokeObjectURL(preview.url);
+      setPreview(null);
+      setFormData(prev => ({
+        ...prev,
+        image: null
+      }));
+    }
+  };
+
+  const handleCaptchaChange = (value) => {
+    setCaptchaValue(value);
+    if (value) setCaptchaError('');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     setError('');
     setSuccess('');
+    setCaptchaError('');
 
-    const { category, description, location, images } = formData;
-
-    // Basic validation
-    if (!category || !description || !location) {
+    // Validation
+    if (!formData.category || !formData.description || !formData.location) {
       setError('Proszę wypełnić wszystkie wymagane pola.');
+      setIsSubmitting(false);
       return;
     }
 
-    // Additional validation: Ensure location is within boundary
-    if (boundary) {
-      const point = turf.point([location.lng, location.lat]);
-      const polygon = turf.polygon(boundary.features[0].geometry.coordinates);
-      const isInside = turf.booleanPointInPolygon(point, polygon);
-      if (!isInside) {
-        setError('Wybrana lokalizacja znajduje się poza obszarem Bielska-Białej.');
-        return;
-      }
+    if (!user && !captchaValue) {
+      setCaptchaError('Proszę przejść weryfikację reCAPTCHA.');
+      setIsSubmitting(false);
+      return;
     }
 
     const data = new FormData();
-    data.append('category', category);
-    data.append('description', description);
-
-    // Send location as a JSON string
+    data.append('category', formData.category);
+    data.append('description', formData.description);
     data.append('location', JSON.stringify({
       type: 'Point',
-      coordinates: [location.lng, location.lat],
+      coordinates: [formData.location.lng, formData.location.lat],
     }));
 
-    for (let i = 0; i < images.length; i++) {
-      data.append('images', images[i]);
+    if (formData.image) {
+      data.append('image', formData.image); // Changed from 'images' to 'image'
     }
 
-    // If the user is logged in, add their ID to the data
-    if (user && user._id) {
-      data.append('user', user._id);
+    if (!user && captchaValue) {
+      data.append('captcha', captchaValue);
     }
 
     try {
-      console.log('Submitting FormData:');
-      for (let pair of data.entries()) {
-        console.log(`${pair[0]}: ${pair[1]}`);
-      }
-
       const response = await api.post('/incidents', data, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 30000
       });
+
       setSuccess('Zgłoszenie zostało pomyślnie utworzone.');
-      setFormData({
-        category: '',
-        description: '',
-        location: null,
-        images: [],
-      });
-      // Optionally navigate to the incident details
       navigate(`/incidents/${response.data._id}`);
     } catch (err) {
-      console.error('Error response:', err.response);
-      setError(err.response?.data?.msg || 'Błąd podczas tworzenia zgłoszenia.');
+      console.error('Error response:', err);
+    const errorMessage = err.response?.data?.msg || err.response?.data?.detail || 'Błąd podczas tworzenia zgłoszenia.';
+    setError(errorMessage);
+    
+    if (!user && captchaRef.current) {
+      captchaRef.current.reset();
+      setCaptchaValue(null);
     }
-  };
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
-  // Handle Snackbar close
-  const handleSnackbarClose = () => {
-    setSnackbarOpen(false);
-  };
+  const handleSnackbarClose = () => setSnackbarOpen(false);
 
-  // Show loading spinner if categories or boundary are being fetched
   if (categoriesLoading || boundaryLoading) {
     return (
-      <Container component="main" maxWidth="md" sx={{ mt: 4 }}>
+      <Container component="main" maxWidth="md" sx={{ mt: 4, textAlign: 'center' }}>
         <CircularProgress />
       </Container>
     );
   }
 
-  // Show error if fetching categories failed
   if (categoriesError) {
     return (
       <Container component="main" maxWidth="md" sx={{ mt: 4 }}>
@@ -235,26 +312,18 @@ const ReportPage = () => {
     );
   }
 
-  // Show error if fetching boundary failed
-  if (!boundary && boundaryError) {
-    return (
-      <Container component="main" maxWidth="md" sx={{ mt: 4 }}>
-        <Alert severity="error">{boundaryError}</Alert>
-      </Container>
-    );
-  }
-
   return (
-    <Container component="main" maxWidth="md" sx={{ mt: 4 }}>
+    <Container component="main" maxWidth="md" sx={{ mt: 4, mb: 4 }}>
       <Typography component="h1" variant="h5" gutterBottom>
         Zgłoś Incydent
       </Typography>
+      
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
       {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
+
       <Box component="form" noValidate onSubmit={handleSubmit}>
         <Grid container spacing={2}>
-          {/* Kategoria */}
-          <Grid item xs={12} sm={6}>
+          <Grid item xs={12}>
             <TextField
               select
               name="category"
@@ -263,6 +332,7 @@ const ReportPage = () => {
               onChange={handleChange}
               fullWidth
               required
+              disabled={isSubmitting}
             >
               <MenuItem value="">Wybierz kategorię</MenuItem>
               {categories.map((option) => (
@@ -272,7 +342,7 @@ const ReportPage = () => {
               ))}
             </TextField>
           </Grid>
-          {/* Opis */}
+
           <Grid item xs={12}>
             <TextField
               name="description"
@@ -283,38 +353,37 @@ const ReportPage = () => {
               onChange={handleChange}
               fullWidth
               required
+              disabled={isSubmitting}
             />
           </Grid>
-          {/* Mapa do wyboru lokalizacji */}
+
           <Grid item xs={12}>
             <Typography variant="subtitle1" gutterBottom>
               Lokalizacja (kliknij na mapie, aby wybrać)
             </Typography>
-            <Box sx={{ height: '300px', width: '100%' }}>
+            <Box sx={{ height: '400px', width: '100%', mb: 2 }}>
               <MapContainer
-                center={[49.8224, 19.0444]} // Bielsko-Biała coordinates
-                zoom={10}
+                center={[49.8224, 19.0444]}
+                zoom={12}
                 style={{ height: '100%', width: '100%' }}
               >
                 <TileLayer
                   attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
-                {/* Display Boundary */}
                 {boundary && (
                   <GeoJSON
                     data={boundary}
                     style={{
-                      color: 'blue',
+                      color: '#2196f3',
                       weight: 2,
                       fillOpacity: 0.1,
                     }}
                   />
                 )}
-                {/* Location Selector with Boundary Checking */}
                 <LocationSelector
                   setLocation={(latlng) => {
-                    setFormData((prev) => ({ ...prev, location: latlng }));
+                    setFormData(prev => ({ ...prev, location: latlng }));
                     setBoundaryError('');
                   }}
                   boundary={boundary}
@@ -323,53 +392,99 @@ const ReportPage = () => {
                     setSnackbarOpen(true);
                   }}
                 />
-                {/* Display Marker if Location is Selected */}
                 {formData.location && (
                   <Marker position={formData.location} />
                 )}
               </MapContainer>
             </Box>
             {formData.location && (
-              <Typography variant="body2" sx={{ mt: 1 }}>
-                Wybrana lokalizacja: {formData.location.lat.toFixed(4)}, {formData.location.lng.toFixed(4)}
+              <Typography variant="body2" color="textSecondary">
+                Wybrana lokalizacja: {formData.location.lat.toFixed(6)}, {formData.location.lng.toFixed(6)}
               </Typography>
             )}
           </Grid>
-          {/* Dodawanie obrazów */}
+
           <Grid item xs={12}>
-            <Button variant="contained" component="label">
-              Dodaj Obrazy
+            <Button
+              variant="contained"
+              component="label"
+              disabled={isSubmitting || formData.image !== null}
+            >
+              {formData.image ? 'Zmień Zdjęcie' : 'Dodaj Zdjęcie'}
               <input
                 type="file"
                 hidden
-                multiple
-                accept="image/*"
+                accept="image/jpeg,image/png,image/gif"            
                 onChange={handleImageChange}
+                disabled={isSubmitting}
               />
             </Button>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', mt: 2 }}>
-              {Array.from(formData.images).map((file, index) => (
-                <img
-                  key={index}
-                  src={URL.createObjectURL(file)}
-                  alt={`Uploaded ${index}`}
-                  style={{
-                    width: '100px',
-                    height: '100px',
-                    objectFit: 'cover',
-                    marginRight: '10px',
-                    marginBottom: '10px',
+            
+            {preview && (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2 }}>
+                <Box
+                  key={preview.name}
+                  sx={{
+                    position: 'relative',
+                    width: 100,
+                    height: 100,
                   }}
-                  loading="lazy"
-                />
-              ))}
-            </Box>
+                >
+                  <img
+                    src={preview.url}
+                    alt={`Uploaded`}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      borderRadius: '4px',
+                    }}
+                  />
+                  <IconButton
+                    size="small"
+                    sx={{
+                      position: 'absolute',
+                      top: 4,
+                      right: 4,
+                      backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                      '&:hover': {
+                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                      },
+                    }}
+                    onClick={handleRemoveImage}
+                  >
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </Box>
+              </Box>
+            )}
+          </Grid>
+
+          {!user && (
+            <Grid item xs={12}>
+              <ReCAPTCHA
+                sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY}
+                onChange={handleCaptchaChange}
+                ref={captchaRef}
+              />
+              {captchaError && <Alert severity="error" sx={{ mt: 1 }}>{captchaError}</Alert>}
+            </Grid>
+          )}
+
+          <Grid item xs={12}>
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              disabled={isSubmitting}
+              sx={{ mt: 2 }}
+            >
+              {isSubmitting ? (
+                <CircularProgress size={24} />
+              ) : 'Zgłoś'}
+            </Button>
           </Grid>
         </Grid>
-        {/* Przycisk do zgłaszania incydentu */}
-        <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }}>
-          Zgłoś Incydent
-        </Button>
       </Box>
       {/* Snackbar for Boundary Errors */}
       <Snackbar
