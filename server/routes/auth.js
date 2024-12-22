@@ -264,6 +264,58 @@ router.post(
   }
 );
 
+// Forgot Password Route - UNPROTECTED
+router.post(
+  "/forgot-password",
+  [check("email", "Please provide a valid email").isEmail()],
+  async (req, res) => {
+    // Validate input
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { email } = req.body;
+
+    try {
+      // Find the user by email
+      const user = await User.findOne({ email });
+      if (!user) {
+        return res.status(400).json({
+          msg: "If that email address is in our database, we will send you an email to reset your password.",
+        });
+      }
+
+      // Generate a new random password
+      const newPassword = crypto.randomBytes(8).toString("hex"); // 16-character hex string
+
+      // **Do not manually hash the password here**
+      // Assign the plain-text password and let the pre-save middleware hash it
+      user.password = newPassword;
+      await user.save();
+
+      // Email content
+      const message = `
+        <h1>Password Reset</h1>
+        <p>Your password has been reset. Here is your new password:</p>
+        <p><strong>${newPassword}</strong></p>
+        <p>Please log in using this password and change it immediately.</p>
+        <p>If you did not request this, please contact support.</p>
+      `;
+
+      // Send the new password via email
+      await sendEmail(email, "Password Reset", message);
+
+      res.status(200).json({
+        msg: "If that email address is in our database, we will send you an email to reset your password.",
+      });
+    } catch (err) {
+      console.error("Forgot Password Error:", err.message);
+      res.status(500).send("Server error");
+    }
+  }
+);
+
 // Authorization Middleware
 const authMiddleware = require("../middleware/auth");
 
