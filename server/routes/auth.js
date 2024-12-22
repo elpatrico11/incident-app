@@ -7,9 +7,12 @@ const User = require("../models/User");
 const dotenv = require("dotenv");
 const { check, validationResult } = require("express-validator");
 const sendEmail = require("../utils/sendEmail");
+const { authLimiter } = require("../middleware/rateLimiter");
 
 // Load environment variables
 dotenv.config();
+
+router.use(authLimiter);
 
 // Registration Route - UNPROTECTED
 router.post(
@@ -385,7 +388,7 @@ router.post(
   }
 );
 
-// Get Logged-in User Data - PROTECTED
+// Get Logged-in User Data - PROTECTED (Excluded from rate limiting)
 router.get("/me", authMiddleware, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
