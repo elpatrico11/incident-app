@@ -1,60 +1,107 @@
-import * as React from 'react';
-import PropTypes from 'prop-types';
-import Button from '@mui/material/Button';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
-import DialogTitle from '@mui/material/DialogTitle';
-import OutlinedInput from '@mui/material/OutlinedInput';
+import React, { useState } from 'react';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Typography,
+  Alert,
+} from '@mui/material';
+import api from '../utils/api';
 
-function ForgotPassword({ open, handleClose }) {
+export default function ForgotPassword({ open, handleClose }) {
+  const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState(false);
+  const [emailErrorMessage, setEmailErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [serverError, setServerError] = useState('');
+
+  const validateEmail = () => {
+    if (!email) {
+      setEmailError(true);
+      setEmailErrorMessage('Email is required.');
+      return false;
+    }
+    const emailRegex = /\S+@\S+\.\S+/;
+    if (!emailRegex.test(email)) {
+      setEmailError(true);
+      setEmailErrorMessage('Please enter a valid email address.');
+      return false;
+    }
+    setEmailError(false);
+    setEmailErrorMessage('');
+    return true;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSuccessMessage('');
+    setServerError('');
+
+    if (!validateEmail()) {
+      return;
+    }
+
+    try {
+      const response = await api.post('/auth/forgot-password', { email });
+      setSuccessMessage(response.data.msg);
+    } catch (error) {
+      setServerError(
+        error.response?.data?.msg ||
+          'An error occurred while processing your request.'
+      );
+    }
+  };
+
+  const handleDialogClose = () => {
+    setEmail('');
+    setEmailError(false);
+    setEmailErrorMessage('');
+    setSuccessMessage('');
+    setServerError('');
+    handleClose();
+  };
+
   return (
-    <Dialog
-      open={open}
-      onClose={handleClose}
-      PaperProps={{
-        component: 'form',
-        onSubmit: (event) => {
-          event.preventDefault();
-          handleClose();
-        },
-        sx: { backgroundImage: 'none' },
-      }}
-    >
-      <DialogTitle>Reset password</DialogTitle>
-      <DialogContent
-        sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%' }}
-      >
-        <DialogContentText>
-          Enter your account&apos;s email address, and we&apos;ll send you a link to
-          reset your password.
-        </DialogContentText>
-        <OutlinedInput
-          autoFocus
-          required
-          margin="dense"
-          id="email"
-          name="email"
-          label="Email address"
-          placeholder="Email address"
-          type="email"
-          fullWidth
-        />
+    <Dialog open={open} onClose={handleDialogClose}>
+      <DialogTitle>Forgot Password</DialogTitle>
+      <DialogContent>
+        {successMessage ? (
+          <Alert severity="success">{successMessage}</Alert>
+        ) : (
+          <>
+            {serverError && <Alert severity="error">{serverError}</Alert>}
+            <Typography className="mb-4">
+              Enter your email address below, and we'll send you a new password.
+            </Typography>
+            <div className="relative">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email Address"
+                className={`w-full p-3 border rounded-md outline-none ${
+                  emailError ? 'border-red-500' : 'border-gray-300'
+                } focus:border-blue-500`}
+              />
+              {emailErrorMessage && (
+                <p className="text-red-500 text-sm mt-1">{emailErrorMessage}</p>
+              )}
+            </div>
+          </>
+        )}
       </DialogContent>
-      <DialogActions sx={{ pb: 3, px: 3 }}>
-        <Button onClick={handleClose}>Cancel</Button>
-        <Button variant="contained" type="submit">
-          Continue
+      <DialogActions>
+        <Button onClick={handleDialogClose} color="secondary">
+          {successMessage ? 'Close' : 'Cancel'}
         </Button>
+        {!successMessage && (
+          <Button onClick={handleSubmit} variant="contained" color="primary">
+            Submit
+          </Button>
+        )}
       </DialogActions>
     </Dialog>
   );
 }
-
-ForgotPassword.propTypes = {
-  handleClose: PropTypes.func.isRequired,
-  open: PropTypes.bool.isRequired,
-};
-
-export default ForgotPassword;
