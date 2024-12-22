@@ -1,77 +1,191 @@
 const express = require("express");
+const axios = require("axios");
+const fs = require("fs");
+
 const router = express.Router();
 const Incident = require("../models/Incident");
 const multer = require("multer");
 const path = require("path");
-const optionalAuth = require("../middleware/optionalAuth"); // Importowanie opcjonalnego middleware
+const optionalAuth = require("../middleware/optionalAuth");
 const authMiddleware = require("../middleware/auth");
-const authorize = require("../middleware/authorize"); // Importujemy authorize middleware
+const authorize = require("../middleware/authorize");
 
-// Konfiguracja multer
+// Multer Configuration
+
+const uploadsDir = path.join(__dirname, "../uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Update the storage configuration
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "uploads/"); // Folder do przechowywania obrazków
+    cb(null, uploadsDir); // Use the absolute path
   },
   filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname)); // Unikalna nazwa pliku
+    cb(null, Date.now() + path.extname(file.originalname));
   },
 });
 
-const upload = multer({ storage: storage });
-
-router.post("/", optionalAuth, upload.array("images", 5), async (req, res) => {
-  const { category, description, location, status, severity } = req.body;
-
-  // Parse location if it's a JSON string
-  let parsedLocation;
-  try {
-    parsedLocation = JSON.parse(location);
-    if (
-      parsedLocation.type !== "Point" ||
-      !Array.isArray(parsedLocation.coordinates) ||
-      parsedLocation.coordinates.length !== 2
-    ) {
-      return res.status(400).json({ msg: "Invalid location format" });
-    }
-  } catch (err) {
-    return res.status(400).json({ msg: "Invalid location JSON" });
-  }
-
-  const images = req.files.map(
-    (file) => `${req.protocol}://${req.get("host")}/uploads/${file.filename}`
+/// File type validation
+const fileFilter = function (req, file, cb) {
+  const allowedTypes = /jpeg|jpg|png|gif/;
+  const extname = allowedTypes.test(
+    path.extname(file.originalname).toLowerCase()
   );
+  const mimetype = allowedTypes.test(file.mimetype);
 
-  try {
-    const newIncident = new Incident({
-      category,
-      description,
-      location: parsedLocation,
-      images,
-      status: status || "Pending",
-      severity: severity || "Low",
-    });
-
-    // If status is 'Resolved', set resolvedAt
-    if (newIncident.status === "Resolved") {
-      newIncident.resolvedAt = new Date();
-    }
-
-    if (req.user) {
-      newIncident.user = req.user.id;
-      console.log("Assigning incident to user:", req.user.id);
-    } else {
-      console.log("Incident created without user association");
-    }
-
-    const incident = await newIncident.save();
-    res.json(incident); // `incident` includes `createdAt` and `updatedAt`
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send("Błąd serwera");
+  if (mimetype && extname) {
+    return cb(null, true);
+  } else {
+    cb(
+      new Error(
+        `Invalid file type. Allowed types are: ${allowedTypes}. Received mimetype: ${file.mimetype}, filename: ${file.originalname}`
+      )
+    );
   }
+};
+
+// Initialize Multer with storage, file filter, and size limits
+const upload = multer({
+  storage: storage,
+  fileFilter: fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB limit
 });
 
-// Pobieranie wszystkich zgłoszeń bez uwierzytelniania
+// Helper Function: Verify reCAPTCHA
+
+const verifyRecaptcha = async (token) => {
+  const secretKey = process.env.RECAPTCHA_SECRET_KEY;
+  if (!secretKey) {
+    throw new Error(
+      "reCAPTCHA secret key not defined in environment variables"
+    );
+  }
+
+  const params = new URLSearchParams();
+  params.append("secret", secretKey);
+  params.append("response", token);
+
+  try {
+    const response = await axios.post(
+      "https://www.google.com/recaptcha/api/siteverify",
+      params,
+      {
+        timeout: 5000,
+      }
+    );
+    return response.data.success;
+  } catch (error) {
+    console.error("Error verifying reCAPTCHA:", error);
+    throw new Error("Failed to verify reCAPTCHA");
+  }
+};
+
+// Route: Add a New Incident
+
+router.post("/", optionalAuth, (req, res) => {
+  upload.single("image")(req, res, async function (err) {
+    if (err instanceof multer.MulterError) {
+      console.error("Multer error:", err);
+      if (err.code === "LIMIT_FILE_SIZE") {
+        return res.status(400).json({
+          msg: "Plik jest za duży. Maksymalny rozmiar to 5 MB.",
+          detail: err.message,
+        });
+      }
+      return res.status(400).json({
+        msg: "Błąd podczas przesyłania pliku",
+        detail: err.message,
+      });
+    } else if (err) {
+      console.error("Upload error:", err);
+      return res.status(400).json({
+        msg: "Błąd podczas przesyłania pliku",
+        detail: err.message,
+      });
+    }
+
+    // Proceed with existing logic after successful upload
+    try {
+      // If user is not authenticated, verify captcha
+      if (!req.user) {
+        const captchaToken = req.body.captcha;
+        if (!captchaToken) {
+          return res
+            .status(400)
+            .json({ msg: "Proszę przejść weryfikację reCAPTCHA." });
+        }
+        try {
+          const isHuman = await verifyRecaptcha(captchaToken);
+          if (!isHuman) {
+            return res
+              .status(400)
+              .json({ msg: "Nieprawidłowa weryfikacja reCAPTCHA." });
+          }
+        } catch (err) {
+          console.error("reCAPTCHA verification error:", err.message);
+          return res.status(500).json({ msg: "Błąd weryfikacji reCAPTCHA." });
+        }
+      }
+
+      const { category, description, location, status, severity } = req.body;
+
+      // Parse location if it's a JSON string
+      let parsedLocation;
+      try {
+        parsedLocation = JSON.parse(location);
+        if (
+          parsedLocation.type !== "Point" ||
+          !Array.isArray(parsedLocation.coordinates) ||
+          parsedLocation.coordinates.length !== 2
+        ) {
+          return res.status(400).json({ msg: "Invalid location format" });
+        }
+      } catch (err) {
+        return res.status(400).json({ msg: "Invalid location JSON" });
+      }
+
+      // Handle single image upload
+      let images = [];
+      if (req.file) {
+        images.push(
+          `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`
+        );
+      }
+
+      const newIncident = new Incident({
+        category,
+        description,
+        location: parsedLocation,
+        images,
+        status: status || "Pending",
+        severity: severity || "Low",
+      });
+
+      // If status is 'Resolved', set resolvedAt
+      if (newIncident.status === "Resolved") {
+        newIncident.resolvedAt = new Date();
+      }
+
+      if (req.user) {
+        newIncident.user = req.user.id;
+        console.log("Assigning incident to user:", req.user.id);
+      } else {
+        console.log("Incident created without user association");
+      }
+
+      const incident = await newIncident.save();
+      res.json(incident); // `incident` includes `createdAt` and `updatedAt`
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send("Błąd serwera");
+    }
+  });
+});
+
+// Route: Get All Incidents
+
 router.get("/", async (req, res) => {
   try {
     const {
@@ -85,22 +199,22 @@ router.get("/", async (req, res) => {
 
     const query = {};
 
-    // Filtrowanie statusu
+    // Filter by status
     if (status && status !== "All") {
       query.status = status;
     }
 
-    // Filtrowanie kategorii
+    // Filter by category
     if (category && category !== "All") {
       query.category = category;
     }
 
-    // Wyszukiwanie po opisie
+    // Search by description
     if (search) {
       query.description = { $regex: search, $options: "i" };
     }
 
-    // Sortowanie
+    // Sorting criteria
     let sortCriteria = {};
     switch (sort) {
       case "date_desc":
@@ -134,6 +248,8 @@ router.get("/", async (req, res) => {
   }
 });
 
+// Route: Get My Incidents
+
 router.get("/my", authMiddleware, async (req, res) => {
   try {
     const incidents = await Incident.find({ user: req.user.id }).populate(
@@ -147,7 +263,8 @@ router.get("/my", authMiddleware, async (req, res) => {
   }
 });
 
-// Pobieranie pojedynczego zgłoszenia (publiczne)
+// Route: Get Single Incident
+
 router.get("/:id", async (req, res) => {
   try {
     const incident = await Incident.findById(req.params.id).populate("user", [
@@ -177,85 +294,110 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// Aktualizacja zgłoszenia (chronione)
+// Route: Update an Incident
+
 router.put(
   "/:id",
   authMiddleware,
-  authorize(["admin", "user"]), // Tylko admin lub użytkownik
-  upload.single("image"),
-  async (req, res) => {
-    const { category, description, location, status } = req.body;
-
-    // Initialize an object to hold the fields to update
-    const incidentFields = {};
-
-    if (category) incidentFields.category = category;
-    if (description) incidentFields.description = description;
-    if (status) incidentFields.status = status;
-
-    // Parse the location field if it exists
-    if (location) {
-      try {
-        const parsedLocation = JSON.parse(location);
-        // Validate GeoJSON structure
-        if (
-          parsedLocation.type === "Point" &&
-          Array.isArray(parsedLocation.coordinates) &&
-          parsedLocation.coordinates.length === 2
-        ) {
-          incidentFields.location = parsedLocation;
-        } else {
-          return res.status(400).json({ msg: "Invalid location format" });
+  authorize(["admin", "user"]), // Only admin or the user who created the incident
+  (req, res) => {
+    upload.single("image")(req, res, async function (err) {
+      if (err instanceof multer.MulterError) {
+        // Multer-specific errors
+        if (err.code === "LIMIT_FILE_SIZE") {
+          return res
+            .status(400)
+            .json({ msg: "Plik jest za duży. Maksymalny rozmiar to 5 MB." });
         }
+        return res.status(400).json({ msg: err.message });
+      } else if (err) {
+        // Unknown errors
+        return res.status(400).json({ msg: err.message });
+      }
+
+      // Proceed with existing logic after successful upload
+      try {
+        const { category, description, location, status, severity } = req.body;
+
+        // Initialize an object to hold the fields to update
+        const incidentFields = {};
+
+        if (category) incidentFields.category = category;
+        if (description) incidentFields.description = description;
+        if (status) incidentFields.status = status;
+        if (severity) incidentFields.severity = severity;
+
+        // Parse the location field if it exists
+        if (location) {
+          try {
+            const parsedLocation = JSON.parse(location);
+            // Validate GeoJSON structure
+            if (
+              parsedLocation.type === "Point" &&
+              Array.isArray(parsedLocation.coordinates) &&
+              parsedLocation.coordinates.length === 2
+            ) {
+              incidentFields.location = parsedLocation;
+            } else {
+              return res.status(400).json({ msg: "Invalid location format" });
+            }
+          } catch (err) {
+            return res.status(400).json({ msg: "Invalid location JSON" });
+          }
+        }
+
+        // Handle image upload if a new image is provided
+        if (req.file) {
+          const newImageUrl = `${req.protocol}://${req.get("host")}/uploads/${
+            req.file.filename
+          }`;
+          incidentFields.images = [newImageUrl]; // Replace existing images with the new one
+        }
+
+        let incident = await Incident.findById(req.params.id);
+
+        if (!incident) {
+          return res.status(404).json({ msg: "Zgłoszenie nie znalezione" });
+        }
+
+        // Check if the user has permission to edit the incident
+        if (
+          incident.user &&
+          incident.user.toString() !== req.user.id &&
+          req.user.role !== "admin"
+        ) {
+          return res.status(401).json({ msg: "Brak uprawnień" });
+        }
+
+        // If status is 'Resolved', set resolvedAt
+        if (status === "Resolved" && incident.status !== "Resolved") {
+          incidentFields.resolvedAt = new Date();
+        } else if (status !== "Resolved" && incident.status === "Resolved") {
+          incidentFields.resolvedAt = undefined; // Remove resolvedAt if status changes from Resolved
+        }
+
+        // Update the incident
+        incident = await Incident.findByIdAndUpdate(
+          req.params.id,
+          { $set: incidentFields },
+          { new: true }
+        ).populate("user", ["firstName", "lastName", "email", "role"]); // Optionally re-populate the user
+
+        res.json(incident);
       } catch (err) {
-        return res.status(400).json({ msg: "Invalid location JSON" });
+        console.error(err.message);
+        res.status(500).send("Błąd serwera");
       }
-    }
-
-    // Handle image upload if a new image is provided
-    if (req.file) {
-      const newImageUrl = `${req.protocol}://${req.get("host")}/uploads/${
-        req.file.filename
-      }`;
-      incidentFields.images = [newImageUrl]; // Replace existing images with the new one
-    }
-
-    try {
-      let incident = await Incident.findById(req.params.id);
-
-      if (!incident) {
-        return res.status(404).json({ msg: "Zgłoszenie nie znalezione" });
-      }
-
-      // Sprawdzenie, czy użytkownik ma prawo edytować zgłoszenie
-      if (
-        incident.user &&
-        incident.user.toString() !== req.user.id &&
-        req.user.role !== "admin"
-      ) {
-        return res.status(401).json({ msg: "Brak uprawnień" });
-      }
-
-      // Aktualizacja zgłoszenia
-      incident = await Incident.findByIdAndUpdate(
-        req.params.id,
-        { $set: incidentFields },
-        { new: true }
-      ).populate("user", ["firstName", "lastName", "email", "role"]); // Opcjonalnie ponownie populuj użytkownika
-
-      res.json(incident);
-    } catch (err) {
-      console.error(err.message);
-      res.status(500).send("Błąd serwera");
-    }
+    });
   }
 );
 
-// Usuwanie zgłoszenia (chronione)
+// Route: Delete an Incident
+
 router.delete(
   "/:id",
   authMiddleware,
-  authorize(["admin", "user"]), // Tylko admin lub użytkownik
+  authorize(["admin", "user"]), // Only admin or the user who created the incident
   async (req, res) => {
     try {
       const incident = await Incident.findById(req.params.id);
@@ -264,7 +406,7 @@ router.delete(
         return res.status(404).json({ msg: "Zgłoszenie nie znalezione" });
       }
 
-      // Sprawdzenie, czy użytkownik ma prawo usunąć zgłoszenie
+      // Check if the user has permission to delete the incident
       if (
         incident.user &&
         incident.user.toString() !== req.user.id &&
@@ -286,7 +428,8 @@ router.delete(
   }
 );
 
-// Dodawanie komentarza do incydentu (chronione)
+// Route: Add a Comment to an Incident
+
 router.post("/:id/comments", authMiddleware, async (req, res) => {
   const { text } = req.body;
 
@@ -322,7 +465,8 @@ router.post("/:id/comments", authMiddleware, async (req, res) => {
   }
 });
 
-// Pobieranie komentarzy dla incydentu (publiczne)
+// Route: Get Comments for an Incident
+
 router.get("/:id/comments", async (req, res) => {
   try {
     const incident = await Incident.findById(req.params.id).populate(
@@ -341,15 +485,16 @@ router.get("/:id/comments", async (req, res) => {
   }
 });
 
-// **Nowa Trasa: Aktualizacja Statusu Incydentu**
+// Route: Update Incident Status
+
 router.put(
   "/:id/status",
   authMiddleware,
-  authorize("admin"), // Tylko administratorzy mogą zmieniać status
+  authorize("admin"), // Only administrators can change the status
   async (req, res) => {
     const { status } = req.body;
 
-    // Walidacja statusu
+    // Validate status
     const validStatuses = ["Pending", "In Progress", "Resolved"];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ msg: "Nieprawidłowa wartość statusu" });
@@ -367,8 +512,16 @@ router.put(
         return res.status(404).json({ msg: "Zgłoszenie nie znalezione" });
       }
 
-      // Aktualizacja statusu
+      // Update status
       incident.status = status;
+
+      // If status is 'Resolved', set resolvedAt
+      if (status === "Resolved") {
+        incident.resolvedAt = new Date();
+      } else {
+        incident.resolvedAt = undefined; // Remove resolvedAt if status is changed from Resolved
+      }
+
       await incident.save();
 
       res.json(incident);
