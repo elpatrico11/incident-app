@@ -319,6 +319,58 @@ router.post(
 // Authorization Middleware
 const authMiddleware = require("../middleware/auth");
 
+// Change Password Route - PROTECTED
+router.post(
+  "/change-password",
+  authMiddleware,
+  [
+    check("oldPassword", "Stare hasło jest wymagane").exists(),
+    check("newPassword", "Nowe hasło musi mieć co najmniej 6 znaków").isLength({
+      min: 6,
+    }),
+    check("confirmNewPassword", "Potwierdzenie hasła jest wymagane").exists(),
+  ],
+  async (req, res) => {
+    // Validate input
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { oldPassword, newPassword, confirmNewPassword } = req.body;
+
+    // Check if newPassword and confirmNewPassword match
+    if (newPassword !== confirmNewPassword) {
+      return res.status(400).json({ msg: "Nowe hasła nie są zgodne." });
+    }
+
+    try {
+      // Find the user by ID from the token
+      const user = await User.findById(req.user.id);
+      if (!user) {
+        return res
+          .status(404)
+          .json({ msg: "Użytkownik nie został znaleziony." });
+      }
+
+      // Check if oldPassword matches
+      const isMatch = await user.comparePassword(oldPassword);
+      if (!isMatch) {
+        return res.status(400).json({ msg: "Stare hasło jest nieprawidłowe." });
+      }
+
+      // Assign the new password (pre-save middleware will hash it)
+      user.password = newPassword;
+      await user.save();
+
+      res.status(200).json({ msg: "Hasło zostało zmienione pomyślnie." });
+    } catch (err) {
+      console.error("Change Password Error:", err.message);
+      res.status(500).send("Błąd serwera");
+    }
+  }
+);
+
 // Get Logged-in User Data - PROTECTED
 router.get("/me", authMiddleware, async (req, res) => {
   try {
