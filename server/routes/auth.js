@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
+const axios = require("axios");
 const User = require("../models/User");
 const dotenv = require("dotenv");
 const { check, validationResult } = require("express-validator");
@@ -24,6 +25,7 @@ router.post(
       .optional()
       .isIn(["user", "admin"])
       .withMessage("Invalid role."),
+    check("captcha", "reCAPTCHA token is required").not().isEmpty(), // Validate captcha
   ],
   async (req, res) => {
     // Validate input
@@ -32,9 +34,25 @@ router.post(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { firstName, lastName, email, password, role } = req.body;
+    const { firstName, lastName, email, password, role, captcha } = req.body;
 
     try {
+      // Verify reCAPTCHA
+      const secretKey = process.env.RECAPTCHA_SECRET_KEY;
+      const verificationURL = `https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${captcha}`;
+
+      const response = await axios.post(verificationURL);
+      const { success, score, action, hostname } = response.data;
+
+      if (!success) {
+        return res
+          .status(400)
+          .json({ msg: "reCAPTCHA verification failed. Please try again." });
+      }
+
+      // Optional: Additional checks based on score or action if using reCAPTCHA v3
+      // For reCAPTCHA v2, success is sufficient
+
       // Check if user already exists
       let user = await User.findOne({ email });
       if (user) {
@@ -56,7 +74,7 @@ router.post(
         verificationTokenExpiry,
       });
 
-      // Save user to the database
+      // Save user to the database (password will be hashed by pre-save middleware)
       await user.save();
 
       // Create verification URL
@@ -154,10 +172,8 @@ router.post(
 // Email Verification Route - UNPROTECTED
 router.get("/verify-email", async (req, res) => {
   const { token, email } = req.query;
-  console.log("Received verification request:", { token, email });
 
   if (!token || !email) {
-    console.log("Missing token or email");
     return res.status(400).json({ msg: "Invalid verification link." });
   }
 
@@ -170,8 +186,6 @@ router.get("/verify-email", async (req, res) => {
         { isVerified: true, verificationToken: null }, // Already verified case
       ],
     });
-
-    console.log("Found user:", user ? "Yes" : "No");
 
     if (!user) {
       return res
