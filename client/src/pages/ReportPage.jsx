@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../utils/api';
@@ -16,6 +17,11 @@ import {
   CircularProgress,
   Snackbar,
   IconButton,
+  FormControl,
+  InputLabel,
+  Select,
+  Checkbox,
+  ListItemText,
 } from '@mui/material';
 import { Delete as DeleteIcon } from '@mui/icons-material';
 import { MapContainer, TileLayer, Marker, GeoJSON, useMapEvents } from 'react-leaflet';
@@ -36,12 +42,31 @@ const compressionOptions = {
   maxSizeMB: 1,
   maxWidthOrHeight: 1920,
   useWebWorker: true,
-   fileType: 'image/png', // Explicitly set the output format
+  fileType: 'image/png', // Explicitly set the output format
   initialQuality: 0.8
 };
 
 // Boundary GeoJSON import
 const boundaryGeoJSONUrl = '/assets/geo/bielsko-biala-boundary.geojson';
+
+// Days of the week options
+const dniTygodniaOptions = [
+  "Poniedziałek",
+  "Wtorek",
+  "Środa",
+  "Czwartek",
+  "Piątek",
+  "Sobota",
+  "Niedziela",
+];
+
+// Time of day options
+const poraDniaOptions = [
+  "Rano",
+  "Popołudnie",
+  "Wieczór",
+  "Noc",
+];
 
 // LocationSelector component with boundary checking
 const LocationSelector = ({ setLocation, boundary, setBoundaryError }) => {
@@ -78,6 +103,9 @@ const ReportPage = () => {
     description: '',
     location: null,
     image: null, // Changed from images: []
+    dataZdarzenia: '',    // New field
+    dniTygodnia: [],      // New field (array for multiple selections)
+    poraDnia: '',         // New field
   });
 
   // UI state
@@ -159,6 +187,21 @@ const ReportPage = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleDniTygodniaChange = (event) => {
+    const {
+      target: { value },
+    } = event;
+    setFormData(prev => ({
+      ...prev,
+      dniTygodnia: typeof value === 'string' ? value.split(',') : value,
+    }));
+  };
+
+  const handlePoraDniaChange = (event) => {
+    const { value } = event.target;
+    setFormData(prev => ({ ...prev, poraDnia: value }));
+  };
+
   const compressImage = async (file) => {
     try {
       const compressedFile = await imageCompression(file, compressionOptions);
@@ -169,56 +212,56 @@ const ReportPage = () => {
     }
   };
 
- const handleImageChange = async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+  const handleImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-  console.log('Selected file:', {
-    name: file.name,
-    type: file.type,
-    size: file.size
-  });
-
-  setIsSubmitting(true);
-  try {
-    const compressedFile = await compressImage(file);
-    console.log('Compressed file:', {
-      name: compressedFile.name,
-      type: compressedFile.type,
-      size: compressedFile.size
+    console.log('Selected file:', {
+      name: file.name,
+      type: file.type,
+      size: file.size
     });
 
-    // Extract the file extension from the MIME type
-    const extension = compressedFile.type.split('/')[1]; // e.g., 'png'
+    setIsSubmitting(true);
+    try {
+      const compressedFile = await compressImage(file);
+      console.log('Compressed file:', {
+        name: compressedFile.name,
+        type: compressedFile.type,
+        size: compressedFile.size
+      });
 
-    // Generate a new filename with the correct extension
-    const newFileName = `${Date.now()}.${extension}`;
+      // Extract the file extension from the MIME type
+      const extension = compressedFile.type.split('/')[1]; // e.g., 'png'
 
-    // Create a new File object with the updated filename
-    const renamedFile = new File([compressedFile], newFileName, { type: compressedFile.type });
+      // Generate a new filename with the correct extension
+      const newFileName = `${Date.now()}.${extension}`;
 
-    const newPreview = {
-      url: URL.createObjectURL(renamedFile),
-      name: renamedFile.name
-    };
+      // Create a new File object with the updated filename
+      const renamedFile = new File([compressedFile], newFileName, { type: compressedFile.type });
 
-    // Revoke previous preview if it exists to free up memory
-    if (preview) {
-      URL.revokeObjectURL(preview.url);
+      const newPreview = {
+        url: URL.createObjectURL(renamedFile),
+        name: renamedFile.name
+      };
+
+      // Revoke previous preview if it exists to free up memory
+      if (preview) {
+        URL.revokeObjectURL(preview.url);
+      }
+
+      setPreview(newPreview);
+      setFormData(prev => ({
+        ...prev,
+        image: renamedFile
+      }));
+    } catch (err) {
+      console.error('Error processing image:', err);
+      setError('Błąd podczas przetwarzania zdjęcia. Szczegóły: ' + err.message);
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setPreview(newPreview);
-    setFormData(prev => ({
-      ...prev,
-      image: renamedFile
-    }));
-  } catch (err) {
-    console.error('Error processing image:', err);
-    setError('Błąd podczas przetwarzania zdjęcia. Szczegóły: ' + err.message);
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  };
 
   const handleRemoveImage = () => {
     if (preview) {
@@ -244,7 +287,11 @@ const ReportPage = () => {
     setCaptchaError('');
 
     // Validation
-    if (!formData.category || !formData.description || !formData.location) {
+    if (
+      !formData.category ||
+      !formData.description ||
+      !formData.location
+    ) {
       setError('Proszę wypełnić wszystkie wymagane pola.');
       setIsSubmitting(false);
       return;
@@ -264,6 +311,18 @@ const ReportPage = () => {
       coordinates: [formData.location.lng, formData.location.lat],
     }));
 
+    // Conditionally append optional fields
+    if (formData.dataZdarzenia) {
+      data.append('dataZdarzenia', formData.dataZdarzenia);
+    }
+    if (formData.dniTygodnia.length > 0) {
+      // Append each day separately if backend expects an array
+      formData.dniTygodnia.forEach(day => data.append('dniTygodnia', day));
+    }
+    if (formData.poraDnia) {
+      data.append('poraDnia', formData.poraDnia);
+    }
+
     if (formData.image) {
       data.append('image', formData.image); // Changed from 'images' to 'image'
     }
@@ -282,17 +341,17 @@ const ReportPage = () => {
       navigate(`/incidents/${response.data._id}`);
     } catch (err) {
       console.error('Error response:', err);
-    const errorMessage = err.response?.data?.msg || err.response?.data?.detail || 'Błąd podczas tworzenia zgłoszenia.';
-    setError(errorMessage);
-    
-    if (!user && captchaRef.current) {
-      captchaRef.current.reset();
-      setCaptchaValue(null);
+      const errorMessage = err.response?.data?.msg || err.response?.data?.detail || 'Błąd podczas tworzenia zgłoszenia.';
+      setError(errorMessage);
+
+      if (!user && captchaRef.current) {
+        captchaRef.current.reset();
+        setCaptchaValue(null);
+      }
+    } finally {
+      setIsSubmitting(false);
     }
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  };
 
   const handleSnackbarClose = () => setSnackbarOpen(false);
 
@@ -323,6 +382,8 @@ const ReportPage = () => {
 
       <Box component="form" noValidate onSubmit={handleSubmit}>
         <Grid container spacing={2}>
+          {/* Existing Fields */}
+
           <Grid item xs={12}>
             <TextField
               select
@@ -356,6 +417,70 @@ const ReportPage = () => {
               disabled={isSubmitting}
             />
           </Grid>
+
+          {/* New Field: Data Zdarzenia */}
+          <Grid item xs={12} sm={6}>
+            <TextField
+              name="dataZdarzenia"
+              label="Data Zdarzenia"
+              type="date"
+              InputLabelProps={{
+                shrink: true,
+              }}
+              value={formData.dataZdarzenia}
+              onChange={handleChange}
+              fullWidth
+              // Removed required
+              disabled={isSubmitting}
+              helperText="Opcjonalnie"
+            />
+          </Grid>
+
+          {/* New Field: Dni Tygodnia */}
+          <Grid item xs={12} sm={6}>
+            <FormControl fullWidth disabled={isSubmitting}>
+              <InputLabel id="dniTygodnia-label">Dni Tygodnia (Opcjonalnie)</InputLabel>
+              <Select
+                labelId="dniTygodnia-label"
+                id="dniTygodnia"
+                multiple
+                name="dniTygodnia"
+                value={formData.dniTygodnia}
+                onChange={handleDniTygodniaChange}
+                renderValue={(selected) => selected.join(', ')}
+              >
+                {dniTygodniaOptions.map((day) => (
+                  <MenuItem key={day} value={day}>
+                    <Checkbox checked={formData.dniTygodnia.indexOf(day) > -1} />
+                    <ListItemText primary={day} />
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+
+          {/* New Field: Pora Dnia */}
+          <Grid item xs={12} sm={6}>
+            <FormControl fullWidth disabled={isSubmitting}>
+              <InputLabel id="poraDnia-label">Pora Dnia (Opcjonalnie)</InputLabel>
+              <Select
+                labelId="poraDnia-label"
+                id="poraDnia"
+                name="poraDnia"
+                value={formData.poraDnia}
+                onChange={handlePoraDniaChange}
+                label="Pora Dnia (Opcjonalnie)"
+              >
+                {poraDniaOptions.map((pora) => (
+                  <MenuItem key={pora} value={pora}>
+                    {pora}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+
+          {/* Existing Fields Continued */}
 
           <Grid item xs={12}>
             <Typography variant="subtitle1" gutterBottom>

@@ -2,6 +2,7 @@ import axios from "axios";
 
 const api = axios.create({
   baseURL: "http://localhost:5000/api", // Adres backendu
+  timeout: 10000,
 });
 
 // Dodawanie tokenu JWT z localStorage do Authorization każdego żądania
