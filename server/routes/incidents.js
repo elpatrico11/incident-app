@@ -1,4 +1,3 @@
-// server/routes/incidents.js
 const express = require("express");
 const axios = require("axios");
 const fs = require("fs");
@@ -177,7 +176,7 @@ router.post("/", optionalAuth, (req, res) => {
         description,
         location: parsedLocation,
         images,
-        status: status || "Pending",
+        status: status || "Nowe",
         severity: severity || "Low",
       };
 
@@ -196,8 +195,8 @@ router.post("/", optionalAuth, (req, res) => {
 
       const newIncident = new Incident(newIncidentData);
 
-      // If status is 'Resolved', set resolvedAt
-      if (newIncident.status === "Resolved") {
+      // If status is 'Rozwiązane', set resolvedAt
+      if (newIncident.status === "Rozwiązane") {
         newIncident.resolvedAt = new Date();
       }
 
@@ -430,11 +429,15 @@ router.put(
           return res.status(401).json({ msg: "Brak uprawnień" });
         }
 
-        // If status is 'Resolved', set resolvedAt
-        if (status === "Resolved" && incident.status !== "Resolved") {
+        // If status is 'Rozwiązane', set resolvedAt
+        if (status === "Rozwiązane" && incident.status !== "Rozwiązane") {
           incidentFields.resolvedAt = new Date();
-        } else if (status !== "Resolved" && incident.status === "Resolved") {
-          incidentFields.resolvedAt = undefined; // Remove resolvedAt if status changes from Resolved
+        } else if (
+          status &&
+          status !== "Rozwiązane" &&
+          incident.status === "Rozwiązane"
+        ) {
+          incidentFields.resolvedAt = undefined; // Remove resolvedAt if status changes from Rozwiązane
         }
 
         // Update the incident
@@ -551,12 +554,30 @@ router.get("/:id/comments", async (req, res) => {
 router.put(
   "/:id/status",
   authMiddleware,
-  authorize("admin"), // Only administrators can change the status
+  authorize("admin"), // Only administrators can change status
   async (req, res) => {
-    const { status } = req.body;
+    let { status } = req.body;
 
-    // Validate status
-    const validStatuses = ["Pending", "In Progress", "Resolved"];
+    if (!status) {
+      return res.status(400).json({ msg: "Status jest wymagany." });
+    }
+
+    // Normalize status: capitalize first letter and lowercase the rest
+    // This handles cases where frontend might send lowercase
+    status = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+
+    // Updated status validation with correct capitalization
+    const validStatuses = [
+      "Nowe",
+      "Weryfikacja",
+      "Potwierdzone",
+      "Wstrzymane",
+      "Eskalowane",
+      "Rozwiązane",
+      "Nierozwiązane",
+      "Zamknięte",
+      "Odrzucone",
+    ];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ msg: "Nieprawidłowa wartość statusu" });
     }
@@ -576,11 +597,19 @@ router.put(
       // Update status
       incident.status = status;
 
-      // If status is 'Resolved', set resolvedAt
-      if (status === "Resolved") {
+      // Middleware in the model will handle setting statusCategory
+
+      // If status is in 'Końcowe' category, set resolvedAt
+      const finalStatuses = [
+        "Rozwiązane",
+        "Nierozwiązane",
+        "Zamknięte",
+        "Odrzucone",
+      ];
+      if (finalStatuses.includes(status)) {
         incident.resolvedAt = new Date();
       } else {
-        incident.resolvedAt = undefined; // Remove resolvedAt if status is changed from Resolved
+        incident.resolvedAt = undefined; // Remove resolvedAt if status is not final
       }
 
       await incident.save();

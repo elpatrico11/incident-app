@@ -1,4 +1,3 @@
-// server/models/Incident.js
 const mongoose = require("mongoose");
 
 // Import the User model
@@ -84,13 +83,28 @@ const IncidentSchema = new mongoose.Schema(
     ],
     status: {
       type: String,
-      enum: ["Pending", "In Progress", "Resolved"],
-      default: "Pending",
+      enum: [
+        "Nowe",
+        "Weryfikacja",
+        "Potwierdzone",
+        "Wstrzymane",
+        "Eskalowane",
+        "Rozwiązane",
+        "Nierozwiązane",
+        "Zamknięte",
+        "Odrzucone",
+      ],
+      default: "Nowe",
     },
-    resolvedAt: { type: Date }, // New field for resolution timestamp
+    statusCategory: {
+      type: String,
+      enum: ["Wstępne", "Aktywne", "Końcowe"],
+      required: true,
+      default: "Wstępne",
+    },
+    resolvedAt: { type: Date },
     comments: [CommentSchema], // Embed comments
 
-    // **New Fields Start Here**
     dataZdarzenia: {
       type: Date,
       required: false,
@@ -113,15 +127,36 @@ const IncidentSchema = new mongoose.Schema(
       enum: ["Rano", "Popołudnie", "Wieczór", "Noc"],
       required: false,
     },
-    // **New Fields End Here**
   },
   {
-    timestamps: true, // Correct placement of timestamps option
+    timestamps: true,
   }
 );
 
 // Geospatial index for location queries
 IncidentSchema.index({ location: "2dsphere" });
+
+// Middleware to set statusCategory based on status
+IncidentSchema.pre("save", function (next) {
+  const initialStatuses = ["Nowe", "Weryfikacja"];
+  const activeStatuses = ["Potwierdzone", "Wstrzymane", "Eskalowane"];
+  const finalStatuses = [
+    "Rozwiązane",
+    "Nierozwiązane",
+    "Zamknięte",
+    "Odrzucone",
+  ];
+
+  if (initialStatuses.includes(this.status)) {
+    this.statusCategory = "Wstępne";
+  } else if (activeStatuses.includes(this.status)) {
+    this.statusCategory = "Aktywne";
+  } else if (finalStatuses.includes(this.status)) {
+    this.statusCategory = "Końcowe";
+  }
+
+  next();
+});
 
 // Export the Incident model
 module.exports = mongoose.model("Incident", IncidentSchema);
