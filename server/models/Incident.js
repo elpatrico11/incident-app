@@ -58,7 +58,7 @@ const IncidentSchema = new mongoose.Schema(
         "Znęcanie się nad zwierzętami",
         "Zła organizacja ruchu drogowego",
         "Żebractwo",
-        "Inne", // Polish equivalent for "Other"
+        "Inne",
       ],
     },
     description: {
@@ -89,6 +89,31 @@ const IncidentSchema = new mongoose.Schema(
     },
     resolvedAt: { type: Date }, // New field for resolution timestamp
     comments: [CommentSchema], // Embed comments
+
+    // **New Fields Start Here**
+    dataZdarzenia: {
+      type: Date,
+      required: false,
+    },
+    dniTygodnia: {
+      type: [String],
+      enum: [
+        "Poniedziałek",
+        "Wtorek",
+        "Środa",
+        "Czwartek",
+        "Piątek",
+        "Sobota",
+        "Niedziela",
+      ],
+      required: false,
+    },
+    poraDnia: {
+      type: String,
+      enum: ["Rano", "Popołudnie", "Wieczór", "Noc"],
+      required: false,
+    },
+    // **New Fields End Here**
   },
   {
     timestamps: true, // Correct placement of timestamps option

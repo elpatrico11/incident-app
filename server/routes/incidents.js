@@ -1,11 +1,12 @@
+// server/routes/incidents.js
 const express = require("express");
 const axios = require("axios");
 const fs = require("fs");
+const path = require("path");
+const multer = require("multer");
 
 const router = express.Router();
 const Incident = require("../models/Incident");
-const multer = require("multer");
-const path = require("path");
 const optionalAuth = require("../middleware/optionalAuth");
 const authMiddleware = require("../middleware/auth");
 const authorize = require("../middleware/authorize");
@@ -27,7 +28,7 @@ const storage = multer.diskStorage({
   },
 });
 
-/// File type validation
+// File type validation
 const fileFilter = function (req, file, cb) {
   const allowedTypes = /jpeg|jpg|png|gif/;
   const extname = allowedTypes.test(
@@ -129,21 +130,37 @@ router.post("/", optionalAuth, (req, res) => {
         }
       }
 
-      const { category, description, location, status, severity } = req.body;
+      const {
+        category,
+        description,
+        location,
+        status,
+        severity,
+        dataZdarzenia, // New field
+        dniTygodnia, // New field
+        poraDnia, // New field
+      } = req.body;
+
+      // **Removed Required Field Validations**
+      // Now, these fields are optional. Only assign them if they are provided.
 
       // Parse location if it's a JSON string
       let parsedLocation;
-      try {
-        parsedLocation = JSON.parse(location);
-        if (
-          parsedLocation.type !== "Point" ||
-          !Array.isArray(parsedLocation.coordinates) ||
-          parsedLocation.coordinates.length !== 2
-        ) {
-          return res.status(400).json({ msg: "Invalid location format" });
+      if (location) {
+        try {
+          parsedLocation = JSON.parse(location);
+          if (
+            parsedLocation.type !== "Point" ||
+            !Array.isArray(parsedLocation.coordinates) ||
+            parsedLocation.coordinates.length !== 2
+          ) {
+            return res.status(400).json({ msg: "Invalid location format" });
+          }
+        } catch (err) {
+          return res.status(400).json({ msg: "Invalid location JSON" });
         }
-      } catch (err) {
-        return res.status(400).json({ msg: "Invalid location JSON" });
+      } else {
+        return res.status(400).json({ msg: "Lokalizacja jest wymagana." });
       }
 
       // Handle single image upload
@@ -154,14 +171,30 @@ router.post("/", optionalAuth, (req, res) => {
         );
       }
 
-      const newIncident = new Incident({
+      // Initialize the new incident with mandatory fields
+      const newIncidentData = {
         category,
         description,
         location: parsedLocation,
         images,
         status: status || "Pending",
         severity: severity || "Low",
-      });
+      };
+
+      // Conditionally add optional fields if they are provided
+      if (dataZdarzenia) {
+        newIncidentData.dataZdarzenia = new Date(dataZdarzenia);
+      }
+
+      if (dniTygodnia && Array.isArray(dniTygodnia) && dniTygodnia.length > 0) {
+        newIncidentData.dniTygodnia = dniTygodnia;
+      }
+
+      if (poraDnia) {
+        newIncidentData.poraDnia = poraDnia;
+      }
+
+      const newIncident = new Incident(newIncidentData);
 
       // If status is 'Resolved', set resolvedAt
       if (newIncident.status === "Resolved") {
@@ -317,7 +350,16 @@ router.put(
 
       // Proceed with existing logic after successful upload
       try {
-        const { category, description, location, status, severity } = req.body;
+        const {
+          category,
+          description,
+          location,
+          status,
+          severity,
+          dataZdarzenia, // New field
+          dniTygodnia, // New field
+          poraDnia, // New field
+        } = req.body;
 
         // Initialize an object to hold the fields to update
         const incidentFields = {};
@@ -326,6 +368,25 @@ router.put(
         if (description) incidentFields.description = description;
         if (status) incidentFields.status = status;
         if (severity) incidentFields.severity = severity;
+
+        // Handle new fields
+        if (dataZdarzenia) {
+          incidentFields.dataZdarzenia = new Date(dataZdarzenia);
+        }
+
+        if (dniTygodnia) {
+          if (Array.isArray(dniTygodnia) && dniTygodnia.length > 0) {
+            incidentFields.dniTygodnia = dniTygodnia;
+          } else {
+            // Optionally, you can choose to clear the field if an empty array is sent
+            incidentFields.dniTygodnia = [];
+            // Or ignore updating this field if no valid data is provided
+          }
+        }
+
+        if (poraDnia) {
+          incidentFields.poraDnia = poraDnia;
+        }
 
         // Parse the location field if it exists
         if (location) {
