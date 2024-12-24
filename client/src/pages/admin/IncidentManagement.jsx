@@ -1,6 +1,6 @@
+
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
-// import useAuthStore from "../../store/useAuthStore";
 import api from "../../utils/api";
 
 const IncidentManagement = () => {
@@ -11,7 +11,7 @@ const IncidentManagement = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Stany dla filtrów, sortowania i paginacji
+  // States for filters, sorting, and pagination
   const [filterStatus, setFilterStatus] = useState("All");
   const [filterCategory, setFilterCategory] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
@@ -19,21 +19,39 @@ const IncidentManagement = () => {
   const [sortOption, setSortOption] = useState("date_desc");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Stany dla modala usuwania
+  // States for delete modal
   const [modalOpen, setModalOpen] = useState(false);
   const [incidentToDelete, setIncidentToDelete] = useState(null);
 
-  // Paginacja
+  // Pagination
   const itemsPerPageOptions = [5, 10, 20, 50];
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // Sortowanie
+  // Sorting
   const sortOptions = [
     { value: "date_desc", label: "Data (najnowsze)" },
     { value: "date_asc", label: "Data (najstarsze)" },
     { value: "category_asc", label: "Kategoria (A-Z)" },
     { value: "category_desc", label: "Kategoria (Z-A)" },
   ];
+
+  // Define colors for different status categories
+  const statusColors = {
+    nowe: 'bg-blue-500',
+    weryfikacja: 'bg-yellow-500',
+    potwierdzone: 'bg-green-500',
+    wstrzymane: 'bg-gray-500',
+    eskalowane: 'bg-orange-500',
+    rozwiązane: 'bg-teal-500',
+    nierozwiązane: 'bg-red-500',
+    zamknięte: 'bg-purple-500',
+    odrzucone: 'bg-pink-500',
+    default: 'bg-gray-500',
+  };
+
+  const getStatusColor = (status) => {
+    return statusColors[status.toLowerCase()] || statusColors.default;
+  };
 
   // Fetch Categories
   const fetchCategories = useCallback(async () => {
@@ -59,7 +77,7 @@ const IncidentManagement = () => {
     setSuccess("");
 
     try {
-      let endpoint = `/incidents?page=1&limit=1000&sort=${sortOption}`; // Pobierz dużo incydentów, aby umożliwić filtrowanie po stronie klienta
+      let endpoint = `/incidents?page=1&limit=1000&sort=${sortOption}`; // Fetch a lot of incidents to allow client-side filtering
 
       const params = [];
       if (filterStatus !== "All") params.push(`status=${filterStatus}`);
@@ -91,11 +109,11 @@ const IncidentManagement = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentPage]);
 
-  // Filtracja i wyszukiwanie po stronie klienta
+  // Filtering and searching on the client side
   const processedIncidents = useMemo(() => {
-    let incidents = allIncidents;
+    let incidents = [...allIncidents];
 
-    // Wyszukiwanie
+    // Searching
     if (searchQuery.trim() !== "") {
       const searchLower = searchQuery.toLowerCase();
       incidents = incidents.filter(incident => {
@@ -106,47 +124,71 @@ const IncidentManagement = () => {
       });
     }
 
-    // Sortowanie
+    // Sorting
     if (sortOption === "date_desc") {
-      incidents = incidents.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      incidents.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     } else if (sortOption === "date_asc") {
-      incidents = incidents.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+      incidents.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
     } else if (sortOption === "category_asc") {
-      incidents = incidents.sort((a, b) => a.category.localeCompare(b.category));
+      incidents.sort((a, b) => a.category.localeCompare(b.category));
     } else if (sortOption === "category_desc") {
-      incidents = incidents.sort((a, b) => b.category.localeCompare(a.category));
+      incidents.sort((a, b) => b.category.localeCompare(a.category));
     }
 
+    // Update total pages after processing incidents
     setTotalPages(Math.ceil(incidents.length / itemsPerPage));
 
     return incidents;
   }, [allIncidents, searchQuery, sortOption, itemsPerPage]);
 
+  // Pagination
   const paginatedIncidents = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     return processedIncidents.slice(startIndex, startIndex + itemsPerPage);
   }, [processedIncidents, currentPage, itemsPerPage]);
 
+  // Function to display appropriate message when no incidents are found
+  const noIncidentsMessage = () => {
+    if (filterStatus !== "All" && filterCategory !== "All") {
+      return "Brak zgłoszeń dla wybranej kategorii i statusu.";
+    } else if (filterStatus !== "All") {
+      return "Brak zgłoszeń o wybranym statusie.";
+    } else if (filterCategory !== "All") {
+      return "Brak zgłoszeń dla wybranej kategorii.";
+    } else if (searchQuery.trim() !== "") {
+      return "Brak zgłoszeń pasujących do wyszukiwania.";
+    } else {
+      return "Brak dostępnych zgłoszeń.";
+    }
+  };
+
+  // Function to update incident status
   const handleStatusChange = async (incidentId, newStatus) => {
     try {
-      const response = await api.put(`/admin/incidents/${incidentId}/status`, {
+       console.log("Updating status to:", newStatus); // Debugging line
+      const response = await api.put(`/incidents/${incidentId}/status`, {
         status: newStatus,
       });
-      console.log("Status Update Response:", response.data); // Debugowanie
 
-      // Sprawdź, czy response.data zawiera incydent
-      const updatedIncident = response.data; // Dostosuj w zależności od API
+      const updatedIncident = response.data;
 
       setAllIncidents((prev) =>
         prev.map((i) => (i._id === incidentId ? updatedIncident : i))
       );
       setSuccess("Status zgłoszenia został zaktualizowany.");
+      setError(""); // Clear any previous errors
     } catch (err) {
       console.error(err);
-      setError("Błąd podczas aktualizacji statusu.");
+      // Display detailed error message if available
+      if (err.response && err.response.data && err.response.data.msg) {
+        setError(err.response.data.msg);
+      } else {
+        setError("Błąd podczas aktualizacji statusu.");
+      }
     }
   };
 
+  // Functions to handle delete modal
   const openModal = (incidentId) => {
     setIncidentToDelete(incidentId);
     setModalOpen(true);
@@ -180,21 +222,6 @@ const IncidentManagement = () => {
     );
   }
 
-  // Funkcja określająca odpowiedni komunikat przy braku zgłoszeń
-  const noIncidentsMessage = () => {
-    if (filterStatus !== "All" && filterCategory !== "All") {
-      return "Brak zgłoszeń dla wybranej kategorii i statusu.";
-    } else if (filterStatus !== "All") {
-      return "Brak zgłoszeń o wybranym statusie.";
-    } else if (filterCategory !== "All") {
-      return "Brak zgłoszeń dla wybranej kategorii.";
-    } else if (searchQuery.trim() !== "") {
-      return "Brak zgłoszeń pasujących do wyszukiwania.";
-    } else {
-      return "Brak dostępnych zgłoszeń.";
-    }
-  };
-
   return (
     <div className="p-4 lg:px-8 bg-gray-900 min-h-screen mb-12">
       <h2 className="text-3xl font-bold mb-6 text-center text-white">
@@ -208,19 +235,25 @@ const IncidentManagement = () => {
       </h3>
 
       <div className="flex flex-wrap justify-center gap-4 mb-8">
-        {/* Filtrowanie statusu */}
+        {/* Status Filtering */}
         <select
           value={filterStatus}
           onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }}
           className="select select-bordered w-48 bg-gray-800 text-white"
         >
           <option value="All">Wszystkie Statusy</option>
-          <option value="Pending">Oczekujące</option>
-          <option value="In Progress">W trakcie</option>
-          <option value="Resolved">Rozwiązane</option>
+          <option value="Nowe">Nowe</option>
+          <option value="Weryfikacja">Weryfikacja</option>
+          <option value="Potwierdzone">Potwierdzone</option>
+          <option value="Wstrzymane">Wstrzymane</option>
+          <option value="Eskalowane">Eskalowane</option>
+          <option value="Rozwiązane">Rozwiązane</option>
+          <option value="Nierozwiązane">Nierozwiązane</option>
+          <option value="Zamknięte">Zamknięte</option>
+          <option value="Odrzucone">Odrzucone</option>
         </select>
 
-        {/* Filtrowanie kategorii */}
+        {/* Category Filtering */}
         <select
           value={filterCategory}
           onChange={(e) => { setFilterCategory(e.target.value); setCurrentPage(1); }}
@@ -234,7 +267,7 @@ const IncidentManagement = () => {
           ))}
         </select>
 
-        {/* Sortowanie */}
+        {/* Sorting */}
         <select
           value={sortOption}
           onChange={(e) => { setSortOption(e.target.value); setCurrentPage(1); }}
@@ -247,16 +280,16 @@ const IncidentManagement = () => {
           ))}
         </select>
 
-        {/* Wyszukiwanie */}
+        {/* Searching */}
         <input
           type="text"
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
           placeholder="Szukaj zgłoszeń..."
           className="input input-bordered w-48 bg-gray-800 text-white"
         />
 
-        {/* Opcja liczby incydentów na stronę */}
+        {/* Items per page */}
         <select
           value={itemsPerPage}
           onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
@@ -294,9 +327,17 @@ const IncidentManagement = () => {
                   </div>
                 )}
                 <div className="flex-grow p-4 flex flex-col justify-between">
-                  <h3 className="text-lg font-bold mb-1">
-                    {incident.category || "Brak Kategorii"}
-                  </h3>
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="text-lg font-bold">
+                      {incident.category || "Brak Kategorii"}
+                    </h3>
+                    {/* Status Badge */}
+                    <span
+                      className={`px-2 py-1 text-xs font-semibold text-white rounded ${getStatusColor(incident.status)}`}
+                    >
+                      {incident.status}
+                    </span>
+                  </div>
                   <p className="text-sm mb-2">
                     {incident.description
                       ? `${incident.description.substring(0, 100)}...`
@@ -315,14 +356,21 @@ const IncidentManagement = () => {
                     <Link to={`/incidents/${incident._id}`} className="w-full">
                       <button className="btn btn-primary btn-sm w-full">Szczegóły</button>
                     </Link>
+                    {/* Update Status */}
                     <select
-                      value={incident.status || "Pending"}
+                      value={incident.status || "Nowe"} // Ensure default is capitalized
                       onChange={(e) => handleStatusChange(incident._id, e.target.value)}
                       className="select select-bordered select-sm w-full bg-gray-800 text-white"
                     >
-                      <option value="Pending">Oczekujące</option>
-                      <option value="In Progress">W trakcie</option>
-                      <option value="Resolved">Rozwiązane</option>
+                      <option value="Nowe">Nowe</option>
+                      <option value="Weryfikacja">Weryfikacja</option>
+                      <option value="Potwierdzone">Potwierdzone</option>
+                      <option value="Wstrzymane">Wstrzymane</option>
+                      <option value="Eskalowane">Eskalowane</option>
+                      <option value="Rozwiązane">Rozwiązane</option>
+                      <option value="Nierozwiązane">Nierozwiązane</option>
+                      <option value="Zamknięte">Zamknięte</option>
+                      <option value="Odrzucone">Odrzucone</option>
                     </select>
                     <button
                       onClick={() => openModal(incident._id)}
@@ -336,7 +384,7 @@ const IncidentManagement = () => {
             ))}
           </div>
 
-          {/* Paginacja */}
+          {/* Pagination */}
           <div className="flex justify-center items-center mt-8 space-x-4">
             <button
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
@@ -359,7 +407,7 @@ const IncidentManagement = () => {
         </>
       )}
 
-      {/* Modal Potwierdzenia Usunięcia */}
+      {/* Delete Confirmation Modal */}
       {modalOpen && (
         <div className="modal modal-open">
           <div className="modal-box">

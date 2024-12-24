@@ -1,4 +1,3 @@
-// src/pages/IncidentsPage.jsx
 
 import React, { useEffect, useState, useMemo } from 'react';
 import api from '../utils/api';
@@ -11,7 +10,7 @@ const IncidentsPage = () => {
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [error, setError] = useState('');
 
-  // States for filters, sorting, searching, and pagination
+  // Stany dla filtrów, sortowania, wyszukiwania i paginacji
   const [filterStatus, setFilterStatus] = useState('All');
   const [filterCategory, setFilterCategory] = useState('All');
   const [sortOption, setSortOption] = useState('date_desc');
@@ -26,7 +25,7 @@ const IncidentsPage = () => {
       setLoadingCategories(true);
       try {
         const response = await api.get('/categories');
-        setCategories(response.data || []); // Corrected to response.data
+        setCategories(response.data || []);
       } catch (err) {
         console.error(err);
         setError('Błąd podczas pobierania kategorii.');
@@ -77,7 +76,7 @@ const IncidentsPage = () => {
   const processedIncidents = useMemo(() => {
     let filtered = [...incidents];
 
-    // Searching
+    // Wyszukiwanie
     if (searchQuery.trim() !== '') {
       const searchLower = searchQuery.toLowerCase();
       filtered = filtered.filter(
@@ -89,7 +88,7 @@ const IncidentsPage = () => {
       );
     }
 
-    // Sorting
+    // Sortowanie
     if (sortOption === 'date_desc') {
       filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     } else if (sortOption === 'date_asc') {
@@ -103,7 +102,7 @@ const IncidentsPage = () => {
     return filtered;
   }, [incidents, searchQuery, sortOption]);
 
-  // Pagination Logic
+  // Paginacja
   const paginatedIncidents = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     return processedIncidents.slice(startIndex, startIndex + itemsPerPage);
@@ -111,7 +110,15 @@ const IncidentsPage = () => {
 
   const totalPages = Math.ceil(processedIncidents.length / itemsPerPage);
 
-  // Function to determine no incidents message
+  // Definicja kolorów dla różnych kategorii statusów
+  const statusColors = {
+    wstępne: 'bg-blue-500',
+    aktywne: 'bg-yellow-500',
+    końcowe: 'bg-green-500',
+    default: 'bg-gray-500',
+  };
+
+  // Funkcja określająca odpowiedni komunikat przy braku zgłoszeń
   const noIncidentsMessage = () => {
     if (filterStatus !== 'All' && filterCategory !== 'All') {
       return 'Brak zgłoszeń dla wybranej kategorii i statusu.';
@@ -161,9 +168,15 @@ const IncidentsPage = () => {
           className="select select-bordered w-32 bg-gray-800 text-white"
         >
           <option value="All">Wszystkie</option>
-          <option value="Pending">Oczekujące</option>
-          <option value="In Progress">W trakcie</option>
-          <option value="Resolved">Rozwiązane</option>
+          <option value="nowe">Nowe</option>
+          <option value="weryfikacja">Weryfikacja</option>
+          <option value="potwierdzone">Potwierdzone</option>
+          <option value="wstrzymane">Wstrzymane</option>
+          <option value="eskalowane">Eskalowane</option>
+          <option value="rozwiązane">Rozwiązane</option>
+          <option value="nierozwiązane">Nierozwiązane</option>
+          <option value="zamknięte">Zamknięte</option>
+          <option value="odrzucone">Odrzucone</option>
         </select>
 
         {/* Filter by Category */}
@@ -269,13 +282,10 @@ const IncidentsPage = () => {
                   </div>
                   <div className="mt-auto">
                     <div className="flex items-center mb-2">
+                      {/* Pobierz kategorię statusu */}
                       <span
                         className={`inline-block px-2 py-1 text-xs font-semibold rounded ${
-                          incident.status === 'Resolved'
-                            ? 'bg-green-500'
-                            : incident.status === 'In Progress'
-                            ? 'bg-yellow-500'
-                            : 'bg-gray-500'
+                          statusColors[incident.statusCategory] || statusColors.default
                         }`}
                       >
                         {incident.status}
