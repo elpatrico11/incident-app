@@ -1,3 +1,4 @@
+// src/pages/IncidentDetailPage.jsx
 
 import { Link as RouterLink } from 'react-router-dom';
 import React, { useEffect, useState } from 'react';
@@ -11,15 +12,10 @@ import {
   Grid,
   Link,
   Alert,
-  List,
-  ListItem,
-  ListItemAvatar,
-  Avatar,
-  ListItemText,
   Button,
   TextField,
   Chip,
-} from '@mui/material';
+} from '@mui/material'; // Usunięto Divider
 import { MapContainer, TileLayer, Marker, Popup, GeoJSON } from 'react-leaflet';
 import * as turf from '@turf/turf';
 import useAuthStore from '../store/useAuthStore';
@@ -127,15 +123,17 @@ const IncidentDetailPage = () => {
 
   if (loading || boundaryLoading) {
     return (
-      <Container sx={{ mt: 4, textAlign: 'center' }}>
-        <CircularProgress />
+      <Container className="mt-4 text-center">
+        <div className="flex justify-center items-center h-64">
+          <CircularProgress />
+        </div>
       </Container>
     );
   }
 
   if (error) {
     return (
-      <Container sx={{ mt: 4 }}>
+      <Container className="mt-4">
         <Alert severity="error">{error}</Alert>
       </Container>
     );
@@ -143,7 +141,7 @@ const IncidentDetailPage = () => {
 
   if (!incident) {
     return (
-      <Container sx={{ mt: 4 }}>
+      <Container className="mt-4">
         <Alert severity="warning">Nie znaleziono zgłoszenia.</Alert>
       </Container>
     );
@@ -156,29 +154,46 @@ const IncidentDetailPage = () => {
     status,
     images,
     location,
-    dataZdarzenia,   // New field
-    dniTygodnia,     // New field
-    poraDnia,        // New field
+    dataZdarzenia, // New field
+    dniTygodnia,   // New field
+    poraDnia,      // New field
+    statusLogs,    // New field: status logs
   } = incident;
 
+  // Definicja kolorów dla różnych statusów
+  const statusColors = {
+    Nowe: 'text-blue-500',
+    Weryfikacja: 'text-yellow-500',
+    Potwierdzone: 'text-green-500',
+    Wstrzymane: 'text-gray-500',
+    Eskalowane: 'text-orange-500',
+    Rozwiązane: 'text-teal-500',
+    Nierozwiązane: 'text-red-500',
+    Zamknięte: 'text-purple-500',
+    Odrzucone: 'text-pink-500',
+    default: 'text-gray-500',
+  };
+
   return (
-    <Container sx={{ mt: 4 }}>
+    <Container className="mt-4">
       {/* Incident Title and Description */}
-      <Typography variant="h4" gutterBottom>
+      <Typography variant="h4" gutterBottom className="text-white">
         {category}
       </Typography>
-      <Typography variant="body1" gutterBottom>
+      <Typography variant="body1" gutterBottom className="text-gray-300">
         {description}
       </Typography>
 
       {/* New Fields: Data Zdarzenia, Dni Tygodnia, Pora Dnia */}
-      <Box sx={{ mt: 2 }}>
+      <Box className="mt-2">
         <Grid container spacing={2}>
           {/* Data Zdarzenia (Date of Incident) */}
           {dataZdarzenia && (
             <Grid item xs={12} sm={4}>
-              <Typography variant="subtitle2">Data Zdarzenia:</Typography>
-              <Typography variant="body2">
+              <Typography variant="subtitle2" className="text-gray-400">
+                Data Zdarzenia:
+              </Typography>
+              <Typography variant="body2" className="text-gray-300">
                 {new Date(dataZdarzenia).toLocaleDateString('pl-PL')}
               </Typography>
             </Grid>
@@ -187,10 +202,12 @@ const IncidentDetailPage = () => {
           {/* Dni Tygodnia (Days of the Week) */}
           {dniTygodnia && dniTygodnia.length > 0 && (
             <Grid item xs={12} sm={4}>
-              <Typography variant="subtitle2">Dni Tygodnia:</Typography>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
+              <Typography variant="subtitle2" className="text-gray-400">
+                Dni Tygodnia:
+              </Typography>
+              <Box className="flex flex-wrap gap-2 mt-1">
                 {dniTygodnia.map((day, index) => (
-                  <Chip key={index} label={day} />
+                  <Chip key={index} label={day} className="bg-gray-700 text-white" />
                 ))}
               </Box>
             </Grid>
@@ -199,27 +216,31 @@ const IncidentDetailPage = () => {
           {/* Pora Dnia (Time of Day) */}
           {poraDnia && (
             <Grid item xs={12} sm={4}>
-              <Typography variant="subtitle2">Pora Dnia:</Typography>
-              <Typography variant="body2">{poraDnia}</Typography>
+              <Typography variant="subtitle2" className="text-gray-400">
+                Pora Dnia:
+              </Typography>
+              <Typography variant="body2" className="text-gray-300">
+                {poraDnia}
+              </Typography>
             </Grid>
           )}
         </Grid>
       </Box>
 
       {/* Incident Status */}
-      <Typography variant="caption" display="block" gutterBottom sx={{ mt: 2 }}>
-        Status: {status}
+      <Typography variant="caption" display="block" gutterBottom className="mt-2 text-gray-400">
+        Status: <span className={statusColors[status] || statusColors.default}>{status}</span>
       </Typography>
 
       {/* Incident Images */}
       {images && images.length > 0 && (
-        <Grid container spacing={2} sx={{ mt: 2 }}>
+        <Grid container spacing={2} className="mt-2">
           {images.map((src, index) => (
             <Grid item key={index} xs={12} sm={6} md={4}>
               <img
                 src={src}
                 alt={`Incydent ${index + 1}`}
-                style={{ width: '100%', height: 'auto', borderRadius: '8px' }}
+                className="w-full h-auto rounded-lg"
                 loading="lazy"
               />
             </Grid>
@@ -228,18 +249,18 @@ const IncidentDetailPage = () => {
       )}
 
       {/* Incident Location Map */}
-      <Box sx={{ mt: 4 }}>
-        <Typography variant="h6" gutterBottom>
+      <Box className="mt-4">
+        <Typography variant="h6" gutterBottom className="text-white">
           Lokalizacja
         </Typography>
-        <Box sx={{ height: '400px', width: '100%' }}>
+        <Box className="h-96 w-full">
           <MapContainer
             center={[
               location.coordinates[1],
               location.coordinates[0],
             ]}
             zoom={13}
-            style={{ height: '100%', width: '100%' }}
+            className="h-full w-full rounded-lg"
           >
             <TileLayer
               attribution='&copy; OpenStreetMap contributors'
@@ -249,11 +270,7 @@ const IncidentDetailPage = () => {
             {boundary && (
               <GeoJSON
                 data={boundary}
-                style={{
-                  color: '#2196f3', // Consistent blue boundary
-                  weight: 2,
-                  fillOpacity: 0.1,
-                }}
+                className="stroke-blue-500 fill-blue-500/10"
               />
             )}
             {/* Marker for Incident Location */}
@@ -264,37 +281,118 @@ const IncidentDetailPage = () => {
               ]}
             >
               <Popup>
-                <Typography variant="h6">{category}</Typography>
-                <Typography variant="body2">{description}</Typography>
-                <Typography variant="caption">Status: {status}</Typography>
+                <Typography variant="h6" className="text-black">
+                  {category}
+                </Typography>
+                <Typography variant="body2" className="text-black">
+                  {description}
+                </Typography>
+                <Typography variant="caption" className="text-black">
+                  Status: {status}
+                </Typography>
               </Popup>
             </Marker>
           </MapContainer>
         </Box>
       </Box>
 
+      {/* Status Logs Section */}
+      <Box className="mt-4">
+        <Typography variant="h6" gutterBottom className="text-white">
+          Historia Zmian Statusów
+        </Typography>
+        {statusLogs && statusLogs.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="min-w-full bg-gray-800 rounded-lg">
+              <thead>
+                <tr>
+                  <th className="px-4 py-2 text-left text-gray-300">Zmieniono przez</th>
+                  <th className="px-4 py-2 text-left text-gray-300">Z Statusu</th>
+                  <th className="px-4 py-2 text-left text-gray-300">Na Status</th>
+                  <th className="px-4 py-2 text-left text-gray-300">Kiedy</th>
+                </tr>
+              </thead>
+              <tbody>
+                {statusLogs.map((log, index) => (
+                  <tr
+                    key={index}
+                    className={`hover:bg-gray-700 ${index % 2 === 0 ? 'bg-gray-800' : 'bg-gray-700'}`}
+                  >
+                    <td className="border px-4 py-2 text-gray-300">
+                      {log.changedBy ? `${log.changedBy.firstName} ${log.changedBy.lastName}` : 'System'}
+                    </td>
+                    <td className="border px-4 py-2 text-gray-300">
+                      {log.previousStatus}
+                    </td>
+                    <td className={`border px-4 py-2 ${statusColors[log.newStatus] || statusColors.default}`}>
+                      {log.newStatus}
+                    </td>
+                    <td className="border px-4 py-2 text-gray-300">
+                      {new Date(log.changedAt).toLocaleString('pl-PL', {
+                        dateStyle: 'short',
+                        timeStyle: 'short',
+                      })}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <Typography variant="body2" className="mt-1 text-gray-300">
+            Brak zmian statusów.
+          </Typography>
+        )}
+      </Box>
+
       {/* Comments Section */}
-      <Box sx={{ mt: 4 }}>
-        <Typography variant="h6">Komentarze</Typography>
-        <List>
+      <Box className="mt-4">
+        <Typography variant="h6" className="text-white">
+          Komentarze
+        </Typography>
+        <div className="space-y-4">
           {comments.map((comment, index) => (
-            <ListItem key={index} alignItems="flex-start">
-              <ListItemAvatar>
-                <Avatar>
-                  {comment.user && comment.user.firstName
-                    ? comment.user.firstName.charAt(0).toUpperCase()
-                    : 'U'}
-                </Avatar>
-              </ListItemAvatar>
-              <ListItemText
-                primary={`${comment.user ? `${comment.user.firstName} ${comment.user.lastName}` : 'Anonimowy'} `}
-                secondary={comment.text}
-              />
-            </ListItem>
+            <div key={index} className="flex items-start bg-gray-800 rounded-lg p-4">
+              {/* Avatar */}
+              <div className="flex-shrink-0">
+                {comment.user && comment.user.avatarUrl ? (
+                  <img
+                    src={comment.user.avatarUrl}
+                    alt={`${comment.user.firstName} ${comment.user.lastName}`}
+                    className="h-10 w-10 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="h-10 w-10 rounded-full bg-gray-700 flex items-center justify-center text-white font-semibold">
+                    {comment.user
+                      ? `${comment.user.firstName.charAt(0)}${comment.user.lastName.charAt(0)}`
+                      : 'A'}
+                  </div>
+                )}
+              </div>
+              {/* Komentarz */}
+              <div className="ml-4">
+                <Typography variant="body2" className="text-gray-300">
+                  <strong>
+                    {comment.user
+                      ? `${comment.user.firstName} ${comment.user.lastName}`
+                      : 'Anonimowy'}
+                  </strong>
+                </Typography>
+                <Typography variant="body2" className="text-gray-200 mt-1">
+                  {comment.text}
+                </Typography>
+                <Typography variant="caption" className="text-gray-400 mt-1">
+                  {new Date(comment.createdAt).toLocaleString('pl-PL', {
+                    dateStyle: 'short',
+                    timeStyle: 'short',
+                  })}
+                </Typography>
+              </div>
+            </div>
           ))}
-        </List>
+        </div>
         {user ? (
-          <Box component="form" onSubmit={handleCommentSubmit} sx={{ mt: 2 }}>
+          <Box component="form" onSubmit={handleCommentSubmit} className="mt-4">
             <TextField
               fullWidth
               label="Dodaj komentarz"
@@ -304,20 +402,27 @@ const IncidentDetailPage = () => {
               helperText={commentError}
               multiline
               rows={3}
+              className="bg-gray-700 text-white"
+              InputLabelProps={{
+                className: 'text-gray-300',
+              }}
+              InputProps={{
+                className: 'text-gray-200',
+              }}
               disabled={isSubmitting} // Disabled when submitting
             />
             <Button
               type="submit"
               variant="contained"
-              sx={{ mt: 1 }}
+              className="mt-2 bg-blue-600 hover:bg-blue-700"
               disabled={isSubmitting} // Disabled when submitting
             >
               {isSubmitting ? <CircularProgress size={24} /> : 'Dodaj'}
             </Button>
           </Box>
         ) : (
-          <Typography variant="body2" sx={{ mt: 2 }}>
-            <Link component={RouterLink} to="/login">
+          <Typography variant="body2" className="mt-4 text-gray-300">
+            <Link component={RouterLink} to="/login" className="text-blue-400 hover:underline">
               Zaloguj się
             </Link>{' '}
             aby dodać komentarz.
@@ -327,5 +432,5 @@ const IncidentDetailPage = () => {
     </Container>
   );
 };
-  
+
 export default IncidentDetailPage;
