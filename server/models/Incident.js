@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
 
-// Import the User model
-const User = require("./User"); // Adjust the path if necessary
+const User = require("./User");
 
 // Define the Comment Schema
 const CommentSchema = new mongoose.Schema({
@@ -18,6 +17,49 @@ const CommentSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now,
+  },
+});
+
+// Define the Status Log Schema
+const StatusLogSchema = new mongoose.Schema({
+  previousStatus: {
+    type: String,
+    enum: [
+      "Nowe",
+      "Weryfikacja",
+      "Potwierdzone",
+      "Wstrzymane",
+      "Eskalowane",
+      "Rozwiązane",
+      "Nierozwiązane",
+      "Zamknięte",
+      "Odrzucone",
+    ],
+    required: true,
+  },
+  newStatus: {
+    type: String,
+    enum: [
+      "Nowe",
+      "Weryfikacja",
+      "Potwierdzone",
+      "Wstrzymane",
+      "Eskalowane",
+      "Rozwiązane",
+      "Nierozwiązane",
+      "Zamknięte",
+      "Odrzucone",
+    ],
+    required: true,
+  },
+  changedAt: {
+    type: Date,
+    default: Date.now,
+  },
+  changedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
   },
 });
 
@@ -104,6 +146,7 @@ const IncidentSchema = new mongoose.Schema(
     },
     resolvedAt: { type: Date },
     comments: [CommentSchema], // Embed comments
+    statusLogs: [StatusLogSchema], // New: Embed status logs
 
     dataZdarzenia: {
       type: Date,
@@ -156,6 +199,51 @@ IncidentSchema.pre("save", function (next) {
   }
 
   next();
+});
+
+// Middleware to log status changes
+IncidentSchema.pre("findOneAndUpdate", async function (next) {
+  const update = this.getUpdate();
+  let status, changedBy;
+
+  if (update.$set) {
+    status = update.$set.status;
+    changedBy = update.$set.changedBy;
+  }
+
+  if (status) {
+    try {
+      const incident = await this.model.findOne(this.getQuery());
+      const previousStatus = incident.status;
+      const newStatus = status;
+
+      if (previousStatus !== newStatus) {
+        if (!changedBy) {
+          throw new Error("Brak informacji o użytkowniku zmieniającym status.");
+        }
+
+        this.updateOne(
+          {},
+          {
+            $push: {
+              statusLogs: {
+                previousStatus,
+                newStatus,
+                changedAt: new Date(),
+                changedBy: changedBy,
+              },
+            },
+          }
+        );
+      }
+
+      next();
+    } catch (error) {
+      next(error);
+    }
+  } else {
+    next();
+  }
 });
 
 // Export the Incident model

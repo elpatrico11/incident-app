@@ -299,12 +299,9 @@ router.get("/my", authMiddleware, async (req, res) => {
 
 router.get("/:id", async (req, res) => {
   try {
-    const incident = await Incident.findById(req.params.id).populate("user", [
-      "firstName",
-      "lastName",
-      "email",
-      "role",
-    ]);
+    const incident = await Incident.findById(req.params.id)
+      .populate("user", ["firstName", "lastName", "email", "role"])
+      .populate("statusLogs.changedBy", ["firstName", "lastName", "email"]); // Add this line
 
     if (!incident) {
       return res.status(404).json({ msg: "Zgłoszenie nie znalezione" });
@@ -595,7 +592,11 @@ router.put(
       }
 
       // Update status
-      incident.status = status;
+      // Pass 'changedBy' to middleware
+      const updateData = {
+        status,
+        changedBy: req.user.id, // Add the user ID here
+      };
 
       // Middleware in the model will handle setting statusCategory
 
@@ -607,12 +608,17 @@ router.put(
         "Odrzucone",
       ];
       if (finalStatuses.includes(status)) {
-        incident.resolvedAt = new Date();
+        updateData.resolvedAt = new Date();
       } else {
-        incident.resolvedAt = undefined; // Remove resolvedAt if status is not final
+        updateData.resolvedAt = undefined; // Remove resolvedAt if status is not final
       }
 
-      await incident.save();
+      // Perform the update using findOneAndUpdate to trigger middleware
+      incident = await Incident.findOneAndUpdate(
+        { _id: req.params.id },
+        { $set: updateData },
+        { new: true }
+      ).populate("user", ["firstName", "lastName", "email", "role"]);
 
       res.json(incident);
     } catch (err) {
