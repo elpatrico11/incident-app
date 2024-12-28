@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 const HomePage = () => {
   return (
-    <div className="bg-gray-800 text-white min-h-screen flex flex-col items-center justify-center px-4">
+    <div className="flex flex-col items-center justify-center h-full px-4 py-12">
       <h1 className="text-4xl font-bold mb-6 text-center">
         Witaj w IncidentApp
       </h1>
