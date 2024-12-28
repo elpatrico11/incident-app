@@ -24,6 +24,7 @@ const categoryRoutes = require("./routes/categories");
 const adminRoutes = require("./routes/admin");
 const adminReportsRoutes = require("./routes/adminReports");
 const adminReportsDownload = require("./routes/adminReportsDownload");
+const notificationsRouter = require("./routes/notifications");
 
 // Using routes
 app.use("/api/auth", authRoutes);
@@ -32,6 +33,7 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/admin/reports", adminReportsRoutes);
 app.use("/api/admin/reports", adminReportsDownload);
+app.use("/api/notifications", notificationsRouter);
 
 // Default route
 app.get("/", (req, res) => {

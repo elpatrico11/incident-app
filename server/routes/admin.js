@@ -5,6 +5,7 @@ const Incident = require("../models/Incident");
 const authMiddleware = require("../middleware/auth");
 const authorize = require("../middleware/authorize");
 const { check, validationResult } = require("express-validator");
+const Notification = require("../models/Notification");
 
 // Middleware: auth + authorize admin
 router.use(authMiddleware, authorize("admin"));
@@ -177,12 +178,23 @@ router.put(
   "/incidents/:id/status",
   [
     check("status")
-      .isIn(["Pending", "In Progress", "Resolved"])
+      .isIn([
+        "Nowe",
+        "Weryfikacja",
+        "Potwierdzone",
+        "Wstrzymane",
+        "Eskalowane",
+        "Rozwiązane",
+        "Nierozwiązane",
+        "Zamknięte",
+        "Odrzucone",
+      ])
       .withMessage("Nieprawidłowy status"),
   ],
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log("Validation errors:", errors.array());
       return res.status(400).json({ errors: errors.array() });
     }
 
@@ -196,26 +208,49 @@ router.put(
       ]);
 
       if (!incident) {
+        console.log(`Incident with ID ${req.params.id} not found.`);
         return res.status(404).json({ msg: "Zgłoszenie nie znalezione" });
       }
 
+      // Update status
       incident.status = status;
 
-      // If status is 'Resolved', set resolvedAt
-      if (status === "Resolved") {
+      // If status is 'Rozwiązane', set resolvedAt
+      if (status === "Rozwiązane") {
         incident.resolvedAt = new Date();
       } else {
-        // If status is changed from 'Resolved' to something else, unset resolvedAt
+        // If status is changed from 'Rozwiązane' to something else, unset resolvedAt
         incident.resolvedAt = null;
       }
 
       await incident.save();
+      console.log(`Incident ${incident._id} status updated to ${status}.`);
 
-      // Opcjonalnie: Wysyłanie powiadomienia email o zmianie statusu
+      // Create a notification for the user
+      if (incident.user) {
+        const message = `Twój incydent o kategorii "${incident.category}" został zaktualizowany do statusu "${status}".`;
+        const newNotification = new Notification({
+          user: incident.user._id,
+          message,
+          relatedIncident: incident._id,
+        });
+
+        await newNotification.save();
+        console.log(
+          `Notification created for user ${incident.user._id}: ${message}`
+        );
+      } else {
+        console.log(
+          `Incident ${incident._id} has no associated user. Notification not created.`
+        );
+      }
 
       res.json(incident);
     } catch (err) {
-      console.error(err.message);
+      console.error(
+        "Error in PUT /api/admin/incidents/:id/status:",
+        err.message
+      );
       res.status(500).send("Błąd serwera");
     }
   }
