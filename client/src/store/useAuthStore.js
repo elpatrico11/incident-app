@@ -5,6 +5,8 @@ const useAuthStore = create((set, get) => ({
   user: null,
   loading: true,
   error: null,
+  notifications: [], // New: Notifications state
+  notificationsLoading: false, // New: Loading state for notifications
 
   // Initialize user by checking both localStorage and sessionStorage
   initializeUser: async () => {
@@ -15,12 +17,14 @@ const useAuthStore = create((set, get) => ({
       try {
         const response = await api.get("/auth/me");
         set({ user: response.data, loading: false });
+        // Fetch notifications after user is set
+        await get().fetchNotifications();
       } catch (error) {
         console.error("Error fetching user:", error);
         localStorage.removeItem("token");
         sessionStorage.removeItem("token");
         delete api.defaults.headers.common["Authorization"];
-        set({ user: null, loading: false });
+        set({ user: null, loading: false, notifications: [] });
       }
     } else {
       set({ loading: false });
@@ -47,6 +51,9 @@ const useAuthStore = create((set, get) => ({
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       set({ user, error: null });
       console.log("User logged in:", user); // Debugging
+
+      // Fetch notifications after login
+      await get().fetchNotifications();
     } catch (error) {
       console.error("Login error:", error);
       set({ error: error.response?.data?.msg || "Error during login" });
@@ -54,7 +61,7 @@ const useAuthStore = create((set, get) => ({
     }
   },
 
-  // Updated register function with captcha
+  // Register function with captcha
   register: async (firstName, lastName, email, password, captcha) => {
     try {
       if (!captcha) {
@@ -83,6 +90,9 @@ const useAuthStore = create((set, get) => ({
         api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
         set({ user, error: null });
         console.log("User registered and logged in:", user); // Debugging
+
+        // Fetch notifications after registration
+        await get().fetchNotifications();
       }
 
       return response.data;
@@ -98,6 +108,35 @@ const useAuthStore = create((set, get) => ({
     }
   },
 
+  // Fetch Notifications
+  fetchNotifications: async () => {
+    set({ notificationsLoading: true });
+    try {
+      const response = await api.get("/notifications");
+      set({ notifications: response.data, notificationsLoading: false });
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      set({ notificationsLoading: false });
+      // Optionally, set an error state or handle the error
+    }
+  },
+
+  // Mark Notification as Read
+  markNotificationAsRead: async (id) => {
+    try {
+      const response = await api.put(`/notifications/${id}/read`);
+      const updatedNotification = response.data;
+      set((state) => ({
+        notifications: state.notifications.map((notif) =>
+          notif._id === id ? updatedNotification : notif
+        ),
+      }));
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      // Optionally, handle the error
+    }
+  },
+
   // Update user data
   setUser: (userData) => {
     console.log("Setting user:", userData); // Debugging
@@ -109,7 +148,7 @@ const useAuthStore = create((set, get) => ({
     localStorage.removeItem("token");
     sessionStorage.removeItem("token");
     delete api.defaults.headers.common["Authorization"];
-    set({ user: null, error: null });
+    set({ user: null, error: null, notifications: [] });
   },
 }));
 

@@ -166,7 +166,7 @@ const IncidentManagement = () => {
   const handleStatusChange = async (incidentId, newStatus) => {
   try {
     console.log("Updating status to:", newStatus); // Debugging line
-    await api.put(`/incidents/${incidentId}/status`, {
+    await api.put(`admin/incidents/${incidentId}/status`, {
       status: newStatus,
     });
 

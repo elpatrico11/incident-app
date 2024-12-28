@@ -5,9 +5,12 @@ import { UserCircle, X, Menu as MenuIcon } from 'lucide-react';
 import useAuthStore from '../store/useAuthStore';
 
 const DashboardLayout = ({ children }) => {
-  const { user, logout } = useAuthStore();
+  const { user, logout, notifications } = useAuthStore();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Number of unread notifications
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   const isActivePath = (path) => {
     return location.pathname === path;
@@ -125,11 +128,33 @@ const DashboardLayout = ({ children }) => {
           <div className="flex items-center">
             {user ? (
               <Menu as="div" className="relative">
-                <Menu.Button className="flex items-center text-sm text-gray-300 hover:text-white">
+                <Menu.Button className="relative flex items-center text-sm text-gray-300 hover:text-white">
+                  {/* If there are unread notifications, show a red badge */}
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1">
+                      {unreadCount}
+                    </span>
+                  )}
                   <UserCircle className="w-8 h-8 mr-2" />
-                  <span>{user.firstName} {user.lastName}</span>
+                  <span>
+                    {user.firstName} {user.lastName}
+                  </span>
                 </Menu.Button>
                 <Menu.Items className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 z-50">
+                  {/* Direct link to notifications (tab=2 on ProfilePage) */}
+                  <Menu.Item>
+                    {({ active }) => (
+                      <Link
+                        to="/profile?tab=2"
+                        className={`block px-4 py-2 text-sm text-gray-300 ${
+                          active ? 'bg-gray-700' : ''
+                        }`}
+                      >
+                        Powiadomienia
+                      </Link>
+                    )}
+                  </Menu.Item>
+
                   <Menu.Item>
                     {({ active }) => (
                       <Link

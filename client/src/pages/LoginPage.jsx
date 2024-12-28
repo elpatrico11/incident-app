@@ -69,7 +69,6 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
 }));
 
 export default function LoginPage(props) {
-
   const [emailError, setEmailError] = useState(false);
   const [emailErrorMessage, setEmailErrorMessage] = useState('');
   const [passwordError, setPasswordError] = useState(false);
