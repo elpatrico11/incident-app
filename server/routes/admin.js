@@ -122,4 +122,11 @@ router.delete("/incidents/:id", adminController.deleteIncident);
  */
 router.get("/download", adminController.downloadReports);
 
+/**
+ * @route   GET /api/admin/reports
+ * @desc    Pobranie raportów administracyjnych
+ * @access  Admin
+ */
+router.get("/reports", adminController.getReports); // Newly added route
+
 module.exports = router;

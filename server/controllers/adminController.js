@@ -375,6 +375,103 @@ const downloadReports = async (req, res, next) => {
   }
 };
 
+/**
+ * @desc    Get administrative reports
+ * @route   GET /api/admin/reports
+ * @access  Admin
+ */
+const getReports = async (req, res, next) => {
+  try {
+    // Total number of incidents
+    const totalIncidents = await Incident.countDocuments();
+
+    // Average resolution time (assuming 'resolutionTime' is in hours)
+    const avgResolution = await Incident.aggregate([
+      { $match: { resolutionTime: { $exists: true } } },
+      {
+        $group: {
+          _id: null,
+          avgTime: { $avg: "$resolutionTime" },
+        },
+      },
+    ]);
+    const averageResolutionTime = avgResolution[0]?.avgTime || 0;
+
+    // Reports by category
+    const reportsByCategory = await Incident.aggregate([
+      {
+        $group: {
+          _id: "$category",
+          count: { $sum: 1 },
+        },
+      },
+      { $project: { category: "$_id", count: 1, _id: 0 } },
+    ]);
+
+    // Status count
+    const statusCount = await Incident.aggregate([
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 },
+        },
+      },
+      { $project: { status: "$_id", count: 1, _id: 0 } },
+    ]);
+
+    // Average incidents per day
+    const averagePerDayAgg = await Incident.aggregate([
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          average: { $avg: "$count" },
+        },
+      },
+    ]);
+    const averagePerDay = averagePerDayAgg[0]?.average || 0;
+
+    // Total incidents per day
+    const totalIncidentsPerDay = await Incident.aggregate([
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          date: "$_id",
+          count: 1,
+          _id: 0,
+        },
+      },
+      { $sort: { date: 1 } },
+    ]);
+
+    res.json({
+      totalIncidents,
+      averageResolutionTime: averageResolutionTime.toFixed(2), // Rounded to 2 decimal places
+      reportsByCategory,
+      statusCount,
+      averagePerDay: averagePerDay.toFixed(2),
+      totalIncidentsPerDay,
+    });
+  } catch (error) {
+    console.error("Error fetching reports:", error);
+    res.status(500).json({ msg: "Błąd podczas generowania raportów." });
+  }
+};
+
 module.exports = {
   getAllUsers,
   getUserById,
@@ -384,4 +481,5 @@ module.exports = {
   updateIncidentStatus,
   deleteIncident,
   downloadReports,
+  getReports, // Export the new function
 };
