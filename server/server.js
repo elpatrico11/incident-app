@@ -1,53 +1,49 @@
 const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
-const dotenv = require("dotenv");
 const path = require("path");
-const { generalLimiter } = require("./middleware/rateLimiter");
+const cors = require("cors");
+const configureEnv = require("./config/dotenv");
+const connectDB = require("./config/db");
+const { generalLimiter } = require("./middlewares/rateLimiter");
+const errorHandler = require("./middlewares/errorHandler");
 
-dotenv.config();
+const authRoutes = require("./routes/auth");
+const incidentRoutes = require("./routes/incidents");
+const categoryRoutes = require("./routes/categories");
+const adminRoutes = require("./routes/admin");
+const notificationsRoutes = require("./routes/notifications");
 
 const app = express();
+
+// Configure Environment Variables
+configureEnv();
+
+// Connect to MongoDB
+connectDB();
 
 // Middleware
 app.use(express.json());
 app.use(cors());
 app.use(generalLimiter);
 
-// Serwowanie statycznych plików (obrazków)
+// Serve static files
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Importing routes
-const authRoutes = require("./routes/auth");
-const incidentRoutes = require("./routes/incidents");
-const categoryRoutes = require("./routes/categories");
-const adminRoutes = require("./routes/admin");
-const adminReportsRoutes = require("./routes/adminReports");
-const adminReportsDownload = require("./routes/adminReportsDownload");
-const notificationsRouter = require("./routes/notifications");
-
-// Using routes
+// Use Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/incidents", incidentRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/admin", adminRoutes);
-app.use("/api/admin/reports", adminReportsRoutes);
-app.use("/api/admin/reports", adminReportsDownload);
-app.use("/api/notifications", notificationsRouter);
+app.use("/api/notifications", notificationsRoutes);
 
-// Default route
+// Default Route
 app.get("/", (req, res) => {
   res.send("API działa");
 });
 
-// MongoDB connection and server startup
-const PORT = process.env.PORT || 5000;
-const URI = process.env.MONGO_URI;
+// Error Handling Middleware (should be after all routes)
+app.use(errorHandler);
 
-mongoose
-  .connect(URI)
-  .then(() => {
-    console.log("Połączono z MongoDB");
-    app.listen(PORT, () => console.log(`Serwer działa na porcie ${PORT}`));
-  })
-  .catch((err) => console.error("Błąd połączenia z MongoDB:", err));
+// MongoDB Connection and Server Startup
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => console.log(`Serwer działa na porcie ${PORT}`));
