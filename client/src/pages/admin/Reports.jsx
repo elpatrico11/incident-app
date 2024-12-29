@@ -39,7 +39,7 @@ const Reports = () => {
 
   const handleDownload = async () => {
     try {
-      const response = await api.get('/admin/reports/download', {
+      const response = await api.get('/admin/download', {
         responseType: 'blob', // Important for binary data
       });
 
