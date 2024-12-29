@@ -8,21 +8,25 @@ import ReportPage from "./pages/ReportPage";
 import IncidentsPage from "./pages/IncidentsPage";
 import MapPage from "./pages/MapPage";
 import IncidentDetailPage from "./pages/IncidentDetailPage";
-import useAuthStore from "./store/useAuthStore";
-import ProtectedRoute from "./components/ProtectedRoute";
 import ProfilePage from "./pages/ProfilePage";
 import MyIncidentPage from "./pages/MyIncidentPage";
 import EditIncidentPage from "./pages/EditIncidentPage";
-import AdminPage from "./pages/AdminPage";
-import UserManagement from "./pages/admin/UserManagement";
-import EditUser from "./pages/admin/EditUser";
-import IncidentManagement from "./pages/admin/IncidentManagement";
-import Reports from "./pages/admin/Reports";
-import CircularProgress from "@mui/material/CircularProgress";
-import Box from "@mui/material/Box";
 import VerifyEmail from "./pages/VerifyEmail";
 import ResendVerification from "./pages/ResendVerification";
-import DashboardLayout from "./components/DashboardLayout"; // Add this import
+
+import DashboardLayout from "./components/DashboardLayout";
+import ProtectedRoute from "./components/ProtectedRoute";
+
+import AdminPage from "./features/admin/pages/AdminPage";
+import UserManagement from "./features/admin/components/UserManagement";
+import EditUser from "./features/admin/components/EditUser";
+import IncidentManagement from "./features/admin/components/IncidentManagement";
+import Reports from "./features/admin/components/Reports";
+
+import useAuthStore from "./store/useAuthStore";
+
+import CircularProgress from "@mui/material/CircularProgress";
+import Box from "@mui/material/Box";
 
 const App = () => {
   const initializeUser = useAuthStore((state) => state.initializeUser);
@@ -49,6 +53,7 @@ const App = () => {
   return (
     <DashboardLayout>
       <Routes>
+        {/* Public Routes */}
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
@@ -75,6 +80,7 @@ const App = () => {
             <Route path="users/:id/edit" element={<EditUser />} />
             <Route path="incidents" element={<IncidentManagement />} />
             <Route path="reports" element={<Reports />} />
+            {/* Add more nested routes as needed */}
           </Route>
         </Route>
 

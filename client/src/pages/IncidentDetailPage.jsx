@@ -3,7 +3,7 @@
 import { Link as RouterLink } from 'react-router-dom';
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import api from '../utils/api';
+import api from '../api/api';
 import {
   Container,
   Typography,

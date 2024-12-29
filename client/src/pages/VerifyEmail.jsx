@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Alert, CircularProgress, Box, Button } from '@mui/material';
-import api from '../utils/api';
+import api from '../api/api';
 
 const VerifyEmail = () => {
   const location = useLocation();

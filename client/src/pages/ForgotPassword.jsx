@@ -8,7 +8,7 @@ import {
   Typography,
   Alert,
 } from '@mui/material';
-import api from '../utils/api';
+import api from '../api/api';
 
 export default function ForgotPassword({ open, handleClose }) {
   const [email, setEmail] = useState('');

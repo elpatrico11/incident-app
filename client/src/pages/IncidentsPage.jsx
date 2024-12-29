@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
-import api from '../utils/api';
+import api from '../api/api';
 import { Link } from 'react-router-dom';
 
 const IncidentsPage = () => {

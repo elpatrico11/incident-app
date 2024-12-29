@@ -17,7 +17,7 @@ import {
   DialogActions,
 } from '@mui/material';
 import { Link } from 'react-router-dom';
-import api from '../utils/api';
+import api from '../api/api';
 import useAuthStore from '../store/useAuthStore';
 
 const MyIncidentsPage = () => {

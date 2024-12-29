@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import api from '../utils/api';
+import api from '../api/api';
 import { fetchCategories } from '../utils/categories';
 import useAuthStore from '../store/useAuthStore';
 import imageCompression from 'browser-image-compression';

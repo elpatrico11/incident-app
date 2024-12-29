@@ -1,7 +1,6 @@
-
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
-import api from "../../utils/api";
+import api from '../../../api/api';
 
 const IncidentManagement = () => {
   const [allIncidents, setAllIncidents] = useState([]); // Wszystkie incydenty
@@ -164,29 +163,29 @@ const IncidentManagement = () => {
 
   // Function to update incident status
   const handleStatusChange = async (incidentId, newStatus) => {
-  try {
-    console.log("Updating status to:", newStatus); // Debugging line
-    await api.put(`admin/incidents/${incidentId}/status`, {
-      status: newStatus,
-    });
+    try {
+      console.log("Updating status to:", newStatus); // Debugging line
+      await api.put(`/admin/incidents/${incidentId}/status`, {
+        status: newStatus,
+      });
 
-    const detailedIncident = await api.get(`/incidents/${incidentId}`);
+      const detailedIncident = await api.get(`/incidents/${incidentId}`);
 
-    setAllIncidents((prev) =>
-      prev.map((i) => (i._id === incidentId ? detailedIncident.data : i))
-    );
-    setSuccess("Status zgłoszenia został zaktualizowany.");
-    setError(""); // Clear any previous errors
-  } catch (err) {
-    console.error(err);
-    // Display detailed error message if available
-    if (err.response && err.response.data && err.response.data.msg) {
-      setError(err.response.data.msg);
-    } else {
-      setError("Błąd podczas aktualizacji statusu.");
+      setAllIncidents((prev) =>
+        prev.map((i) => (i._id === incidentId ? detailedIncident.data : i))
+      );
+      setSuccess("Status zgłoszenia został zaktualizowany.");
+      setError(""); // Clear any previous errors
+    } catch (err) {
+      console.error(err);
+      // Display detailed error message if available
+      if (err.response && err.response.data && err.response.data.msg) {
+        setError(err.response.data.msg);
+      } else {
+        setError("Błąd podczas aktualizacji statusu.");
+      }
     }
-  }
-};
+  };
 
   // Functions to handle delete modal
   const openModal = (incidentId) => {

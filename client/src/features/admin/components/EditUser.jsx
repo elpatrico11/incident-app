@@ -1,16 +1,10 @@
-// client/src/pages/admin/EditUser.jsx
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import api from '../../utils/api';
-// Removed the unused 'useAuthStore' import
-// import useAuthStore from '../../store/useAuthStore';
+import api from '../../../api/api';
 
 const EditUser = () => {
   const { id } = useParams(); // Get user ID from URL
   const navigate = useNavigate();
-  // Removed the unused 'currentUser' variable
-  // const currentUser = useAuthStore(state => state.user);
 
   const [userData, setUserData] = useState({
     firstName: '',
@@ -62,7 +56,7 @@ const EditUser = () => {
     }
 
     try {
-      await api.put(`/admin/users/${id}`, userData); // Removed 'response' variable
+      await api.put(`/admin/users/${id}`, userData);
       setSuccess('Dane użytkownika zostały zaktualizowane.');
       // Optionally, redirect back to user management after a delay
       setTimeout(() => navigate('/admin/users'), 2000);

@@ -1,5 +1,3 @@
-// frontend/src/components/Reports/ReportsByCategoryBarChart.js
-
 import React from 'react';
 import { Bar } from 'react-chartjs-2';
 import {
@@ -46,7 +44,6 @@ const ReportsByCategoryBarChart = ({ data, categories }) => {
   const chartData = {
     labels: categories,
     datasets: [{
-      // Removed 'Liczba zgłoszeń' label
       data: categories.map(category => categoryCounts[category]),
       backgroundColor: categories.map((_, index) => COLORS[index % COLORS.length]),
       borderColor: categories.map((_, index) => COLORS[index % COLORS.length]),

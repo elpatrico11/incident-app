@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import api from '../utils/api';
+import api from '../api/api';
 import { fetchCategories } from '../utils/categories';
 import {
   Container,

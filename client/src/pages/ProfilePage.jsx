@@ -13,7 +13,7 @@ import {
   ThemeProvider,
 } from '@mui/material';
 import useAuthStore from '../store/useAuthStore';
-import api from '../utils/api';
+import api from '../api/api';
 import Notifications from '../components/Notifications';
 
 // Create a dark theme

@@ -1,5 +1,3 @@
-// frontend/src/components/Reports/StatusCountChart.js
-
 import React from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Typography } from '@mui/material';

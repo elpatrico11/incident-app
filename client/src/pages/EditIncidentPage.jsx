@@ -22,7 +22,7 @@ import {
 import { useParams, useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, GeoJSON, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
-import api from '../utils/api';
+import api from '../api/api';
 import useAuthStore from '../store/useAuthStore';
 import { Delete as DeleteIcon } from '@mui/icons-material';
 import * as turf from '@turf/turf';

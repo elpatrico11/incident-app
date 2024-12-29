@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { CSVLink } from 'react-csv'; 
-import useAuthStore from '../../store/useAuthStore';
-import api from '../../utils/api';
+import api from '../../../api/api';
+import useAuthStore from '../../../store/useAuthStore';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -127,8 +127,6 @@ const UserManagement = () => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     return sortedUsers.slice(startIndex, startIndex + itemsPerPage);
   }, [sortedUsers, currentPage, itemsPerPage]);
-
-  // Funkcja eksportu CSV została zastąpiona przez CSVLink
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);

@@ -1,9 +1,8 @@
-
 import React, { useEffect, useState } from 'react';
 import { Typography, CircularProgress, Alert, Grid, Button } from '@mui/material';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
-import api from '../../utils/api';
+import api from '../../../api/api';
 import ReportsByCategoryBarChart from './ReportsByCategoryBarChart';
 import StatusCountChart from './StatusCountChart';
 import IncidentsPerDayChart from './IncidentsPerDayChart'; 
@@ -20,7 +19,7 @@ const Reports = () => {
       setError('');
 
       try {
-        const response = await api.get('/admin/reports');
+        const response = await api.get('/admin/reports'); // Corrected endpoint
         if (!response || !response.data) {
           throw new Error('No data received from server');
         }
@@ -28,7 +27,13 @@ const Reports = () => {
         setReportData(response.data);
       } catch (err) {
         console.error(err);
-        setError('Błąd podczas pobierania raportów.');
+        if (err.response) {
+          setError(err.response.data.msg || 'Błąd podczas pobierania raportów.');
+        } else if (err.request) {
+          setError('Nie otrzymano odpowiedzi od serwera.');
+        } else {
+          setError('Wystąpił nieoczekiwany błąd.');
+        }
       }
 
       setLoading(false);
@@ -47,7 +52,13 @@ const Reports = () => {
       saveAs(blob, 'raporty.csv');
     } catch (err) {
       console.error(err);
-      setError('Błąd podczas pobierania raportu CSV.');
+      if (err.response) {
+        setError(err.response.data.msg || 'Błąd podczas pobierania raportu CSV.');
+      } else if (err.request) {
+        setError('Nie otrzymano odpowiedzi od serwera.');
+      } else {
+        setError('Wystąpił nieoczekiwany błąd.');
+      }
     }
   };
 
@@ -157,11 +168,11 @@ const Reports = () => {
         </Grid>
 
         {/* Download CSV Button */}
-         <Grid item xs={12} className="flex justify-end">
-        <Button variant="contained" color="primary" onClick={handleDownload}>
-          Pobierz Raport CSV
-        </Button>
-      </Grid>
+        <Grid item xs={12} className="flex justify-end">
+          <Button variant="contained" color="primary" onClick={handleDownload}>
+            Pobierz Raport CSV
+          </Button>
+        </Grid>
       </Grid>
     </div>
   );

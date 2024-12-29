@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Button, TextField, Typography, Alert, FormControl, FormLabel } from '@mui/material';
-import api from '../utils/api';
+import api from '../api/api';
 
 
 const ResendVerification = () => {
