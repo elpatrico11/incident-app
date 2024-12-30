@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
-import api from '../../../api/api';
+import api from "../api/api";
 
 const IncidentManagement = () => {
   const [allIncidents, setAllIncidents] = useState([]); // Wszystkie incydenty

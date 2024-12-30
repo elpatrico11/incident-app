@@ -17,11 +17,11 @@ import ResendVerification from "./pages/ResendVerification";
 import DashboardLayout from "./components/DashboardLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 
-import AdminPage from "./features/admin/pages/AdminPage";
-import UserManagement from "./features/admin/components/UserManagement";
-import EditUser from "./features/admin/components/EditUser";
-import IncidentManagement from "./features/admin/components/IncidentManagement";
-import Reports from "./features/admin/components/Reports";
+import AdminPage from "./pages/AdminPage";
+import UserManagement from "./pages/UserManagement";
+import EditUser from "./pages/EditUser";
+import IncidentManagement from "./pages/IncidentManagement";
+import Reports from "./pages/Reports";
 
 import useAuthStore from "./store/useAuthStore";
 

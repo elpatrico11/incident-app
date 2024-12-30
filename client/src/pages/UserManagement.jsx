@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { CSVLink } from 'react-csv'; 
-import api from '../../../api/api';
-import useAuthStore from '../../../store/useAuthStore';
+import api from "../api/api";
+import useAuthStore from '../store/useAuthStore';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);

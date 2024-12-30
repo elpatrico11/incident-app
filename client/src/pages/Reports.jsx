@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Typography, CircularProgress, Alert, Grid, Button } from '@mui/material';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
-import api from '../../../api/api';
+import api from "../api/api";
 import ReportsByCategoryBarChart from './ReportsByCategoryBarChart';
 import StatusCountChart from './StatusCountChart';
 import IncidentsPerDayChart from './IncidentsPerDayChart'; 
@@ -20,6 +20,8 @@ const Reports = () => {
 
       try {
         const response = await api.get('/admin/reports'); // Corrected endpoint
+            console.log('Report data:', response.data); // Add this to debug
+
         if (!response || !response.data) {
           throw new Error('No data received from server');
         }
@@ -120,15 +122,15 @@ const Reports = () => {
           <div className="p-4 bg-gray-800 shadow rounded-lg h-full flex flex-col items-center">
             <Typography variant="h6" className="text-gray-300 mb-2">Średni Czas Rozwiązania</Typography>
             <div className="w-40 h-40 mb-4">
-              <CircularProgressbar
-                value={parseFloat(averageResolutionTime || 0)}
-                text={`${averageResolutionTime || 0}h`}
-                styles={buildStyles({
-                  textColor: '#a0aec0',
-                  pathColor: '#f6ad55',
-                  trailColor: '#4a5568',
-                })}
-              />
+             <CircularProgressbar
+  value={Math.min(100, parseFloat(averageResolutionTime || 0))}
+  text={`${averageResolutionTime?.toFixed(2) || '0.00'}h`}
+  styles={buildStyles({
+    textColor: '#a0aec0',
+    pathColor: '#f6ad55',
+    trailColor: '#4a5568',
+  })}
+/>
             </div>
             <Typography variant="body1" className="text-gray-300 text-center">
               Średni czas potrzebny na rozwiązanie zgłoszenia.
