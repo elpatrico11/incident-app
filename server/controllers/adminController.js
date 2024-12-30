@@ -386,16 +386,32 @@ const getReports = async (req, res, next) => {
     const totalIncidents = await Incident.countDocuments();
 
     // Average resolution time (assuming 'resolutionTime' is in hours)
-    const avgResolution = await Incident.aggregate([
-      { $match: { resolutionTime: { $exists: true } } },
+    const avgResolutionTimeResult = await Incident.aggregate([
+      {
+        $match: { status: "Rozwiązane", resolvedAt: { $exists: true } },
+      },
+      {
+        $project: {
+          resolutionTime: {
+            $divide: [
+              { $subtract: ["$resolvedAt", "$createdAt"] },
+              1000 * 60 * 60, // Convert to hours
+            ],
+          },
+        },
+      },
       {
         $group: {
           _id: null,
-          avgTime: { $avg: "$resolutionTime" },
+          averageResolutionTime: { $avg: "$resolutionTime" },
         },
       },
     ]);
-    const averageResolutionTime = avgResolution[0]?.avgTime || 0;
+
+    const averageResolutionTime =
+      avgResolutionTimeResult.length > 0
+        ? avgResolutionTimeResult[0].averageResolutionTime
+        : 0;
 
     // Reports by category
     const reportsByCategory = await Incident.aggregate([
@@ -460,10 +476,10 @@ const getReports = async (req, res, next) => {
 
     res.json({
       totalIncidents,
-      averageResolutionTime: averageResolutionTime.toFixed(2), // Rounded to 2 decimal places
+      averageResolutionTime: Number(averageResolutionTime.toFixed(2)),
       reportsByCategory,
       statusCount,
-      averagePerDay: averagePerDay.toFixed(2),
+      averagePerDay: averagePerDayAgg[0]?.average.toFixed(2) || 0,
       totalIncidentsPerDay,
     });
   } catch (error) {
