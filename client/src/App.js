@@ -5,7 +5,7 @@ import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import ReportPage from "./pages/ReportPage";
-import IncidentsPage from "./pages/IncidentsPage";
+import IncidentsPage from "./views/pages/IncidentsPage";
 import MapPage from "./pages/MapPage";
 import IncidentDetailPage from "./views/pages/IncidentDetailPage";
 import ProfilePage from "./views/pages/ProfilePage";
