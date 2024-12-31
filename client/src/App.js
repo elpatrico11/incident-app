@@ -7,7 +7,7 @@ import RegisterPage from "./pages/RegisterPage";
 import ReportPage from "./pages/ReportPage";
 import IncidentsPage from "./pages/IncidentsPage";
 import MapPage from "./pages/MapPage";
-import IncidentDetailPage from "./pages/IncidentDetailPage";
+import IncidentDetailPage from "./views/pages/IncidentDetailPage";
 import ProfilePage from "./views/pages/ProfilePage";
 import MyIncidentPage from "./pages/MyIncidentPage";
 import EditIncidentPage from "./pages/EditIncidentPage";
