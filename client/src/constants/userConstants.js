@@ -14,3 +14,16 @@ export const STATUS_COLORS = {
   admin: "bg-green-500",
   default: "bg-gray-500",
 };
+
+export const USER_ROLES = {
+  USER: "user",
+  ADMIN: "admin",
+};
+
+/**
+ * Validation messages
+ */
+export const VALIDATION_MESSAGES = {
+  REQUIRED: "To pole jest wymagane.",
+  INVALID_EMAIL: "Nieprawidłowy adres email.",
+};

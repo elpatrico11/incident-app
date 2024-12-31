@@ -92,11 +92,6 @@ const useUserManagement = () => {
         return;
       }
 
-      const confirmDelete = window.confirm(
-        "Czy na pewno chcesz usunąć tego użytkownika?"
-      );
-      if (!confirmDelete) return;
-
       try {
         await deleteUserAPI(userId);
         setUsers((prevUsers) => prevUsers.filter((u) => u._id !== userId));
