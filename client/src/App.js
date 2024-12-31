@@ -21,7 +21,7 @@ import AdminPage from "./views/pages/AdminPage";
 import UserManagement from "./views/pages/UserManagement";
 import EditUser from "./pages/EditUser";
 import IncidentManagement from "./views/pages/IncidentManagement";
-import Reports from "./pages/Reports";
+import Reports from "./views/pages/ReportManagement";
 
 import useAuthStore from "./store/useAuthStore";
 
