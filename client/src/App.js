@@ -8,7 +8,7 @@ import ReportPage from "./pages/ReportPage";
 import IncidentsPage from "./pages/IncidentsPage";
 import MapPage from "./pages/MapPage";
 import IncidentDetailPage from "./pages/IncidentDetailPage";
-import ProfilePage from "./pages/ProfilePage";
+import ProfilePage from "./views/pages/ProfilePage";
 import MyIncidentPage from "./pages/MyIncidentPage";
 import EditIncidentPage from "./pages/EditIncidentPage";
 import VerifyEmail from "./pages/VerifyEmail";
