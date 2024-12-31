@@ -19,7 +19,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 
 import AdminPage from "./views/pages/AdminPage";
 import UserManagement from "./views/pages/UserManagement";
-import EditUser from "./pages/EditUser";
+import EditUser from "./views/pages/EditUser";
 import IncidentManagement from "./views/pages/IncidentManagement";
 import Reports from "./views/pages/ReportManagement";
 
