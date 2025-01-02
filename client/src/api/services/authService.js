@@ -9,3 +9,10 @@ export const resendVerification = async (email) => {
   const response = await api.post("/auth/resend-verification", { email });
   return response.data;
 };
+
+export const verifyEmail = async (token, email) => {
+  const response = await api.get("/auth/verify-email", {
+    params: { token, email },
+  });
+  return response.data;
+};

@@ -11,7 +11,7 @@ import IncidentDetailPage from "./views/pages/IncidentDetailPage";
 import ProfilePage from "./views/pages/ProfilePage";
 import MyIncidentsPage from "./views/pages/MyIncidentsPage";
 import EditIncidentPage from "./views/pages/EditIncidentPage";
-import VerifyEmail from "./pages/VerifyEmail";
+import VerifyEmail from "./views/pages/VerifyEmail";
 import ResendVerification from "./views/pages/ResendVerification";
 
 import DashboardLayout from "./components/DashboardLayout";
