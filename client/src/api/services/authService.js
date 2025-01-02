@@ -16,3 +16,20 @@ export const verifyEmail = async (token, email) => {
   });
   return response.data;
 };
+
+export const registerUser = async (
+  firstName,
+  lastName,
+  email,
+  password,
+  captchaValue
+) => {
+  const response = await api.post("/auth/register", {
+    firstName,
+    lastName,
+    email,
+    password,
+    captcha: captchaValue,
+  });
+  return response.data;
+};

@@ -3,7 +3,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 
 import HomePage from "./views/pages/HomePage";
 import LoginPage from "./views/pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
+import RegisterPage from "./views/pages/RegisterPage";
 import ReportPage from "./views/pages/ReportPage";
 import IncidentsPage from "./views/pages/IncidentsPage";
 import MapPage from "./views/pages/MapPage";
