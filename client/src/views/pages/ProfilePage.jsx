@@ -13,7 +13,7 @@ import {
 import useProfile from '../../controllers/hooks/useProfile';
 import TextInput from '../components/features/profileManagement/TextInput';
 import AlertMessage from '../components/common/AlertMessage';
-import Notifications from '../../components/Notifications';
+import Notifications from '../components/common/Notifications';
 import Loader from '../components/common/Loader'; // Corrected import path
 
 // Create a dark theme

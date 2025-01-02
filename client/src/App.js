@@ -14,7 +14,7 @@ import EditIncidentPage from "./views/pages/EditIncidentPage";
 import VerifyEmail from "./views/pages/VerifyEmail";
 import ResendVerification from "./views/pages/ResendVerification";
 
-import DashboardLayout from "./components/DashboardLayout";
+import DashboardLayout from "./views/components/layout/DashboardLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 import AdminPage from "./views/pages/AdminPage";
