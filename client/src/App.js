@@ -15,7 +15,7 @@ import VerifyEmail from "./views/pages/VerifyEmail";
 import ResendVerification from "./views/pages/ResendVerification";
 
 import DashboardLayout from "./views/components/layout/DashboardLayout";
-import ProtectedRoute from "./components/ProtectedRoute";
+import ProtectedRoute from "./views/components/features/auth/ProtectedRoute";
 
 import AdminPage from "./views/pages/AdminPage";
 import UserManagement from "./views/pages/UserManagement";
