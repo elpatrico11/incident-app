@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 
 import HomePage from "./views/pages/HomePage";
-import LoginPage from "./pages/LoginPage";
+import LoginPage from "./views/pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import ReportPage from "./views/pages/ReportPage";
 import IncidentsPage from "./views/pages/IncidentsPage";
