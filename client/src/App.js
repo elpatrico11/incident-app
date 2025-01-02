@@ -9,7 +9,7 @@ import IncidentsPage from "./views/pages/IncidentsPage";
 import MapPage from "./pages/MapPage";
 import IncidentDetailPage from "./views/pages/IncidentDetailPage";
 import ProfilePage from "./views/pages/ProfilePage";
-import MyIncidentPage from "./pages/MyIncidentPage";
+import MyIncidentsPage from "./views/pages/MyIncidentsPage";
 import EditIncidentPage from "./pages/EditIncidentPage";
 import VerifyEmail from "./pages/VerifyEmail";
 import ResendVerification from "./pages/ResendVerification";
@@ -67,7 +67,7 @@ const App = () => {
         {/* Protected Routes for Authenticated Users */}
         <Route element={<ProtectedRoute />}>
           <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/my-incidents" element={<MyIncidentPage />} />
+          <Route path="/my-incidents" element={<MyIncidentsPage />} />
           <Route path="/incidents/:id/edit" element={<EditIncidentPage />} />
         </Route>
 

@@ -39,6 +39,12 @@ export const deleteIncident = async (incidentId) => {
   return response.data;
 };
 
+// Delete incident by user
+export const userDeleteIncident = async (incidentId) => {
+  const response = await api.delete(`/incidents/${incidentId}`);
+  return response.data;
+};
+
 /**
  * Fetch detailed information about a single incident.
  * @param {string} incidentId - The ID of the incident.
@@ -83,4 +89,11 @@ export const submitComment = async (incidentId, commentData) => {
     // Optionally, handle errors here or let the calling function handle them
     throw error;
   }
+};
+
+//gets user incidents
+
+export const getMyIncidents = async () => {
+  const response = await api.get("/incidents/my");
+  return response.data;
 };
