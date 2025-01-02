@@ -29,3 +29,18 @@ export const STATUS_OPTIONS = [
   "Zamknięte",
   "Odrzucone",
 ];
+
+export const BOUNDARY_GEOJSON_URL =
+  "/assets/geo/bielsko-biala-boundary.geojson";
+
+export const DNI_TYGODNIA_OPTIONS = [
+  "Poniedziałek",
+  "Wtorek",
+  "Środa",
+  "Czwartek",
+  "Piątek",
+  "Sobota",
+  "Niedziela",
+];
+
+export const PORA_DNIA_OPTIONS = ["Rano", "Popołudnie", "Wieczór", "Noc"];

@@ -31,6 +31,7 @@ const IncidentCard = ({ incident, getStatusColor, onStatusChange, onDelete }) =>
             {incident.status}
           </span>
         </div>
+        
         <p className="text-sm mb-2">
           {incident.description
             ? `${incident.description.substring(0, 100)}...`
@@ -46,10 +47,18 @@ const IncidentCard = ({ incident, getStatusColor, onStatusChange, onDelete }) =>
             minute: '2-digit',
           })}
         </p>
+
         <div className="mt-4 space-y-2">
+          {/* Details Button */}
           <Link to={`/incidents/${incident._id}`} className="w-full">
             <button className="btn btn-primary btn-sm w-full">Szczegóły</button>
           </Link>
+          
+          {/* New: Edit Button */}
+          <Link to={`/incidents/${incident._id}/edit`} className="w-full">
+            <button className="btn btn-accent btn-sm w-full">Edytuj</button>
+          </Link>
+
           {/* Update Status */}
           <select
             value={incident.status || 'Nowe'}
@@ -62,6 +71,8 @@ const IncidentCard = ({ incident, getStatusColor, onStatusChange, onDelete }) =>
               </option>
             ))}
           </select>
+
+          {/* Delete Button */}
           <button
             onClick={() => onDelete(incident._id)}
             className="btn btn-error btn-outline btn-sm w-full"

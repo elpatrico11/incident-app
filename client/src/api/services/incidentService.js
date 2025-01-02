@@ -1,4 +1,5 @@
 import api from "../api";
+import { BOUNDARY_GEOJSON_URL } from "../../constants/incidentConstants";
 
 /**
  * Fetch all categories.
@@ -97,3 +98,27 @@ export const getMyIncidents = async () => {
   const response = await api.get("/incidents/my");
   return response.data;
 };
+
+/**
+ * Update an existing incident
+ */
+export async function updateIncident(incidentId, data) {
+  // data is FormData
+  const response = await api.put(`/incidents/${incidentId}`, data, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+}
+
+/**
+ * Fetch boundary GeoJSON
+ */
+export async function fetchBoundaryGeoJSON() {
+  // If your server hosts it differently, adjust accordingly.
+  // If it's a static file in /assets, we can do a normal fetch:
+  const response = await fetch(BOUNDARY_GEOJSON_URL);
+  if (!response.ok) {
+    throw new Error("Failed to load boundary data");
+  }
+  return response.json();
+}

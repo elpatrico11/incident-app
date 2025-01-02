@@ -10,7 +10,7 @@ import MapPage from "./pages/MapPage";
 import IncidentDetailPage from "./views/pages/IncidentDetailPage";
 import ProfilePage from "./views/pages/ProfilePage";
 import MyIncidentsPage from "./views/pages/MyIncidentsPage";
-import EditIncidentPage from "./pages/EditIncidentPage";
+import EditIncidentPage from "./views/pages/EditIncidentPage";
 import VerifyEmail from "./pages/VerifyEmail";
 import ResendVerification from "./pages/ResendVerification";
 

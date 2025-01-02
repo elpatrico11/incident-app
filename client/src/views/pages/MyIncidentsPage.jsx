@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Container,
   Typography,
@@ -12,8 +13,8 @@ import { DeleteConfirmationDialog } from '../components/features/incidentManagem
 
 import { STATUS_COLORS } from '../../constants/incidentConstants';
 
-
 const MyIncidentsPage = () => {
+  const navigate = useNavigate();
   const {
     incidents,
     loading,
@@ -45,25 +46,32 @@ const MyIncidentsPage = () => {
       <Typography variant="h4" gutterBottom>
         Moje Zgłoszenia
       </Typography>
+
       {incidents.length === 0 ? (
         <Typography variant="body1">Nie masz żadnych zgłoszeń.</Typography>
       ) : (
         <Grid container spacing={4}>
           {incidents.map((incident) => (
             <Grid item key={incident._id} xs={12} sm={6} md={4}>
-              <IncidentCard 
+              <IncidentCard
                 incident={incident}
                 statusColors={STATUS_COLORS}
+                // DELETE callback
                 onDelete={() => {
                   setIncidentToDelete(incident);
                   setDeleteDialogOpen(true);
+                }}
+                // EDIT callback
+                onEdit={() => {
+                  // navigate to the edit page for this incident
+                  navigate(`/incidents/${incident._id}/edit`);
                 }}
               />
             </Grid>
           ))}
         </Grid>
       )}
-      
+
       <DeleteConfirmationDialog
         open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
