@@ -1,7 +1,4 @@
-
-import React, { useEffect, useState } from 'react';
-import api from '../api/api';
-import { fetchCategories } from '../utils/categories';
+import {React, useEffect} from 'react';
 import {
   Container,
   Typography,
@@ -23,80 +20,33 @@ import { MapContainer, TileLayer, Marker, Popup, GeoJSON } from 'react-leaflet';
 import L from 'leaflet';
 import { useNavigate } from 'react-router-dom';
 
-// Custom marker icon
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
-  iconUrl: require('leaflet/dist/images/marker-icon.png'),
-  shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
-});
+import { useMapPage } from '../../controllers/hooks/useMapPage';
+import 'leaflet/dist/leaflet.css';
+import { setupLeafletMarkerIcons } from '../../utils/mapUtils';
 
 const MapPage = () => {
-  const [incidents, setIncidents] = useState([]);
-  const [filteredIncidents, setFilteredIncidents] = useState([]);
-  const [incidentsLoading, setIncidentsLoading] = useState(true);
-  const [incidentsError, setIncidentsError] = useState('');
-  const [categories, setCategories] = useState([]);
-  const [categoriesLoading, setCategoriesLoading] = useState(true);
-  const [categoriesError, setCategoriesError] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('All');
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [boundary, setBoundary] = useState(null);
+  // Hook logic
+  const {
+    incidentsError,
+    incidentsLoading,
+    filteredIncidents,
+    categoriesError,
+    categoriesLoading,
+    categories,
+    categoryFilter,
+    handleFilterChange,
+    boundary,
+    drawerOpen,
+    setDrawerOpen,
+  } = useMapPage();
+
+   useEffect(() => {
+    setupLeafletMarkerIcons();
+  }, []);
+
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchIncidents = async () => {
-      try {
-        const response = await api.get('/incidents');
-        setIncidents(response.data.incidents);
-        setFilteredIncidents(response.data.incidents);
-      } catch (err) {
-        console.error(err);
-        setIncidentsError('Błąd podczas pobierania zgłoszeń.');
-      }
-      setIncidentsLoading(false);
-    };
-    fetchIncidents();
-  }, []);
-
-  useEffect(() => {
-    const getCategories = async () => {
-      try {
-        const fetchedCategories = await fetchCategories();
-        setCategories(fetchedCategories);
-      } catch (err) {
-        console.error(err);
-        setCategoriesError('Błąd podczas pobierania kategorii.');
-      }
-      setCategoriesLoading(false);
-    };
-    getCategories();
-  }, []);
-
-  useEffect(() => {
-    fetch('/assets/geo/bielsko-biala-boundary.geojson')
-      .then((response) => response.json())
-      .then((data) => {
-        setBoundary(data);
-      })
-      .catch((error) => {
-        console.error('Error loading boundary GeoJSON:', error);
-      });
-  }, []);
-
-  const handleFilterChange = (e) => {
-    const selectedCategory = e.target.value;
-    setCategoryFilter(selectedCategory);
-    if (selectedCategory === 'All') {
-      setFilteredIncidents(incidents);
-    } else {
-      const filtered = incidents.filter(
-        (incident) => incident.category === selectedCategory
-      );
-      setFilteredIncidents(filtered);
-    }
-  };
-
+  // If still loading incidents or categories or boundary not loaded yet:
   if (incidentsLoading || categoriesLoading || !boundary) {
     return (
       <Container sx={{ mt: 4 }}>
@@ -126,6 +76,7 @@ const MapPage = () => {
       <Typography variant="h4" gutterBottom>
         Mapa Incydentów
       </Typography>
+
       <Box
         sx={{
           mb: 2,
@@ -141,7 +92,7 @@ const MapPage = () => {
             id="category-filter"
             value={categoryFilter}
             label="Filtruj według kategorii"
-            onChange={handleFilterChange}
+            onChange={(e) => handleFilterChange(e.target.value)}
           >
             <MenuItem value="All">Wszystkie</MenuItem>
             {categories.map((category) => (
@@ -152,12 +103,14 @@ const MapPage = () => {
           </Select>
         </FormControl>
       </Box>
+
       <Box sx={{ height: '600px', width: '100%', mb: 2 }}>
         <MapContainer
-          center={[49.8224, 19.0444]} // Default coordinates
+          center={[49.8224, 19.0444]}
           zoom={13}
           style={{ height: '100%', width: '100%' }}
           whenCreated={(map) => {
+            // Fit bounds to boundary
             if (boundary) {
               const geoJsonLayer = L.geoJSON(boundary);
               map.fitBounds(geoJsonLayer.getBounds());
@@ -165,7 +118,7 @@ const MapPage = () => {
           }}
         >
           <TileLayer
-            attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
+            attribution='&copy; OpenStreetMap contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           {boundary && (
@@ -179,7 +132,7 @@ const MapPage = () => {
             />
           )}
           {filteredIncidents
-            .filter((incident) => incident.location && incident.location.coordinates) // Ensure valid incidents
+            .filter((i) => i.location && i.location.coordinates)
             .map((incident) => (
               <Marker
                 key={incident._id}
@@ -199,6 +152,8 @@ const MapPage = () => {
             ))}
         </MapContainer>
       </Box>
+
+      {/* Floating Button */}
       <Fab
         color="primary"
         aria-label="add"
@@ -211,6 +166,8 @@ const MapPage = () => {
       >
         <AddIcon />
       </Fab>
+
+      {/* Bottom Drawer */}
       <Drawer
         anchor="bottom"
         open={drawerOpen}

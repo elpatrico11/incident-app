@@ -10,6 +10,16 @@ export const fetchCategories = async () => {
 };
 
 /**
+ * Fetch all incidents.
+ */
+
+export async function fetchAllIncidents() {
+  const response = await api.get("/incidents");
+  // Assume response.data.incidents is an array
+  return response.data.incidents;
+}
+
+/**
  * Fetch incidents with filters and sorting.
  * @param {Object} params - Query parameters.
  */
@@ -114,8 +124,6 @@ export async function updateIncident(incidentId, data) {
  * Fetch boundary GeoJSON
  */
 export async function fetchBoundaryGeoJSON() {
-  // If your server hosts it differently, adjust accordingly.
-  // If it's a static file in /assets, we can do a normal fetch:
   const response = await fetch(BOUNDARY_GEOJSON_URL);
   if (!response.ok) {
     throw new Error("Failed to load boundary data");
