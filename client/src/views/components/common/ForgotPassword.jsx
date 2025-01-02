@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -8,58 +9,22 @@ import {
   Typography,
   Alert,
 } from '@mui/material';
-import api from '../api/api';
+import useForgotPassword from '../../../controllers/hooks/useForgotPassword';
 
-export default function ForgotPassword({ open, handleClose }) {
-  const [email, setEmail] = useState('');
-  const [emailError, setEmailError] = useState(false);
-  const [emailErrorMessage, setEmailErrorMessage] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
-  const [serverError, setServerError] = useState('');
-
-  const validateEmail = () => {
-    if (!email) {
-      setEmailError(true);
-      setEmailErrorMessage('Email is required.');
-      return false;
-    }
-    const emailRegex = /\S+@\S+\.\S+/;
-    if (!emailRegex.test(email)) {
-      setEmailError(true);
-      setEmailErrorMessage('Please enter a valid email address.');
-      return false;
-    }
-    setEmailError(false);
-    setEmailErrorMessage('');
-    return true;
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSuccessMessage('');
-    setServerError('');
-
-    if (!validateEmail()) {
-      return;
-    }
-
-    try {
-      const response = await api.post('/auth/forgot-password', { email });
-      setSuccessMessage(response.data.msg);
-    } catch (error) {
-      setServerError(
-        error.response?.data?.msg ||
-          'An error occurred while processing your request.'
-      );
-    }
-  };
+const ForgotPassword = ({ open, handleClose }) => {
+  const {
+    email,
+    setEmail,
+    emailError,
+    emailErrorMessage,
+    successMessage,
+    serverError,
+    handleSubmit,
+    resetState,
+  } = useForgotPassword();
 
   const handleDialogClose = () => {
-    setEmail('');
-    setEmailError(false);
-    setEmailErrorMessage('');
-    setSuccessMessage('');
-    setServerError('');
+    resetState();
     handleClose();
   };
 
@@ -104,4 +69,6 @@ export default function ForgotPassword({ open, handleClose }) {
       </DialogActions>
     </Dialog>
   );
-}
+};
+
+export default ForgotPassword;

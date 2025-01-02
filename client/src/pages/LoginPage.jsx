@@ -18,7 +18,7 @@ import { styled } from '@mui/material/styles';
 import MuiCard from '@mui/material/Card';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 
-import ForgotPassword from './ForgotPassword';
+import ForgotPassword from '../views/components/common/ForgotPassword';
 import { GoogleIcon, SitemarkIcon } from '../assets/CustomIcons';
 import AppTheme from '../assets/shared-theme/AppTheme';
 import ColorModeSelect from '../assets/shared-theme/ColorModeSelect';
