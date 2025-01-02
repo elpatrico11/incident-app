@@ -5,7 +5,7 @@ import {
   deleteUser as deleteUserAPI,
 } from "../../api/services/userService";
 import { SORT_OPTIONS } from "../../constants/userConstants";
-import useAuthStore from "../../store/useAuthStore";
+import useAuthStore from "../../models/stores/useAuthStore";
 
 const useUserManagement = () => {
   // Data States

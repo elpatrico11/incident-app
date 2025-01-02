@@ -5,7 +5,7 @@ import {
   createIncident,
 } from "../../api/services/reportIncidentService";
 import { compressImage } from "../../utils/imageUtils";
-import useAuthStore from "../../store/useAuthStore";
+import useAuthStore from "../../models/stores/useAuthStore.js";
 import * as turf from "@turf/turf";
 import {
   BOUNDARY_GEOJSON_URL,

@@ -23,7 +23,7 @@ import EditUser from "./views/pages/EditUser";
 import IncidentManagement from "./views/pages/IncidentManagement";
 import Reports from "./views/pages/ReportManagement";
 
-import useAuthStore from "./store/useAuthStore";
+import useAuthStore from "./models/stores/useAuthStore";
 
 import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";

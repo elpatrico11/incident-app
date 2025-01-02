@@ -12,7 +12,7 @@ import {
   Divider,
   Pagination,
 } from '@mui/material';
-import useAuthStore from '../store/useAuthStore';
+import useAuthStore from '../models/stores/useAuthStore';
 
 const Notifications = () => {
   const {

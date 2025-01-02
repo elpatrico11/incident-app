@@ -11,7 +11,7 @@ import {
   DNI_TYGODNIA_OPTIONS,
   PORA_DNIA_OPTIONS,
 } from "../../constants/incidentConstants";
-import useAuthStore from "../../store/useAuthStore";
+import useAuthStore from "../../models/stores/useAuthStore";
 
 export function useEditIncidentForm(incidentId) {
   const navigate = useNavigate();

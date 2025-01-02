@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import useAuthStore from "../../store/useAuthStore";
+import useAuthStore from "../../models/stores/useAuthStore";
 import {
   EMAIL_REQUIRED,
   INVALID_EMAIL,

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { fetchUserById, updateUserById } from "../../api/services/userService";
 import { USER_ROLES, VALIDATION_MESSAGES } from "../../constants/userConstants";
-import useAuthStore from "../../store/useAuthStore";
+import useAuthStore from "../../models/stores/useAuthStore";
 
 const useEditUser = (userId) => {
   // State Management

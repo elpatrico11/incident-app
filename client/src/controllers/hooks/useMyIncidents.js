@@ -3,7 +3,7 @@ import {
   getMyIncidents,
   userDeleteIncident,
 } from "../../api/services/incidentService";
-import useAuthStore from "../../store/useAuthStore";
+import useAuthStore from "../../models/stores/useAuthStore";
 
 export const useMyIncidents = () => {
   const { user } = useAuthStore();

@@ -5,7 +5,7 @@ import {
   changeUserPassword,
 } from "../../api/services/profileService";
 import { VALIDATION_MESSAGES } from "../../constants/profileConstants";
-import useAuthStore from "../../store/useAuthStore";
+import useAuthStore from "../../models/stores/useAuthStore";
 
 /**
  * Custom hook to manage user profile.

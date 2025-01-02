@@ -5,7 +5,7 @@ import {
   submitComment,
 } from "../../api/services/incidentService";
 import { point, polygon, booleanPointInPolygon } from "@turf/turf";
-import useAuthStore from "../../store/useAuthStore";
+import useAuthStore from "../../models/stores/useAuthStore";
 
 /**
  * Custom hook to manage incident details, comments, and boundary data.

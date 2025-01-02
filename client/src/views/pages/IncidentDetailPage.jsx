@@ -1,4 +1,3 @@
-// client/src/views/pages/IncidentDetailPage.jsx
 import React from 'react';
 import { useParams, Link as RouterLink } from 'react-router-dom';
 import {

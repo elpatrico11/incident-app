@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu } from '@headlessui/react';
 import { UserCircle, X, Menu as MenuIcon } from 'lucide-react';
-import useAuthStore from '../store/useAuthStore';
+import useAuthStore from '../models/stores/useAuthStore';
 
 const DashboardLayout = ({ children }) => {
   const { user, logout, notifications } = useAuthStore();

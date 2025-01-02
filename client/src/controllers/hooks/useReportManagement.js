@@ -3,7 +3,7 @@ import {
   fetchReports,
   downloadReportsCSV,
 } from "../../api/services/reportService";
-import useAuthStore from "../../store/useAuthStore";
+import useAuthStore from "../../models/stores/useAuthStore";
 
 const useReportManagement = () => {
   // Data States
