@@ -1,5 +1,3 @@
-// src/views/components/SignUp.jsx
-
 import React from 'react';
 import {
   Box,
@@ -14,11 +12,11 @@ import {
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import MuiCard from '@mui/material/Card';
-import {  useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import ReCAPTCHA from 'react-google-recaptcha'; // Import ReCAPTCHA
 import CssBaseline from '@mui/material/CssBaseline'; // Correctly import CssBaseline
 
-import { GoogleIcon, SitemarkIcon } from '../../assets/CustomIcons';
+import { SitemarkIcon } from '../../assets/CustomIcons';
 import AppTheme from '../../assets/shared-theme/AppTheme';
 import ColorModeSelect from '../../assets/shared-theme/ColorModeSelect';
 import useRegister from '../../controllers/hooks/useRegister'; // Correctly import the hook
@@ -232,16 +230,18 @@ export default function SignUp(props) {
               </Divider>
 
               {/* Alternative Sign-Up Methods */}
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <Button
-                  fullWidth
-                  variant="outlined"
-                  onClick={() => alert('Sign up with Google')}
-                  startIcon={<GoogleIcon />}
-                >
-                  Sign up with Google
-                </Button>
-                {/* Removed "Already have an account? Sign in" */}
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+                {/* "Already have an account? Sign in" Section */}
+                <Typography variant="body2" align="center">
+                  Already have an account?{' '}
+                  <Button
+                    variant="text"
+                    onClick={() => navigate('/login')}
+                    sx={{ textTransform: 'none', padding: 0 }}
+                  >
+                    Sign in
+                  </Button>
+                </Typography>
               </Box>
             </>
           )}

@@ -19,7 +19,7 @@ import MuiCard from '@mui/material/Card';
 import { Link as RouterLink } from 'react-router-dom';
 
 import ForgotPassword from '../components/common/ForgotPassword';
-import { GoogleIcon, SitemarkIcon } from '../../assets/CustomIcons';
+import { SitemarkIcon } from '../../assets/CustomIcons';
 import AppTheme from '../../assets/shared-theme/AppTheme';
 import ColorModeSelect from '../../assets/shared-theme/ColorModeSelect';
 import useLogin from '../../controllers/hooks/useLogin';
@@ -206,14 +206,7 @@ export default function LoginPage(props) {
 
           {/* Alternative Sign-In Methods */}
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Button
-              fullWidth
-              variant="outlined"
-              onClick={() => alert('Sign in with Google')}
-              startIcon={<GoogleIcon />}
-            >
-              Sign in with Google
-            </Button>
+            
             <Typography sx={{ textAlign: 'center' }}>
               Don&apos;t have an account?{' '}
               <Link
