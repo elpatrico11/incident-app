@@ -16,13 +16,18 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
-import { MapContainer, TileLayer, Marker, Popup, GeoJSON } from 'react-leaflet';
+import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet';
 import L from 'leaflet';
 import { useNavigate } from 'react-router-dom';
 
 import { useMapPage } from '../../controllers/hooks/useMapPage';
 import 'leaflet/dist/leaflet.css';
 import { setupLeafletMarkerIcons } from '../../utils/mapUtils';
+import 'leaflet.markercluster/dist/MarkerCluster.css';
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
+import 'leaflet.markercluster';
+import MarkerClusterGroup from '../components/common/MarkerClusterGroup';
+
 
 const MapPage = () => {
   // Hook logic
@@ -71,7 +76,7 @@ const MapPage = () => {
     );
   }
 
-  return (
+ return (
     <Container sx={{ mt: 4, position: 'relative' }}>
       <Typography variant="h4" gutterBottom>
         Mapa Incydentów
@@ -131,25 +136,8 @@ const MapPage = () => {
               }}
             />
           )}
-          {filteredIncidents
-            .filter((i) => i.location && i.location.coordinates)
-            .map((incident) => (
-              <Marker
-                key={incident._id}
-                position={[
-                  incident.location.coordinates[1],
-                  incident.location.coordinates[0],
-                ]}
-              >
-                <Popup>
-                  <Typography variant="h6">{incident.category}</Typography>
-                  <Typography variant="body2">{incident.description}</Typography>
-                  <Typography variant="caption">
-                    Status: {incident.status}
-                  </Typography>
-                </Popup>
-              </Marker>
-            ))}
+          {/* Use the custom MarkerClusterGroup */}
+          <MarkerClusterGroup incidents={filteredIncidents} />
         </MapContainer>
       </Box>
 
