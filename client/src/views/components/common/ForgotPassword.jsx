@@ -59,11 +59,11 @@ const ForgotPassword = ({ open, handleClose }) => {
       </DialogContent>
       <DialogActions>
         <Button onClick={handleDialogClose} color="secondary">
-          {successMessage ? 'Close' : 'Cancel'}
+          {successMessage ? 'Close' : 'Anuluj'}
         </Button>
         {!successMessage && (
           <Button onClick={handleSubmit} variant="contained" color="primary">
-            Submit
+            Potwierdź
           </Button>
         )}
       </DialogActions>

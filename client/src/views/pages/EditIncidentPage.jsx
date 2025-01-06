@@ -1,13 +1,33 @@
 import React, { useEffect } from 'react';
-import { Container, Typography, Box, TextField, Button, Alert, Grid, FormControl, InputLabel, Select, MenuItem, CircularProgress, Checkbox, ListItemText, IconButton, Snackbar } from '@mui/material';
-import { useParams } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, GeoJSON, useMapEvents } from 'react-leaflet';
-import { Delete as DeleteIcon } from '@mui/icons-material';
+import {
+  Container,
+  Typography,
+  Box,
+  TextField,
+  Button,
+  Alert,
+  Grid,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  CircularProgress,
+  Checkbox,
+  ListItemText,
+  IconButton,
+  Snackbar,
+  InputAdornment
+} from '@mui/material';
 
+import { MapContainer, TileLayer, Marker, GeoJSON, useMapEvents } from 'react-leaflet';
+import { Delete as DeleteIcon, Search as SearchIcon } from '@mui/icons-material';
+
+import { useParams } from 'react-router-dom';
 import { useEditIncidentForm } from '../../controllers/hooks/useEditIncidentForm';
 import { setupLeafletMarkerIcons } from '../../utils/mapUtils';
 import 'leaflet/dist/leaflet.css';
 
+// Reusable component: whenever user clicks map => call onMapClick(latlng)
 const LocationSelector = ({ onMapClick }) => {
   useMapEvents({
     click(e) {
@@ -19,12 +39,6 @@ const LocationSelector = ({ onMapClick }) => {
 
 const EditIncidentPage = () => {
   const { id } = useParams();
-
-  // (Optional) set up Leaflet’s default marker icons:
-  useEffect(() => {
-    setupLeafletMarkerIcons();
-  }, []);
-
   const {
     formData,
     existingImage,
@@ -47,9 +61,24 @@ const EditIncidentPage = () => {
     handleImageChange,
     handleRemoveImage,
     handleMapClick,
+    handleSearchAddress, // Calls forward geocoding
     handleSubmit,
     handleSnackbarClose,
   } = useEditIncidentForm(id);
+
+  // For Leaflet icons
+  useEffect(() => {
+    setupLeafletMarkerIcons();
+  }, []);
+
+  // Prevent the Enter key from submitting the form 
+  // when user is typing in “Lokalizacja”.
+  const handleAddressKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();  // Stop the form from submitting
+      handleSearchAddress(); 
+    }
+  };
 
   if (categoriesLoading || boundaryLoading) {
     return (
@@ -72,6 +101,7 @@ const EditIncidentPage = () => {
       <Typography variant="h4" gutterBottom>
         Edytuj Zgłoszenie
       </Typography>
+
       {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
@@ -116,7 +146,7 @@ const EditIncidentPage = () => {
             />
           </Grid>
 
-          {/* Data Zdarzenia (Optional) */}
+          {/* Data Zdarzenia */}
           <Grid item xs={12} sm={6}>
             <TextField
               label="Data Zdarzenia (Opcjonalnie)"
@@ -130,7 +160,7 @@ const EditIncidentPage = () => {
             />
           </Grid>
 
-          {/* Dni Tygodnia (Optional) */}
+          {/* Dni Tygodnia */}
           <Grid item xs={12} sm={6}>
             <FormControl fullWidth>
               <InputLabel id="dniTygodnia-label">Dni Tygodnia (Opcjonalnie)</InputLabel>
@@ -145,7 +175,7 @@ const EditIncidentPage = () => {
               >
                 {DNI_TYGODNIA_OPTIONS.map((day) => (
                   <MenuItem key={day} value={day}>
-                    <Checkbox checked={formData.dniTygodnia.indexOf(day) > -1} />
+                    <Checkbox checked={formData.dniTygodnia.includes(day)} />
                     <ListItemText primary={day} />
                   </MenuItem>
                 ))}
@@ -153,7 +183,7 @@ const EditIncidentPage = () => {
             </FormControl>
           </Grid>
 
-          {/* Pora Dnia (Optional) */}
+          {/* Pora Dnia */}
           <Grid item xs={12} sm={6}>
             <FormControl fullWidth>
               <InputLabel id="poraDnia-label">Pora Dnia (Opcjonalnie)</InputLabel>
@@ -165,7 +195,7 @@ const EditIncidentPage = () => {
                 onChange={handlePoraDniaChange}
                 label="Pora Dnia (Opcjonalnie)"
               >
-                {PORA_DNIA_OPTIONS.map(pora => (
+                {PORA_DNIA_OPTIONS.map((pora) => (
                   <MenuItem key={pora} value={pora}>
                     {pora}
                   </MenuItem>
@@ -174,12 +204,12 @@ const EditIncidentPage = () => {
             </FormControl>
           </Grid>
 
-          {/* Map + Location */}
+          {/* Map Section */}
           <Grid item xs={12}>
             <Typography variant="subtitle1" gutterBottom>
-              Lokalizacja (kliknij na mapie, aby wybrać)
+              Mapa (kliknij, aby wybrać lokalizację)
             </Typography>
-            <Box sx={{ height: '400px', width: '100%' }}>
+            <Box sx={{ height: 400, width: '100%' }}>
               <MapContainer
                 center={[
                   formData.latitude ? parseFloat(formData.latitude) : 49.8225,
@@ -189,7 +219,7 @@ const EditIncidentPage = () => {
                 style={{ height: '100%', width: '100%' }}
               >
                 <TileLayer
-                  attribution='&copy; OpenStreetMap contributors'
+                  attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
                 {boundary && (
@@ -204,15 +234,41 @@ const EditIncidentPage = () => {
                 )}
                 <LocationSelector onMapClick={handleMapClick} />
                 {formData.latitude && formData.longitude && (
-                  <Marker position={[parseFloat(formData.latitude), parseFloat(formData.longitude)]} />
+                  <Marker
+                    position={[
+                      parseFloat(formData.latitude),
+                      parseFloat(formData.longitude)
+                    ]}
+                  />
                 )}
               </MapContainer>
             </Box>
-            {formData.latitude && formData.longitude && (
-              <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
-                Wybrana lokalizacja: {parseFloat(formData.latitude).toFixed(6)}, {parseFloat(formData.longitude).toFixed(6)}
-              </Typography>
-            )}
+          </Grid>
+
+          {/* Lokalizacja (under the map) + Magnifier => forward geocode */}
+          <Grid item xs={12}>
+            <TextField
+              label="Lokalizacja"
+              name="address"
+              value={formData.address}
+              onChange={handleFormChange}
+              onKeyDown={handleAddressKeyDown}  // <--- handle Enter
+              fullWidth
+              placeholder="np. Działkowców 15, Bielsko-Biała"
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={handleSearchAddress}
+                      disabled={isSubmitting}
+                      edge="end"
+                    >
+                      <SearchIcon />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
           </Grid>
 
           {/* Image Section */}
@@ -226,7 +282,7 @@ const EditIncidentPage = () => {
                   sx={{
                     position: 'relative',
                     width: '100%',
-                    height: '200px',
+                    height: 200,
                     border: '1px solid #ccc',
                     borderRadius: '8px',
                     overflow: 'hidden',
@@ -270,7 +326,7 @@ const EditIncidentPage = () => {
                   sx={{
                     position: 'relative',
                     width: '100%',
-                    height: '200px',
+                    height: 200,
                     border: '1px solid #ccc',
                     borderRadius: '8px',
                     overflow: 'hidden',
@@ -328,7 +384,7 @@ const EditIncidentPage = () => {
         </Box>
       </Box>
 
-      {/* Snackbar for Boundary Errors */}
+      {/* Snackbar for boundary errors */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={6000}

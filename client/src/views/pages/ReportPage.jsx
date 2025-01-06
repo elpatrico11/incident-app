@@ -16,8 +16,9 @@ import {
   Select,
   Checkbox,
   ListItemText,
+  InputAdornment,
 } from '@mui/material';
-import { Delete as DeleteIcon } from '@mui/icons-material';
+import { Delete as DeleteIcon, Search as SearchIcon } from '@mui/icons-material';
 import { MapContainer, TileLayer, Marker, GeoJSON, useMapEvents } from 'react-leaflet';
 import ReCAPTCHA from 'react-google-recaptcha';
 
@@ -35,7 +36,6 @@ const LocationSelector = ({ onMapClick }) => {
 };
 
 const ReportPage = () => {
-  // Optionally set up Leaflet marker icons once
   useEffect(() => {
     setupLeafletMarkerIcons();
   }, []);
@@ -43,6 +43,7 @@ const ReportPage = () => {
   const {
     formData,
     handleFormChange,
+    handleAddressChange,
     handleDniTygodniaChange,
     handlePoraDniaChange,
     handleImageChange,
@@ -51,6 +52,7 @@ const ReportPage = () => {
     handleSubmit,
     handleSnackbarClose,
     handleMapClick,
+    handleSearchAddress,
     boundary,
     boundaryError,
     boundaryLoading,
@@ -68,6 +70,14 @@ const ReportPage = () => {
     DNI_TYGODNIA_OPTIONS,
     PORA_DNIA_OPTIONS,
   } = useReportForm();
+
+  // Press Enter => trigger the search
+  const handleAddressKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSearchAddress();
+    }
+  };
 
   if (categoriesLoading || boundaryLoading) {
     return (
@@ -161,7 +171,7 @@ const ReportPage = () => {
               >
                 {DNI_TYGODNIA_OPTIONS.map((day) => (
                   <MenuItem key={day} value={day}>
-                    <Checkbox checked={formData.dniTygodnia.indexOf(day) > -1} />
+                    <Checkbox checked={formData.dniTygodnia.includes(day)} />
                     <ListItemText primary={day} />
                   </MenuItem>
                 ))}
@@ -190,10 +200,10 @@ const ReportPage = () => {
             </FormControl>
           </Grid>
 
-          {/* Map and Location */}
+          {/* Map */}
           <Grid item xs={12}>
             <Typography variant="subtitle1" gutterBottom>
-              Lokalizacja (kliknij na mapie, aby wybrać)
+              Kliknij na mapie, aby wybrać lokalizację
             </Typography>
             <Box sx={{ height: '400px', width: '100%', mb: 2 }}>
               <MapContainer
@@ -217,15 +227,35 @@ const ReportPage = () => {
                 )}
                 <LocationSelector onMapClick={handleMapClick} />
                 {formData.location && (
-                  <Marker position={formData.location} />
+                  <Marker position={[formData.location.lat, formData.location.lng]} />
                 )}
               </MapContainer>
             </Box>
-            {formData.location && (
-              <Typography variant="body2" color="textSecondary">
-                Wybrana lokalizacja: {formData.location.lat.toFixed(6)}, {formData.location.lng.toFixed(6)}
-              </Typography>
-            )}
+          </Grid>
+
+          {/* Address (single line) + Magnifier Button */}
+          <Grid item xs={12}>
+            <TextField
+              label="Lokalizacja"
+              fullWidth
+              disabled={isSubmitting}
+              value={formData.address}
+              onChange={handleAddressChange}
+              onKeyDown={handleAddressKeyDown}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={handleSearchAddress}
+                      disabled={isSubmitting}
+                      edge="end"
+                    >
+                      <SearchIcon />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
           </Grid>
 
           {/* Image upload */}
@@ -284,7 +314,7 @@ const ReportPage = () => {
             )}
           </Grid>
 
-          {/* reCAPTCHA for non-logged users */}
+          {/* reCAPTCHA if not logged in */}
           {!user && (
             <Grid item xs={12}>
               <ReCAPTCHA
@@ -296,7 +326,7 @@ const ReportPage = () => {
             </Grid>
           )}
 
-          {/* Submit button */}
+          {/* Submit */}
           <Grid item xs={12}>
             <Button
               type="submit"
@@ -311,7 +341,6 @@ const ReportPage = () => {
         </Grid>
       </Box>
 
-      {/* Snackbar for boundary errors */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={4000}

@@ -54,10 +54,11 @@ const IncidentDetailPage = () => {
     status,
     images,
     location,
-    dataZdarzenia, // New field
-    dniTygodnia, // New field
-    poraDnia, // New field
-    statusLogs, // New field: status logs
+    address,      // <--- Make sure we have 'address' available
+    dataZdarzenia,
+    dniTygodnia,
+    poraDnia,
+    statusLogs,
   } = incident || {};
 
   // Define colors for different statuses
@@ -77,7 +78,7 @@ const IncidentDetailPage = () => {
   // Determine loading state
   const isLoading = loadingIncident || loadingBoundary;
 
-  // Handle Boundary and Incident Intersection
+  // Check if the incident is inside the boundary
   const isWithinBoundary = isIncidentWithinBoundary();
 
   return (
@@ -114,7 +115,7 @@ const IncidentDetailPage = () => {
           {/* Additional Fields: Data Zdarzenia, Dni Tygodnia, Pora Dnia */}
           <Box className="mt-2">
             <Grid container spacing={2}>
-              {/* Data Zdarzenia (Date of Incident) */}
+              {/* Data Zdarzenia */}
               {dataZdarzenia && (
                 <Grid item xs={12} sm={4}>
                   <Typography variant="subtitle2" className="text-gray-400">
@@ -126,7 +127,7 @@ const IncidentDetailPage = () => {
                 </Grid>
               )}
 
-              {/* Dni Tygodnia (Days of the Week) */}
+              {/* Dni Tygodnia */}
               {dniTygodnia && dniTygodnia.length > 0 && (
                 <Grid item xs={12} sm={4}>
                   <Typography variant="subtitle2" className="text-gray-400">
@@ -144,7 +145,7 @@ const IncidentDetailPage = () => {
                 </Grid>
               )}
 
-              {/* Pora Dnia (Time of Day) */}
+              {/* Pora Dnia */}
               {poraDnia && (
                 <Grid item xs={12} sm={4}>
                   <Typography variant="subtitle2" className="text-gray-400">
@@ -225,6 +226,11 @@ const IncidentDetailPage = () => {
                     <Typography variant="body2" className="text-black">
                       {description}
                     </Typography>
+                    {address && (
+                      <Typography variant="body2" className="text-black">
+                        Adres: {address}
+                      </Typography>
+                    )}
                     <Typography variant="caption" className="text-black">
                       Status: {status}
                     </Typography>
@@ -234,17 +240,25 @@ const IncidentDetailPage = () => {
             </Box>
           </Box>
 
-          {/* Display if Incident is Within Boundary */}
-          {isWithinBoundary && (
-            <Typography variant="body2" className="mt-2 text-green-500">
-              Zgłoszenie znajduje się wewnątrz granic miasta.
-            </Typography>
-          )}
-          {!isWithinBoundary && (
-            <Typography variant="body2" className="mt-2 text-red-500">
-              Zgłoszenie znajduje się poza granicami miasta.
-            </Typography>
-          )}
+          {/* Instead of "Zgłoszenie wewnątrz granic miasta" -> show exact address or "outside" */}
+          <Box className="mt-2">
+            {isWithinBoundary ? (
+              // If it's inside the boundary, show the stored address
+              address ? (
+                <Typography variant="body2" className="text-gray-300">
+                  Dokładna lokalizacja: {address}
+                </Typography>
+              ) : (
+                <Typography variant="body2" className="text-gray-300">
+                  Brak dostępnego adresu
+                </Typography>
+              )
+            ) : (
+              <Typography variant="body2" className="text-red-500">
+                Zgłoszenie znajduje się poza granicami miasta.
+              </Typography>
+            )}
+          </Box>
 
           {/* Status Logs Section */}
           <Box className="mt-4">
