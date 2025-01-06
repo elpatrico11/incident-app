@@ -118,6 +118,10 @@ const IncidentSchema = new mongoose.Schema(
         required: true,
       },
     },
+    address: {
+      type: String, // <--- new field for the human-readable address
+      required: false,
+    },
     images: [
       {
         type: String, // Image URL

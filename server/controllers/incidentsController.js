@@ -28,10 +28,10 @@ const addIncident = async (req, res, next) => {
       description,
       location,
       status,
-      severity,
-      dataZdarzenia, // New field
-      dniTygodnia, // New field
-      poraDnia, // New field
+      dataZdarzenia,
+      dniTygodnia,
+      poraDnia,
+      address,
     } = req.body;
 
     // Parse and validate location
@@ -70,10 +70,9 @@ const addIncident = async (req, res, next) => {
       location: parsedLocation,
       images,
       status: status || "Nowe",
-      severity: severity || "Low",
     };
 
-    // Conditionally add optional fields
+    if (address) newIncidentData.address = address;
     if (dataZdarzenia) newIncidentData.dataZdarzenia = new Date(dataZdarzenia);
     if (dniTygodnia && Array.isArray(dniTygodnia) && dniTygodnia.length > 0) {
       newIncidentData.dniTygodnia = dniTygodnia;
@@ -219,7 +218,6 @@ const updateIncident = async (req, res, next) => {
       description,
       location,
       status,
-      severity,
       dataZdarzenia, // New field
       dniTygodnia, // New field
       poraDnia, // New field
@@ -230,7 +228,6 @@ const updateIncident = async (req, res, next) => {
     if (category) incidentFields.category = category;
     if (description) incidentFields.description = description;
     if (status) incidentFields.status = status;
-    if (severity) incidentFields.severity = severity;
 
     // Handle new fields
     if (dataZdarzenia) incidentFields.dataZdarzenia = new Date(dataZdarzenia);
