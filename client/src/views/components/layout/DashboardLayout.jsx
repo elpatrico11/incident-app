@@ -125,7 +125,7 @@ const DashboardLayout = ({ children }) => {
           
           <div className="flex-1"></div>
           
-          <div className="flex items-center">
+          <div className="flex items-center space-x-4">
             {user ? (
               <Menu as="div" className="relative">
                 <Menu.Button className="relative flex items-center text-sm text-gray-300 hover:text-white">
@@ -182,12 +182,15 @@ const DashboardLayout = ({ children }) => {
                 </Menu.Items>
               </Menu>
             ) : (
-              <div className="space-x-4">
+              <div className="flex space-x-4">
                 <Link to="/login" className="text-sm text-gray-300 hover:text-white">
                   Logowanie
                 </Link>
                 <Link to="/register" className="text-sm text-gray-300 hover:text-white">
                   Rejestracja
+                </Link>
+                <Link to="/contact" className="text-sm text-gray-300 hover:text-white">
+                  Kontakt
                 </Link>
               </div>
             )}

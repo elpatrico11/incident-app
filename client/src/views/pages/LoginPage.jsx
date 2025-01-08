@@ -21,7 +21,6 @@ import { Link as RouterLink } from 'react-router-dom';
 import ForgotPassword from '../components/common/ForgotPassword';
 import { SitemarkIcon } from '../../assets/CustomIcons';
 import AppTheme from '../../assets/shared-theme/AppTheme';
-import ColorModeSelect from '../../assets/shared-theme/ColorModeSelect';
 import useLogin from '../../controllers/hooks/useLogin';
 
 // Styled Components
@@ -97,8 +96,8 @@ export default function LoginPage(props) {
     <AppTheme {...props}>
       <CssBaseline enableColorScheme />
       <SignInContainer direction="column" justifyContent="center">
-        {/* Color Mode Toggle */}
-        <ColorModeSelect sx={{ position: 'fixed', top: '1rem', right: '1rem' }} />
+        {/* Removed Color Mode Toggle */}
+        {/* <ColorModeSelect sx={{ position: 'fixed', top: '1rem', right: '1rem' }} /> */}
 
         {/* Login Card */}
         <Card variant="outlined">
@@ -206,7 +205,6 @@ export default function LoginPage(props) {
 
           {/* Alternative Sign-In Methods */}
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            
             <Typography sx={{ textAlign: 'center' }}>
               Don&apos;t have an account?{' '}
               <Link

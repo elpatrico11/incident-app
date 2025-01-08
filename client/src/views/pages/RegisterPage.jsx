@@ -18,7 +18,6 @@ import CssBaseline from '@mui/material/CssBaseline'; // Correctly import CssBase
 
 import { SitemarkIcon } from '../../assets/CustomIcons';
 import AppTheme from '../../assets/shared-theme/AppTheme';
-import ColorModeSelect from '../../assets/shared-theme/ColorModeSelect';
 import useRegister from '../../controllers/hooks/useRegister'; // Correctly import the hook
 
 // Styled Components
@@ -91,8 +90,9 @@ export default function SignUp(props) {
   return (
     <AppTheme {...props}>
       <CssBaseline enableColorScheme /> {/* Correctly use CssBaseline */}
-      <ColorModeSelect sx={{ position: 'fixed', top: '1rem', right: '1rem' }} />
       <SignUpContainer direction="column" justifyContent="space-between">
+        {/* Removed Color Mode Toggle */}
+        {/* <ColorModeSelect sx={{ position: 'fixed', top: '1rem', right: '1rem' }} /> */}
         <Card variant="outlined">
           {/* App Logo */}
           <SitemarkIcon />
