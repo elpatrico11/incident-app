@@ -35,7 +35,7 @@ const DashboardLayout = ({ children }) => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-900">
+    <div className="flex h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div
@@ -182,7 +182,7 @@ const DashboardLayout = ({ children }) => {
                 </Menu.Items>
               </Menu>
             ) : (
-              <div className="flex space-x-4">
+              <div className="space-x-4">
                 <Link to="/login" className="text-sm text-gray-300 hover:text-white">
                   Logowanie
                 </Link>
@@ -198,7 +198,7 @@ const DashboardLayout = ({ children }) => {
         </div>
 
         {/* Main content area */}
-        <main className="flex-1 overflow-y-auto bg-gray-900">
+        <main className="flex-1 overflow-y-auto bg-transparent">
           {children}
         </main>
       </div>
