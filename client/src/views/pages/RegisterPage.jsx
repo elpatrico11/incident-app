@@ -1,3 +1,4 @@
+// SignUp.jsx
 import React from 'react';
 import {
   Box,
@@ -13,12 +14,12 @@ import {
 import { styled } from '@mui/material/styles';
 import MuiCard from '@mui/material/Card';
 import { useNavigate } from 'react-router-dom';
-import ReCAPTCHA from 'react-google-recaptcha'; // Import ReCAPTCHA
-import CssBaseline from '@mui/material/CssBaseline'; // Correctly import CssBaseline
+import ReCAPTCHA from 'react-google-recaptcha';
+import CssBaseline from '@mui/material/CssBaseline';
 
 import { SitemarkIcon } from '../../assets/CustomIcons';
 import AppTheme from '../../assets/shared-theme/AppTheme';
-import useRegister from '../../controllers/hooks/useRegister'; // Correctly import the hook
+import useRegister from '../../controllers/hooks/useRegister';
 
 // Styled Components
 const Card = styled(MuiCard)(({ theme }) => ({
@@ -41,13 +42,18 @@ const Card = styled(MuiCard)(({ theme }) => ({
 }));
 
 const SignUpContainer = styled(Stack)(({ theme }) => ({
-  height: 'calc((1 - var(--template-frame-height, 0)) * 100dvh)',
-  minHeight: '100%',
   padding: theme.spacing(2),
   [theme.breakpoints.up('sm')]: {
     padding: theme.spacing(4),
   },
   position: 'relative',
+  display: 'flex',
+  flexDirection: 'column',
+    minHeight: 0, // Add this
+  flex: '1 1 auto', // Add this
+
+  justifyContent: 'center', // Center the content vertically
+  alignItems: 'center', // Center the content horizontally
   '&::before': {
     content: '""',
     display: 'block',
@@ -83,16 +89,14 @@ export default function SignUp(props) {
     loading,
     handleCaptchaChange,
     handleSubmit,
-  } = useRegister(); // Use the correctly named hook
+  } = useRegister();
 
   const navigate = useNavigate();
 
   return (
     <AppTheme {...props}>
-      <CssBaseline enableColorScheme /> {/* Correctly use CssBaseline */}
-      <SignUpContainer direction="column" justifyContent="space-between">
-        {/* Removed Color Mode Toggle */}
-        {/* <ColorModeSelect sx={{ position: 'fixed', top: '1rem', right: '1rem' }} /> */}
+      <CssBaseline enableColorScheme />
+      <SignUpContainer direction="column" justifyContent="center">
         <Card variant="outlined">
           {/* App Logo */}
           <SitemarkIcon />
@@ -114,10 +118,7 @@ export default function SignUp(props) {
             <Alert severity="success">
               {formSuccess}
               <Box mt={2}>
-                <Button
-                  variant="contained"
-                  onClick={() => navigate('/login')}
-                >
+                <Button variant="contained" onClick={() => navigate('/login')}>
                   Przejdź do logowania
                 </Button>
               </Box>
@@ -125,7 +126,7 @@ export default function SignUp(props) {
           )}
 
           {/* Registration Form */}
-          {!formSuccess && ( // Only show form if registration is not successful
+          {!formSuccess && (
             <>
               <Box
                 component="form"
@@ -209,7 +210,7 @@ export default function SignUp(props) {
 
                 {/* reCAPTCHA */}
                 <ReCAPTCHA
-                  sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY} // Ensure this environment variable is set
+                  sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY}
                   onChange={handleCaptchaChange}
                 />
 
@@ -231,7 +232,6 @@ export default function SignUp(props) {
 
               {/* Alternative Sign-Up Methods */}
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
-                {/* "Already have an account? Sign in" Section */}
                 <Typography variant="body2" align="center">
                   Already have an account?{' '}
                   <Button

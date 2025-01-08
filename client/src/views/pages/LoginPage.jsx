@@ -1,3 +1,4 @@
+// LoginPage.jsx
 import React from 'react';
 import {
   Box,
@@ -44,13 +45,17 @@ const Card = styled(MuiCard)(({ theme }) => ({
 }));
 
 const SignInContainer = styled(Stack)(({ theme }) => ({
-  height: '100vh',
-  minHeight: '100%',
   padding: theme.spacing(2),
   [theme.breakpoints.up('sm')]: {
     padding: theme.spacing(4),
   },
   position: 'relative',
+  display: 'flex',
+  flexDirection: 'column',
+  minHeight: 0, // Added for flexibility
+  flex: '1 1 auto', // Added for flexibility
+  justifyContent: 'center', // Center vertically
+  alignItems: 'center', // Center horizontally
   '&::before': {
     content: '""',
     display: 'block',
