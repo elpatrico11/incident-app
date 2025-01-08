@@ -1,4 +1,4 @@
-import {React, useEffect} from 'react';
+import React, { useEffect } from 'react';
 import {
   Container,
   Typography,
@@ -13,11 +13,20 @@ import {
   Drawer,
   Grid,
   IconButton,
+  TextField,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button,
 } from '@mui/material';
+
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
+import SearchIcon from '@mui/icons-material/Search';
+
 import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet';
-import L from 'leaflet';
 import { useNavigate } from 'react-router-dom';
 
 import { useMapPage } from '../../controllers/hooks/useMapPage';
@@ -28,30 +37,48 @@ import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import 'leaflet.markercluster';
 import MarkerClusterGroup from '../components/common/MarkerClusterGroup';
 
-
 const MapPage = () => {
-  // Hook logic
+  const navigate = useNavigate();
   const {
+    // Incidents
     incidentsError,
     incidentsLoading,
     filteredIncidents,
+
+    // Categories
     categoriesError,
     categoriesLoading,
     categories,
     categoryFilter,
     handleFilterChange,
+
+    // Boundary
     boundary,
+
+    // Drawer
     drawerOpen,
     setDrawerOpen,
+
+    // Map
+    handleMapCreated,
+
+    // Searching
+    searchQuery,
+    handleSearchChange,
+    handleSearch,
+
+    // Dialog
+    searchDialogOpen,
+    searchDialogMessage,
+    handleCloseDialog,
   } = useMapPage();
 
-   useEffect(() => {
+  useEffect(() => {
     setupLeafletMarkerIcons();
   }, []);
 
-  const navigate = useNavigate();
 
-  // If still loading incidents or categories or boundary not loaded yet:
+
   if (incidentsLoading || categoriesLoading || !boundary) {
     return (
       <Container sx={{ mt: 4 }}>
@@ -76,20 +103,42 @@ const MapPage = () => {
     );
   }
 
- return (
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSearch();
+    }
+  };
+
+  return (
     <Container sx={{ mt: 4, position: 'relative' }}>
       <Typography variant="h4" gutterBottom>
         Mapa Incydentów
       </Typography>
 
-      <Box
-        sx={{
-          mb: 2,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
-      >
+      <Box sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
+        {/* Search bar */}
+        <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
+          <TextField
+            label="Wyszukaj adres"
+            variant="outlined"
+            size="small"
+            value={searchQuery}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            onKeyDown={handleSearchKeyDown}
+            placeholder="np. Michałowicza"
+            sx={{ width: 220 }}
+          />
+          <IconButton
+            color="primary"
+            sx={{ ml: 1 }}
+            onClick={handleSearch}
+          >
+            <SearchIcon />
+          </IconButton>
+        </Box>
+
+        {/* Category filter */}
         <FormControl sx={{ minWidth: 200 }}>
           <InputLabel id="category-filter-label">Filtruj według kategorii</InputLabel>
           <Select
@@ -100,27 +149,21 @@ const MapPage = () => {
             onChange={(e) => handleFilterChange(e.target.value)}
           >
             <MenuItem value="All">Wszystkie</MenuItem>
-            {categories.map((category) => (
-              <MenuItem key={category.value} value={category.value}>
-                {category.label}
+            {categories.map((cat) => (
+              <MenuItem key={cat.value} value={cat.value}>
+                {cat.label}
               </MenuItem>
             ))}
           </Select>
         </FormControl>
       </Box>
 
-      <Box sx={{ height: '600px', width: '100%', mb: 2 }}>
+      <Box sx={{ height: 600, width: '100%', mb: 2 }}>
         <MapContainer
           center={[49.8224, 19.0444]}
           zoom={13}
           style={{ height: '100%', width: '100%' }}
-          whenCreated={(map) => {
-            // Fit bounds to boundary
-            if (boundary) {
-              const geoJsonLayer = L.geoJSON(boundary);
-              map.fitBounds(geoJsonLayer.getBounds());
-            }
-          }}
+          whenReady={(map) => handleMapCreated(map.target)}
         >
           <TileLayer
             attribution='&copy; OpenStreetMap contributors'
@@ -136,12 +179,11 @@ const MapPage = () => {
               }}
             />
           )}
-          {/* Use the custom MarkerClusterGroup */}
           <MarkerClusterGroup incidents={filteredIncidents} />
         </MapContainer>
       </Box>
 
-      {/* Floating Button */}
+      {/* Add incident FAB */}
       <Fab
         color="primary"
         aria-label="add"
@@ -155,13 +197,14 @@ const MapPage = () => {
         <AddIcon />
       </Fab>
 
-      {/* Bottom Drawer */}
+      {/* Category selection drawer */}
       <Drawer
         anchor="bottom"
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
+        disableEnforceFocus
       >
-        <Box sx={{ padding: 2 }}>
+        <Box sx={{ p: 2 }}>
           <Box
             sx={{
               display: 'flex',
@@ -176,8 +219,8 @@ const MapPage = () => {
             </IconButton>
           </Box>
           <Grid container spacing={2}>
-            {categories.map((category) => (
-              <Grid item xs={6} sm={4} md={3} key={category.value}>
+            {categories.map((c) => (
+              <Grid item xs={6} sm={4} md={3} key={c.value}>
                 <Box
                   sx={{
                     display: 'flex',
@@ -186,7 +229,7 @@ const MapPage = () => {
                     justifyContent: 'center',
                     border: '1px solid #ccc',
                     borderRadius: '4px',
-                    padding: '10px',
+                    p: 1,
                     cursor: 'pointer',
                     transition: 'background-color 0.4s, transform 0.5s, color 0.4s',
                     '&:hover': {
@@ -198,16 +241,16 @@ const MapPage = () => {
                       },
                     },
                   }}
-                  onClick={() => navigate(`/report?category=${category.value}`)}
+                  onClick={() => navigate(`/report?category=${c.value}`)}
                 >
                   <img
-                    src={category.image}
-                    alt={category.label}
+                    src={c.image}
+                    alt={c.label}
                     style={{
-                      width: '40px',
-                      height: '40px',
+                      width: 40,
+                      height: 40,
                       objectFit: 'contain',
-                      marginBottom: '8px',
+                      marginBottom: 8,
                     }}
                   />
                   <Typography
@@ -215,12 +258,12 @@ const MapPage = () => {
                     variant="body2"
                     align="center"
                     sx={{
-                      fontSize: '12px',
+                      fontSize: 12,
                       color: '#000',
                       transition: 'color 0.4s',
                     }}
                   >
-                    {category.label}
+                    {c.label}
                   </Typography>
                 </Box>
               </Grid>
@@ -228,6 +271,25 @@ const MapPage = () => {
           </Grid>
         </Box>
       </Drawer>
+
+      {/* Search results dialog */}
+      <Dialog
+        open={searchDialogOpen}
+        onClose={handleCloseDialog}
+        disableEnforceFocus
+      >
+        <DialogTitle>Wyniki wyszukiwania</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            {searchDialogMessage}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog} autoFocus>
+            OK
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };
