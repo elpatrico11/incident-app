@@ -1,3 +1,4 @@
+// file: ReportPage.jsx
 import React, { useEffect } from 'react';
 import {
   Container,
@@ -18,7 +19,12 @@ import {
   ListItemText,
   InputAdornment,
 } from '@mui/material';
-import { Delete as DeleteIcon, Search as SearchIcon } from '@mui/icons-material';
+import {
+  Delete as DeleteIcon,
+  Search as SearchIcon,
+  MyLocation as MyLocationIcon, // NEW: for the "Locate me" button
+} from '@mui/icons-material';
+
 import { MapContainer, TileLayer, Marker, GeoJSON, useMapEvents } from 'react-leaflet';
 import ReCAPTCHA from 'react-google-recaptcha';
 
@@ -53,6 +59,7 @@ const ReportPage = () => {
     handleSnackbarClose,
     handleMapClick,
     handleSearchAddress,
+    handleLocateUser,        // NEW: from our hook
     boundary,
     boundaryError,
     boundaryLoading,
@@ -205,6 +212,19 @@ const ReportPage = () => {
             <Typography variant="subtitle1" gutterBottom>
               Kliknij na mapie, aby wybrać lokalizację
             </Typography>
+
+            {/* NEW: "Locate Me" button */}
+            <Box sx={{ mb: 1 }}>
+              <Button
+                variant="outlined"
+                startIcon={<MyLocationIcon />}
+                onClick={handleLocateUser}
+                disabled={isSubmitting}
+              >
+                Zlokalizuj mnie
+              </Button>
+            </Box>
+
             <Box sx={{ height: '400px', width: '100%', mb: 2 }}>
               <MapContainer
                 center={[49.8224, 19.0444]}
@@ -345,8 +365,19 @@ const ReportPage = () => {
         open={snackbarOpen}
         autoHideDuration={4000}
         onClose={handleSnackbarClose}
-        message={boundaryError}
-      />
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        sx={{
+            '& .MuiSnackbar-anchorOriginTopCenter': {
+              top: '50%',
+              transform: 'translateY(-50%)',
+            },
+          }}
+      >
+
+  <Alert severity="error" onClose={handleSnackbarClose}>
+    {boundaryError}
+  </Alert>
+</Snackbar>
     </Container>
   );
 };

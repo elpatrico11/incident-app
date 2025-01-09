@@ -1,3 +1,4 @@
+// file: useReportForm.js
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import * as turf from "@turf/turf";
@@ -23,7 +24,6 @@ function formatAddressSingleLine({ road, houseNum, postcode, city, country }) {
   const roadPart = houseNum ? `${road} ${houseNum}`.trim() : road;
   if (roadPart) parts.push(roadPart);
   if (postcode && city) {
-    // "43-300, Bielsko-Biała"
     parts.push(`${postcode}, ${city}`);
   } else if (city) {
     parts.push(city);
@@ -56,13 +56,9 @@ async function reverseGeocodeSingleLine(lat, lon) {
 }
 
 /**
- * Forward geocoding => text query to lat/lng, restricted (somewhat) to Bielsko-Biała
+ * Forward geocoding => text query to lat/lng, restricted to Bielsko-Biała area
  */
 async function forwardGeocodeSingleLine(query) {
-  // You can add a bounding box or "city=Bielsko-Biala" to limit results.
-  // Example bounding box for Bielsko-Biała (approx):
-  // &bounded=1&viewbox=19.0,49.84,19.15,49.78  (left, top, right, bottom)
-  // Adjust as needed.
   const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&addressdetails=1&bounded=1&viewbox=19.0,49.84,19.15,49.78&q=${encodeURIComponent(
     query
   )}`;
@@ -76,7 +72,6 @@ async function forwardGeocodeSingleLine(query) {
     throw new Error("No results found for that address.");
   }
 
-  // We only take the first result (limit=1)
   const best = data[0];
   const lat = parseFloat(best.lat);
   const lon = parseFloat(best.lon);
@@ -85,7 +80,6 @@ async function forwardGeocodeSingleLine(query) {
   const road = a.road || a.pedestrian || a.footway || query;
   const houseNum = a.house_number || "";
   const postcode = a.postcode || "";
-  // prefer city, but fallback to (town/village/county)
   const city = a.city || a.town || a.village || a.county || "Bielsko-Biała";
   const country = a.country || "Polska";
 
@@ -109,7 +103,7 @@ export function useReportForm() {
     category: "",
     description: "",
     location: null, // { lat, lng }
-    address: "", // "Działkowców 19, 43-380, Bielsko-Biała, Polska"
+    address: "",
     image: null,
     dataZdarzenia: "",
     dniTygodnia: [],
@@ -123,6 +117,7 @@ export function useReportForm() {
   const [boundaryError, setBoundaryError] = useState("");
   const [boundary, setBoundary] = useState(null);
   const [boundaryLoading, setBoundaryLoading] = useState(true);
+
   const [categories, setCategories] = useState([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [categoriesError, setCategoriesError] = useState("");
@@ -188,7 +183,7 @@ export function useReportForm() {
     };
   }, [preview]);
 
-  // ========== Handlers ==========
+  // ================== Handlers ==================
 
   const handleFormChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -303,7 +298,6 @@ export function useReportForm() {
         formData.address
       );
 
-      // Check if lat/lng is inside boundary (similar to handleMapClick)
       const point = turf.point([lon, lat]);
       const polygon = turf.polygon(boundary.features[0].geometry.coordinates);
       const isInside = turf.booleanPointInPolygon(point, polygon);
@@ -316,7 +310,6 @@ export function useReportForm() {
         return;
       }
 
-      // If inside, set new location + new address
       setFormData((prev) => ({
         ...prev,
         location: { lat, lng: lon },
@@ -330,11 +323,71 @@ export function useReportForm() {
     }
   };
 
+  // ===== NEW: Handle user geolocation =====
+  const handleLocateUser = () => {
+    if (!boundary) {
+      setBoundaryError(
+        "Brak granic miasta. Proszę spróbować ponownie później."
+      );
+      setSnackbarOpen(true);
+      return;
+    }
+
+    if (!("geolocation" in navigator)) {
+      setBoundaryError("Twoja przeglądarka nie obsługuje geolokalizacji.");
+      setSnackbarOpen(true);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+
+        // Check if the location is inside Bielsko-Biała
+        const point = turf.point([longitude, latitude]);
+        const polygon = turf.polygon(boundary.features[0].geometry.coordinates);
+        const isInside = turf.booleanPointInPolygon(point, polygon);
+
+        if (!isInside) {
+          setBoundaryError("Jesteś poza granicami Bielska-Białej.");
+          setSnackbarOpen(true);
+          return;
+        }
+
+        // If inside, reverse geocode to get a nice address
+        try {
+          const addressSingleLine = await reverseGeocodeSingleLine(
+            latitude,
+            longitude
+          );
+          setFormData((prev) => ({
+            ...prev,
+            location: { lat: latitude, lng: longitude },
+            address: addressSingleLine,
+          }));
+          setBoundaryError("");
+        } catch (err) {
+          console.error("Reverse geocode failed:", err);
+          setFormData((prev) => ({
+            ...prev,
+            location: { lat: latitude, lng: longitude },
+            address: "",
+          }));
+        }
+      },
+      (err) => {
+        console.error("Geolocation error:", err);
+        setBoundaryError("Nie udało się pobrać lokalizacji.");
+        setSnackbarOpen(true);
+      },
+      { enableHighAccuracy: true }
+    );
+  };
+
   // Close boundary error
   const handleSnackbarClose = () => setSnackbarOpen(false);
 
   // ========== Submit ==========
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -374,6 +427,7 @@ export function useReportForm() {
 
     if (formData.dataZdarzenia)
       data.append("dataZdarzenia", formData.dataZdarzenia);
+
     if (formData.dniTygodnia.length > 0) {
       formData.dniTygodnia.forEach((day) => data.append("dniTygodnia", day));
     }
@@ -434,8 +488,9 @@ export function useReportForm() {
     handleMapClick,
     handleSubmit,
     handleSnackbarClose,
-
-    // NEW search handler
     handleSearchAddress,
+
+    // NEW:
+    handleLocateUser,
   };
 }
