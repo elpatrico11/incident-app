@@ -1,3 +1,5 @@
+// file: MapPage.jsx
+
 import React, { useEffect } from 'react';
 import {
   Container,
@@ -9,7 +11,6 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Fab,
   Drawer,
   Grid,
   IconButton,
@@ -20,64 +21,59 @@ import {
   DialogContentText,
   DialogActions,
   Button,
+  Fab,            // <-- IMPORTANT: import Fab
 } from '@mui/material';
 
-import AddIcon from '@mui/icons-material/Add';
-import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
+import CloseIcon from '@mui/icons-material/Close';
+// Add this for the + icon:
+import AddIcon from '@mui/icons-material/Add';  
 
 import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet';
 import { useNavigate } from 'react-router-dom';
 
-import { useMapPage } from '../../controllers/hooks/useMapPage';
 import 'leaflet/dist/leaflet.css';
-import { setupLeafletMarkerIcons } from '../../utils/mapUtils';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import 'leaflet.markercluster';
+
+import { setupLeafletMarkerIcons } from '../../utils/mapUtils';
+import { useMapPage } from '../../controllers/hooks/useMapPage';
 import MarkerClusterGroup from '../components/common/MarkerClusterGroup';
+
+// Import our custom control
+import MyLocationControl from '../components/common/MyLocationControl';
 
 const MapPage = () => {
   const navigate = useNavigate();
   const {
-    // Incidents
+    // from your hook
     incidentsError,
     incidentsLoading,
     filteredIncidents,
-
-    // Categories
     categoriesError,
     categoriesLoading,
     categories,
     categoryFilter,
     handleFilterChange,
-
-    // Boundary
     boundary,
-
-    // Drawer
     drawerOpen,
     setDrawerOpen,
-
-    // Map
     handleMapCreated,
-
-    // Searching
     searchQuery,
     handleSearchChange,
     handleSearch,
-
-    // Dialog
     searchDialogOpen,
     searchDialogMessage,
     handleCloseDialog,
+
+    // the geolocation function in your hook
+    handleUserLocation,
   } = useMapPage();
 
   useEffect(() => {
     setupLeafletMarkerIcons();
   }, []);
-
-
 
   if (incidentsLoading || categoriesLoading || !boundary) {
     return (
@@ -116,8 +112,8 @@ const MapPage = () => {
         Mapa Incydentów
       </Typography>
 
+      {/* Filter + Search bar */}
       <Box sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
-        {/* Search bar */}
         <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
           <TextField
             label="Wyszukaj adres"
@@ -138,7 +134,6 @@ const MapPage = () => {
           </IconButton>
         </Box>
 
-        {/* Category filter */}
         <FormControl sx={{ minWidth: 200 }}>
           <InputLabel id="category-filter-label">Filtruj według kategorii</InputLabel>
           <Select
@@ -158,6 +153,7 @@ const MapPage = () => {
         </FormControl>
       </Box>
 
+      {/* Map */}
       <Box sx={{ height: 600, width: '100%', mb: 2 }}>
         <MapContainer
           center={[49.8224, 19.0444]}
@@ -169,6 +165,10 @@ const MapPage = () => {
             attribution='&copy; OpenStreetMap contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
+
+          {/* "Locate me" control in top-left corner */}
+          <MyLocationControl onLocate={handleUserLocation} />
+
           {boundary && (
             <GeoJSON
               data={boundary}
@@ -183,19 +183,22 @@ const MapPage = () => {
         </MapContainer>
       </Box>
 
-      {/* Add incident FAB */}
-      <Fab
-        color="primary"
-        aria-label="add"
-        onClick={() => setDrawerOpen(true)}
-        sx={{
-          position: 'absolute',
-          bottom: 16,
-          left: 16,
-        }}
-      >
-        <AddIcon />
-      </Fab>
+      {/* "Add new incident" FAB in bottom-left corner */}
+     {!drawerOpen && (
+  <Fab
+    color="primary"
+    aria-label="add"
+    onClick={() => setDrawerOpen(true)}
+    sx={{
+      position: 'absolute',
+      bottom: 16,
+      left: 16,
+      zIndex: 9999,
+    }}
+  >
+    <AddIcon />
+  </Fab>
+)}
 
       {/* Category selection drawer */}
       <Drawer
@@ -272,7 +275,6 @@ const MapPage = () => {
         </Box>
       </Drawer>
 
-      {/* Search results dialog */}
       <Dialog
         open={searchDialogOpen}
         onClose={handleCloseDialog}

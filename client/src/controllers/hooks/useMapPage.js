@@ -32,7 +32,7 @@ export function useMapPage() {
   const [searchDialogOpen, setSearchDialogOpen] = useState(false);
   const [searchDialogMessage, setSearchDialogMessage] = useState("");
 
-  // Load incidents
+  // ---- LOAD INCIDENTS -----------------------------------------------------
   useEffect(() => {
     const loadIncidents = async () => {
       try {
@@ -49,7 +49,7 @@ export function useMapPage() {
     loadIncidents();
   }, []);
 
-  // Load categories
+  // ---- LOAD CATEGORIES ----------------------------------------------------
   useEffect(() => {
     const loadCategories = async () => {
       try {
@@ -65,7 +65,7 @@ export function useMapPage() {
     loadCategories();
   }, []);
 
-  // Load boundary
+  // ---- LOAD BOUNDARY GEOJSON ---------------------------------------------
   useEffect(() => {
     const loadBoundary = async () => {
       try {
@@ -78,6 +78,7 @@ export function useMapPage() {
     loadBoundary();
   }, []);
 
+  // ---- FILTER INCIDENTS BY CATEGORY ---------------------------------------
   const handleFilterChange = (value) => {
     setCategoryFilter(value);
     if (value === "All") {
@@ -88,10 +89,12 @@ export function useMapPage() {
     }
   };
 
+  // ---- LEAFLET MAP REFERENCE ---------------------------------------------
   const handleMapCreated = (map) => {
     mapInstance.current = map;
   };
 
+  // ---- SEARCH / GEOCODING ------------------------------------------------
   const handleSearchChange = (value) => {
     setSearchQuery(value);
   };
@@ -103,6 +106,7 @@ export function useMapPage() {
     let query = searchQuery.trim();
     if (!query) return;
 
+    // If user hasn't typed "bielsko-biała" or a variant, add it
     if (!query.toLowerCase().includes("bielsko-biała")) {
       query = `${query}, Bielsko-Biała`;
     }
@@ -146,9 +150,51 @@ export function useMapPage() {
     }
   };
 
+  // ---- CLOSE DIALOG ------------------------------------------------------
   const handleCloseDialog = () => {
     setSearchDialogOpen(false);
     setSearchDialogMessage("");
+  };
+
+  // ---- GET USER'S CURRENT LOCATION ---------------------------------------
+  const handleUserLocation = () => {
+    // Check if map is ready
+    if (!mapInstance.current) {
+      setSearchDialogMessage(
+        "Mapa nie jest dostępna. Proszę odświeżyć stronę."
+      );
+      setSearchDialogOpen(true);
+      return;
+    }
+
+    // Check if browser supports geolocation
+    if (!("geolocation" in navigator)) {
+      setSearchDialogMessage(
+        "Geolokalizacja nie jest obsługiwana przez Twoją przeglądarkę."
+      );
+      setSearchDialogOpen(true);
+      return;
+    }
+
+    // Request location
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        // Move the map to the user's location
+        mapInstance.current.setView([latitude, longitude], 16, {
+          animate: true,
+          duration: 1,
+        });
+      },
+      (error) => {
+        console.error("Geolocation error:", error);
+        setSearchDialogMessage(
+          "Nie można pobrać lokalizacji. Sprawdź uprawnienia."
+        );
+        setSearchDialogOpen(true);
+      },
+      { enableHighAccuracy: true }
+    );
   };
 
   return {
@@ -184,5 +230,8 @@ export function useMapPage() {
     searchDialogOpen,
     searchDialogMessage,
     handleCloseDialog,
+
+    // Geolocation
+    handleUserLocation,
   };
 }
