@@ -1,7 +1,7 @@
 // DashboardLayout.jsx
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu } from '@headlessui/react';
+import { Menu, MenuButton, MenuItems, MenuItem} from '@headlessui/react';
 import { UserCircle, X, Menu as MenuIcon } from 'lucide-react';
 import useAuthStore from '../../../models/stores/useAuthStore';
 
@@ -76,13 +76,13 @@ const DashboardLayout = ({ children }) => {
                         key={item.path}
                         to={item.path}
                         onClick={() => setSidebarOpen(false)}
-                        className={`flex items-center px-3 py-2 text-sm rounded-lg transition-colors ${
+                        className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-300 ${
                           isActivePath(item.path)
-                            ? 'bg-indigo-600 text-white'
-                            : 'text-gray-300 hover:bg-gray-700'
+                            ? 'bg-indigo-500 text-white shadow-lg'
+                            : 'text-gray-300 hover:bg-gray-700 hover:text-white'
                         }`}
                       >
-                        <span className="mr-3">{item.icon}</span>
+                        <span className="mr-3 text-lg">{item.icon}</span>
                         {item.label}
                       </Link>
                     )
@@ -98,13 +98,13 @@ const DashboardLayout = ({ children }) => {
                         key={item.path}
                         to={item.path}
                         onClick={() => setSidebarOpen(false)}
-                        className={`flex items-center px-3 py-2 text-sm rounded-lg transition-colors ${
+                        className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-300 ${
                           isActivePath(item.path)
-                            ? 'bg-indigo-600 text-white'
-                            : 'text-gray-300 hover:bg-gray-700'
+                            ? 'bg-indigo-500 text-white shadow-lg'
+                            : 'text-gray-300 hover:bg-gray-700 hover:text-white'
                         }`}
                       >
-                        <span className="mr-3">{item.icon}</span>
+                        <span className="mr-3 text-lg">{item.icon}</span>
                         {item.label}
                       </Link>
                     ))}
@@ -131,7 +131,7 @@ const DashboardLayout = ({ children }) => {
             <div className="flex items-center space-x-4">
               {user ? (
                 <Menu as="div" className="relative">
-                  <Menu.Button className="relative flex items-center text-sm text-gray-300 hover:text-white">
+                  <MenuButton className="relative flex items-center text-sm text-gray-300 hover:text-white">
                     {/* If there are unread notifications, show a red badge */}
                     {unreadCount > 0 && (
                       <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1">
@@ -142,57 +142,52 @@ const DashboardLayout = ({ children }) => {
                     <span>
                       {user.firstName} {user.lastName}
                     </span>
-                  </Menu.Button>
-                  <Menu.Items className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 z-50">
-                    {/* Direct link to notifications (tab=2 on ProfilePage) */}
-                    <Menu.Item>
-                      {({ active }) => (
-                        <Link
-                          to="/profile?tab=2"
-                          className={`block px-4 py-2 text-sm text-gray-300 ${
-                            active ? 'bg-gray-700' : ''
-                          }`}
-                        >
-                          Powiadomienia
-                        </Link>
-                      )}
-                    </Menu.Item>
-
-                    <Menu.Item>
-                      {({ active }) => (
-                        <Link
-                          to="/profile"
-                          className={`block px-4 py-2 text-sm text-gray-300 ${
-                            active ? 'bg-gray-700' : ''
-                          }`}
-                        >
-                          Profil użytkownika
-                        </Link>
-                      )}
-                    </Menu.Item>
-                    <Menu.Item>
-                      {({ active }) => (
-                        <button
-                          onClick={logout}
-                          className={`block w-full text-left px-4 py-2 text-sm text-gray-300 ${
-                            active ? 'bg-gray-700' : ''
-                          }`}
-                        >
-                          Wyloguj się
-                        </button>
-                      )}
-                    </Menu.Item>
-                  </Menu.Items>
+                  </MenuButton>
+                  <MenuItems className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 z-50">
+                    <MenuItem as="div">
+                      <Link
+                        to="/profile?tab=2"
+                        className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
+                      >
+                        Powiadomienia
+                      </Link>
+                    </MenuItem>
+                    <MenuItem as="div">
+                      <Link
+                        to="/profile"
+                        className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
+                      >
+                        Profil użytkownika
+                      </Link>
+                    </MenuItem>
+                    <MenuItem as="div">
+                      <button
+                        onClick={logout}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
+                      >
+                        Wyloguj się
+                      </button>
+                    </MenuItem>
+                  </MenuItems>
                 </Menu>
               ) : (
                 <div className="space-x-4">
-                  <Link to="/login" className="text-sm text-gray-300 hover:text-white">
+                  <Link
+                    to="/login"
+                    className="text-sm font-medium text-gray-300 hover:text-indigo-400 transition-colors duration-300"
+                  >
                     Logowanie
                   </Link>
-                  <Link to="/register" className="text-sm text-gray-300 hover:text-white">
+                  <Link
+                    to="/register"
+                    className="text-sm font-medium text-gray-300 hover:text-indigo-400 transition-colors duration-300"
+                  >
                     Rejestracja
                   </Link>
-                  <Link to="/contact" className="text-sm text-gray-300 hover:text-white">
+                  <Link
+                    to="/contact"
+                    className="text-sm font-medium text-gray-300 hover:text-indigo-400 transition-colors duration-300"
+                  >
                     Kontakt
                   </Link>
                 </div>
@@ -211,7 +206,7 @@ const DashboardLayout = ({ children }) => {
 
       {/* Footer */}
       <footer className="h-14 bg-gray-900 text-gray-400 flex items-center justify-center border-t border-gray-700">
-        <span>© {new Date().getFullYear()} IncidentApp. All rights reserved.</span>
+        <span>© {new Date().getFullYear()} IncidentApp. Wszelkie prawa zastrzeżone.</span>
       </footer>
     </div>
   );

@@ -8,15 +8,12 @@ import {
   FIRST_NAME_REQUIRED,
   LAST_NAME_REQUIRED,
   CAPTCHA_REQUIRED,
+  TERMS_REQUIRED,
   NO_RESPONSE_ERROR,
   UNEXPECTED_ERROR,
 } from "../../constants/validationConstants";
 import { validateEmail } from "../../utils/validationUtils";
 
-/**
- * Custom hook to handle user registration.
- * @returns {Object} - State and handlers related to registration.
- */
 const useRegister = () => {
   // Form Fields
   const [firstName, setFirstName] = useState("");
@@ -27,6 +24,8 @@ const useRegister = () => {
   const [emailError, setEmailError] = useState("");
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [termsError, setTermsError] = useState("");
 
   // reCAPTCHA
   const [captchaValue, setCaptchaValue] = useState(null);
@@ -38,10 +37,6 @@ const useRegister = () => {
   // Loading State
   const [loading, setLoading] = useState(false);
 
-  /**
-   * Validates the input fields.
-   * @returns {boolean} - Whether the inputs are valid.
-   */
   const validateInputs = () => {
     let isValid = true;
 
@@ -83,6 +78,14 @@ const useRegister = () => {
       setPasswordError("");
     }
 
+    // Validate Terms
+    if (!termsAccepted) {
+      setTermsError(TERMS_REQUIRED);
+      isValid = false;
+    } else {
+      setTermsError("");
+    }
+
     // Validate reCAPTCHA
     if (!captchaValue) {
       setFormError(CAPTCHA_REQUIRED);
@@ -94,10 +97,6 @@ const useRegister = () => {
     return isValid;
   };
 
-  /**
-   * Handles form submission for registration.
-   * @param {Event} event - The form submission event.
-   */
   const handleSubmit = async (event) => {
     event.preventDefault();
     setFormError("");
@@ -120,37 +119,21 @@ const useRegister = () => {
       setEmail("");
       setPassword("");
       setCaptchaValue(null);
+      setTermsAccepted(false);
     } catch (error) {
-      // Handle error response from backend
       if (error.response && error.response.data && error.response.data.errors) {
-        // Handle validation errors
         const backendErrors = error.response.data.errors;
         backendErrors.forEach((err) => {
-          if (err.param === "email") {
-            setEmailError(err.msg);
-          }
-          if (err.param === "password") {
-            setPasswordError(err.msg);
-          }
-          if (err.param === "firstName") {
-            setFirstNameError(err.msg);
-          }
-          if (err.param === "lastName") {
-            setLastNameError(err.msg);
-          }
-          if (err.param === "captcha") {
-            setFormError(err.msg);
-          }
+          if (err.param === "email") setEmailError(err.msg);
+          if (err.param === "password") setPasswordError(err.msg);
+          if (err.param === "firstName") setFirstNameError(err.msg);
+          if (err.param === "lastName") setLastNameError(err.msg);
+          if (err.param === "captcha") setFormError(err.msg);
+          if (err.param === "terms") setTermsError(err.msg);
         });
-      } else if (
-        error.response &&
-        error.response.data &&
-        error.response.data.msg
-      ) {
-        // Handle general form errors
+      } else if (error.response?.data?.msg) {
         setFormError(error.response.data.msg);
       } else if (error.request && !error.response) {
-        // Handle no response received
         setFormError(NO_RESPONSE_ERROR);
       } else {
         setFormError(UNEXPECTED_ERROR);
@@ -160,14 +143,17 @@ const useRegister = () => {
     }
   };
 
-  /**
-   * Handles reCAPTCHA change.
-   * @param {string|null} value - The reCAPTCHA token.
-   */
   const handleCaptchaChange = (value) => {
     setCaptchaValue(value);
     if (value) {
       setFormError("");
+    }
+  };
+
+  const handleTermsChange = (event) => {
+    setTermsAccepted(event.target.checked);
+    if (event.target.checked) {
+      setTermsError("");
     }
   };
 
@@ -184,10 +170,13 @@ const useRegister = () => {
     password,
     setPassword,
     passwordError,
+    termsAccepted,
+    termsError,
     formError,
     formSuccess,
     loading,
     handleCaptchaChange,
+    handleTermsChange,
     handleSubmit,
   };
 };

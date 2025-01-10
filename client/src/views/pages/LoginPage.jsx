@@ -1,4 +1,3 @@
-// LoginPage.jsx
 import React from 'react';
 import {
   Box,
@@ -20,7 +19,6 @@ import MuiCard from '@mui/material/Card';
 import { Link as RouterLink } from 'react-router-dom';
 
 import ForgotPassword from '../components/common/ForgotPassword';
-import { SitemarkIcon } from '../../assets/CustomIcons';
 import AppTheme from '../../assets/shared-theme/AppTheme';
 import useLogin from '../../controllers/hooks/useLogin';
 
@@ -52,10 +50,10 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
   position: 'relative',
   display: 'flex',
   flexDirection: 'column',
-  minHeight: 0, // Added for flexibility
-  flex: '1 1 auto', // Added for flexibility
-  justifyContent: 'center', // Center vertically
-  alignItems: 'center', // Center horizontally
+  minHeight: 0, 
+  flex: '1 1 auto', 
+  justifyContent: 'center', 
+  alignItems: 'center', 
   '&::before': {
     content: '""',
     display: 'block',
@@ -88,7 +86,6 @@ export default function LoginPage(props) {
 
   const [openForgotPassword, setOpenForgotPassword] = React.useState(false);
 
-  // Handlers for Forgot Password Dialog
   const handleOpenForgotPassword = () => {
     setOpenForgotPassword(true);
   };
@@ -101,13 +98,10 @@ export default function LoginPage(props) {
     <AppTheme {...props}>
       <CssBaseline enableColorScheme />
       <SignInContainer direction="column" justifyContent="center">
-        {/* Removed Color Mode Toggle */}
-        {/* <ColorModeSelect sx={{ position: 'fixed', top: '1rem', right: '1rem' }} /> */}
 
         {/* Login Card */}
         <Card variant="outlined">
-          {/* App Logo */}
-          <SitemarkIcon />
+
 
           {/* Page Title */}
           <Typography
@@ -115,7 +109,7 @@ export default function LoginPage(props) {
             variant="h4"
             sx={{ width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)' }}
           >
-            Sign in
+            Zaloguj się
           </Typography>
 
           {/* Form Error Alert */}
@@ -142,7 +136,7 @@ export default function LoginPage(props) {
                 id="email"
                 type="email"
                 name="email"
-                placeholder="your@email.com"
+                placeholder="nazwa@email.com"
                 autoComplete="email"
                 required
                 fullWidth
@@ -155,12 +149,12 @@ export default function LoginPage(props) {
 
             {/* Password Field */}
             <FormControl>
-              <FormLabel htmlFor="password">Password</FormLabel>
+              <FormLabel htmlFor="password">Hasło</FormLabel>
               <TextField
                 error={Boolean(passwordError)}
                 helperText={passwordError}
                 name="password"
-                placeholder="••••••"
+                placeholder="••••••••"
                 type="password"
                 id="password"
                 autoComplete="current-password"
@@ -182,7 +176,7 @@ export default function LoginPage(props) {
                   color="primary"
                 />
               }
-              label="Remember me"
+              label="Pamiętaj mnie"
             />
 
             {/* Forgot Password Dialog */}
@@ -190,7 +184,7 @@ export default function LoginPage(props) {
 
             {/* Submit Button */}
             <Button type="submit" fullWidth variant="contained">
-              Sign in
+              Zaloguj się
             </Button>
 
             {/* Forgot Password Link */}
@@ -201,36 +195,43 @@ export default function LoginPage(props) {
               variant="body2"
               sx={{ alignSelf: 'center' }}
             >
-              Forgot your password?
+              Przypomnij hasło
             </Link>
           </Box>
 
           {/* Divider */}
-          <Divider>or</Divider>
+          <Divider></Divider>
 
           {/* Alternative Sign-In Methods */}
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Typography sx={{ textAlign: 'center' }}>
-              Don&apos;t have an account?{' '}
+          <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 1,
+                textAlign: 'center',
+                alignItems: 'center', 
+                justifyContent: 'center', 
+              }}
+            >
+              <Typography>Nie masz konta?</Typography>
               <Link
                 component={RouterLink}
                 to="/register"
                 variant="body2"
-                sx={{ alignSelf: 'center' }}
+                sx={{ display: 'block' }}
               >
-                Sign up
+                Zarejestruj się
               </Link>
-              {' '}or{' '}
+              <Typography>lub</Typography>
               <Link
                 component={RouterLink}
                 to="/resend-verification"
                 variant="body2"
-                sx={{ alignSelf: 'center' }}
+                sx={{ display: 'block' }}
               >
-                Resend verification link
+                Wyślij ponownie link weryfikacyjny
               </Link>
-            </Typography>
-          </Box>
+            </Box>
         </Card>
       </SignInContainer>
     </AppTheme>

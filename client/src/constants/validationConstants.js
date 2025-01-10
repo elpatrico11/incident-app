@@ -8,3 +8,5 @@ export const UNEXPECTED_ERROR = "Wystąpił nieoczekiwany błąd.";
 export const FIRST_NAME_REQUIRED = "Imię jest wymagane.";
 export const LAST_NAME_REQUIRED = "Nazwisko jest wymagane.";
 export const CAPTCHA_REQUIRED = "Uzupełnij reCAPTCHA żeby kontynuować.";
+export const TERMS_REQUIRED =
+  "Musisz zaakceptować regulamin i politykę prywatności";
