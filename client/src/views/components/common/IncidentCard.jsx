@@ -1,30 +1,26 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-/**
- * IncidentCard component representing a single incident.
- */
 const IncidentCard = ({ incident, statusColors }) => {
   return (
     <div
       key={incident._id}
-      className="card bg-gray-800 text-gray-100 shadow-md rounded-lg border border-gray-700 flex flex-col"
+      className="card bg-gray-800 text-gray-100 shadow-md rounded-lg border border-gray-700 flex flex-col max-w-sm"
     >
       {incident.images && incident.images.length > 0 ? (
         <img
           src={incident.images[0]}
           alt={incident.category}
-          className="h-48 w-full object-cover rounded-t-lg"
+          className="h-40 w-full object-cover rounded-t-lg" 
         />
       ) : (
-        <div className="h-48 bg-gray-700 flex items-center justify-center rounded-t-lg">
+        <div className="h-40 bg-gray-700 flex items-center justify-center rounded-t-lg">
           <span className="text-5xl">?</span>
         </div>
       )}
-      <div className="flex-grow p-4 flex flex-col justify-between">
+      <div className="flex-grow p-3 flex flex-col justify-between">
         <div>
-          <h3 className="text-lg font-bold mb-2">
+          <h3 className="text-base font-bold mb-2">
             <Link
               to={`/incidents/${incident._id}`}
               className="text-white hover:underline"
@@ -40,7 +36,6 @@ const IncidentCard = ({ incident, statusColors }) => {
         </div>
         <div className="mt-auto">
           <div className="flex items-center mb-2">
-            {/* Status Category */}
             <span
               className={`inline-block px-2 py-1 text-xs font-semibold rounded ${
                 statusColors[incident.statusCategory] || statusColors.default
@@ -60,7 +55,9 @@ const IncidentCard = ({ incident, statusColors }) => {
             })}
           </p>
           <Link to={`/incidents/${incident._id}`}>
-            <button className="btn btn-primary w-full">Szczegóły</button>
+            <button className="btn btn-primary w-full text-sm py-1 px-1">
+              Szczegóły
+            </button>
           </Link>
         </div>
       </div>

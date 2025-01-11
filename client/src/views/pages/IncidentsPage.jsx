@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Container,
@@ -39,8 +38,6 @@ const IncidentsPage = () => {
     itemsPerPage,
     setItemsPerPage,
     itemsPerPageOptions,
-
-    // Misc
     statusColors,
     noIncidentsMessage,
   } = useIncidents();
@@ -48,7 +45,6 @@ const IncidentsPage = () => {
   if (loadingIncidents || loadingCategories) {
     return (
       <div className="container mx-auto mt-8 px-4 p-4 lg:px-8 bg-gray-900 min-h-screen mb-12 flex justify-center items-center">
-        {/* Custom Loader */}
         <Loader />
       </div>
     );
@@ -64,7 +60,10 @@ const IncidentsPage = () => {
 
   return (
     <Container className="mt-24 px-4 p-4 lg:px-8 bg-gray-900 min-h-screen mb-24">
-      <Typography variant="h2" className="text-4xl mb-6 text-center text-white mt-8">
+      <Typography
+        variant="h4" // Changed from h2 to h4 for smaller text
+        className="text-xl mb-6 text-center text-white mt-8"
+      >
         Wszystkie Incydenty
       </Typography>
 
