@@ -172,6 +172,24 @@ const IncidentDetailPage = () => {
             </span>
           </Typography>
 
+          {incident?.createdAt && (
+          <Typography
+            variant="caption"
+            display="block"
+            gutterBottom
+            className="mt-2 text-gray-400"
+          >
+            Data dodania:{' '}
+            <span className="text-gray-300">
+              {new Date(incident.createdAt).toLocaleDateString('pl-PL', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+              })}
+            </span>
+          </Typography>
+        )}
+
           {/* Incident Images */}
           {images && images.length > 0 && (
             <Grid container spacing={2} className="mt-2">
@@ -193,7 +211,7 @@ const IncidentDetailPage = () => {
             <Typography variant="h6" gutterBottom className="text-white">
               Lokalizacja
             </Typography>
-            <Box className="h-96 w-full">
+            <Box className="h-64 w-full">
               <MapContainer
                 center={[location.coordinates[1], location.coordinates[0]]}
                 zoom={13}
@@ -345,66 +363,66 @@ const IncidentDetailPage = () => {
               </Alert>
             )}
 
-            {/* Comments List */}
-            <div className="space-y-4">
-              {Array.isArray(comments) && comments.length > 0 ? (
-                comments.map((commentItem, index) => (
-                  <Box
-                    key={index}
-                    className="flex items-start bg-gray-800 rounded-lg p-4"
-                  >
-                    {/* Avatar */}
-                    <Box className="flex-shrink-0">
-                      {commentItem.user && commentItem.user.avatarUrl ? (
-                        <img
-                          src={commentItem.user.avatarUrl}
-                          alt={`${commentItem.user.firstName} ${commentItem.user.lastName}`}
-                          className="h-10 w-10 rounded-full object-cover"
-                        />
-                      ) : (
-                        <Box className="h-10 w-10 rounded-full bg-gray-700 flex items-center justify-center text-white font-semibold">
-                          {commentItem.user
-                            ? `${commentItem.user.firstName.charAt(0)}${commentItem.user.lastName.charAt(0)}`
-                            : 'A'}
-                        </Box>
-                      )}
-                    </Box>
-                    {/* Comment Content */}
-                    <Box className="ml-4">
-                      <Typography
-                        variant="body2"
-                        className="text-gray-300"
-                      >
-                        <strong>
-                          {commentItem.user
-                            ? `${commentItem.user.firstName} ${commentItem.user.lastName}`
-                            : 'Anonimowy'}
-                        </strong>
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        className="text-gray-200 mt-1"
-                      >
-                        {commentItem.text}
-                      </Typography>
-                      <Typography
-                        variant="caption"
-                        className="text-gray-400 mt-1"
-                      >
-                        {new Date(commentItem.createdAt).toLocaleString('pl-PL', {
-                          dateStyle: 'short',
-                          timeStyle: 'short',
-                        })}
-                      </Typography>
-                    </Box>
-                  </Box>
-                ))
-              ) : (
-                <Typography variant="body2" className="mt-1 text-gray-300">
-                  Brak komentarzy.
-                </Typography>
-              )}
-            </div>
+           {/* Comments List */}
+<div className="space-y-4">
+  {Array.isArray(comments) && comments.length > 0 ? (
+    comments.map((commentItem, index) => (
+      <Box
+        key={index}
+        className="flex items-start bg-gray-800 rounded-lg p-4 border border-gray-600"
+      >
+        {/* Avatar */}
+        <Box className="flex-shrink-0">
+          {commentItem.user && commentItem.user.avatarUrl ? (
+            <img
+              src={commentItem.user.avatarUrl}
+              alt={`${commentItem.user.firstName} ${commentItem.user.lastName}`}
+              className="h-10 w-10 rounded-full object-cover"
+            />
+          ) : (
+            <Box className="h-10 w-10 rounded-full bg-gray-700 flex items-center justify-center text-white font-semibold">
+              {commentItem.user
+                ? `${commentItem.user.firstName.charAt(0)}${commentItem.user.lastName.charAt(0)}`
+                : 'A'}
+            </Box>
+          )}
+        </Box>
+        {/* Comment Content */}
+        <Box className="ml-4">
+          <Typography
+            variant="body2"
+            className="text-gray-300"
+          >
+            <strong>
+              {commentItem.user
+                ? `${commentItem.user.firstName} ${commentItem.user.lastName}`
+                : 'Anonimowy'}
+            </strong>
+          </Typography>
+          <Typography
+            variant="body2"
+            className="text-gray-200 mt-1"
+          >
+            {commentItem.text}
+          </Typography>
+          <Typography
+            variant="caption"
+            className="text-gray-400 mt-1"
+          >
+            {new Date(commentItem.createdAt).toLocaleString('pl-PL', {
+              dateStyle: 'short',
+              timeStyle: 'short',
+            })}
+          </Typography>
+        </Box>
+      </Box>
+    ))
+  ) : (
+    <Typography variant="body2" className="mt-1 text-gray-300">
+      Brak komentarzy.
+    </Typography>
+  )}
+</div>
 
             {/* Comment Submission Form */}
             {user ? (
