@@ -5,6 +5,9 @@ const authController = require("../controllers/authController");
 const authMiddleware = require("../middlewares/auth");
 const { authLimiter } = require("../middlewares/rateLimiter");
 
+const passwordRegex =
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]{12,}$/;
+
 // Apply authLimiter to all auth routes
 router.use(authLimiter);
 
@@ -15,9 +18,12 @@ router.post(
     check("firstName", "First name is required").not().isEmpty(),
     check("lastName", "Last name is required").not().isEmpty(),
     check("email", "Please provide a valid email").isEmail(),
-    check("password", "Password must be at least 6 characters").isLength({
-      min: 6,
-    }),
+    check(
+      "password",
+      "Hasło musi mieć co najmniej 12 znaków, zawierać małe i duże litery oraz cyfry (polskie znaki nie są dozwolone)"
+    )
+      .isLength({ min: 12 })
+      .matches(passwordRegex),
     check("role")
       .optional()
       .isIn(["user", "admin"])
@@ -32,7 +38,7 @@ router.post(
   "/login",
   [
     check("email", "Please provide a valid email").isEmail(),
-    check("password", "Password is required").exists(),
+    check("password", "Hasło jest wymagane").exists(),
     check("rememberMe").optional().isBoolean(),
   ],
   authController.login

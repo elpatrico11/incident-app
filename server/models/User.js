@@ -1,7 +1,14 @@
+// server/models/User.js
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
-// Define the User Schema
+// Wyrażenie regularne dla hasła:
+// - Minimum 12 znaków
+// - Przynajmniej jedna mała litera, jedna duża litera oraz cyfra
+// - Dozwolone: [A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]
+const passwordRegex =
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]{12,}$/;
+
 const UserSchema = new mongoose.Schema({
   firstName: {
     type: String,
@@ -26,7 +33,14 @@ const UserSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
-    minlength: 6,
+    minlength: 12, // zwiększona minimalna długość
+    validate: {
+      validator: function (v) {
+        return passwordRegex.test(v);
+      },
+      message:
+        "Hasło musi mieć co najmniej 12 znaków, zawierać małe i duże litery oraz cyfry, polskie znaki nie są dozwolone.",
+    },
   },
   role: {
     type: String,
@@ -67,5 +81,4 @@ UserSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
-// Export the User model
 module.exports = mongoose.model("User", UserSchema);
