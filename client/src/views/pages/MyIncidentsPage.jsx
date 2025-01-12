@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Container,
   Typography,
-  Grid,
+  Box,
   CircularProgress,
   Alert,
 } from '@mui/material';
@@ -27,7 +27,7 @@ const MyIncidentsPage = () => {
 
   if (loading) {
     return (
-      <Container sx={{ mt: 4, textAlign: 'center' }}>
+      <Container className="mt-24 px-4 p-4 lg:px-8 bg-gray-900 min-h-screen mb-24 flex justify-center items-center">
         <CircularProgress />
       </Container>
     );
@@ -35,41 +35,47 @@ const MyIncidentsPage = () => {
 
   if (error) {
     return (
-      <Container sx={{ mt: 4 }}>
-        <Alert severity="error">{error}</Alert>
+      <Container className="mt-24 px-4 p-4 lg:px-8 bg-gray-900 min-h-screen mb-24">
+        <Alert severity="error" className="mb-4">
+          {error}
+        </Alert>
       </Container>
     );
   }
 
   return (
-    <Container sx={{ mt: 4 }}>
-      <Typography variant="h4" gutterBottom>
+    <Container className="mt-24 px-4 p-4 lg:px-8 bg-gray-900 min-h-screen mb-24">
+      <Typography
+        variant="h4"
+        gutterBottom
+        className="text-xl text-white text-center mt-8"
+      >
         Moje Zgłoszenia
       </Typography>
 
       {incidents.length === 0 ? (
-        <Typography variant="body1">Nie masz żadnych zgłoszeń.</Typography>
+        <Typography variant="body1" className="text-white">
+          Nie masz żadnych zgłoszeń.
+        </Typography>
       ) : (
-        <Grid container spacing={4}>
+        <Box className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {incidents.map((incident) => (
-            <Grid item key={incident._id} xs={12} sm={6} md={4}>
-              <IncidentCard
-                incident={incident}
-                statusColors={STATUS_COLORS}
-                // DELETE callback
-                onDelete={() => {
-                  setIncidentToDelete(incident);
-                  setDeleteDialogOpen(true);
-                }}
-                // EDIT callback
-                onEdit={() => {
-                  // navigate to the edit page for this incident
-                  navigate(`/incidents/${incident._id}/edit`);
-                }}
-              />
-            </Grid>
+            <IncidentCard
+              key={incident._id}
+              incident={incident}
+              statusColors={STATUS_COLORS}
+              // Callback dla usuwania
+              onDelete={() => {
+                setIncidentToDelete(incident);
+                setDeleteDialogOpen(true);
+              }}
+              // Callback dla edycji
+              onEdit={() => {
+                navigate(`/incidents/${incident._id}/edit`);
+              }}
+            />
           ))}
-        </Grid>
+        </Box>
       )}
 
       <DeleteConfirmationDialog

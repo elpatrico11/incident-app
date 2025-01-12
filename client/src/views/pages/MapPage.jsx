@@ -21,13 +21,13 @@ import {
   DialogContentText,
   DialogActions,
   Button,
-  Fab,            // <-- IMPORTANT: import Fab
+  Fab,
+  Tooltip, // <-- Imported Tooltip for hover text
 } from '@mui/material';
 
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
-// Add this for the + icon:
-import AddIcon from '@mui/icons-material/Add';  
+import AddIcon from '@mui/icons-material/Add';
 
 import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet';
 import { useNavigate } from 'react-router-dom';
@@ -47,7 +47,6 @@ import MyLocationControl from '../components/common/MyLocationControl';
 const MapPage = () => {
   const navigate = useNavigate();
   const {
-    // from your hook
     incidentsError,
     incidentsLoading,
     filteredIncidents,
@@ -66,8 +65,6 @@ const MapPage = () => {
     searchDialogOpen,
     searchDialogMessage,
     handleCloseDialog,
-
-    // the geolocation function in your hook
     handleUserLocation,
   } = useMapPage();
 
@@ -107,7 +104,17 @@ const MapPage = () => {
   };
 
   return (
-    <Container sx={{ mt: 4, position: 'relative' }}>
+    <Container
+      sx={{
+        mt: 4,
+        border: '1px solid rgba(33,150,243,0.3)',
+        borderRadius: 2,
+        backgroundColor: '#1e2a38',
+        color: '#ffffff',
+        p: 2,
+        position: 'relative',
+      }}
+    >
       <Typography variant="h4" gutterBottom>
         Mapa Incydentów
       </Typography>
@@ -123,25 +130,33 @@ const MapPage = () => {
             onChange={(e) => handleSearchChange(e.target.value)}
             onKeyDown={handleSearchKeyDown}
             placeholder="np. Michałowicza"
-            sx={{ width: 220 }}
+            sx={{
+              width: 220,
+              '& .MuiOutlinedInput-root': {
+                backgroundColor: 'transparent',
+                borderRadius: 1,
+                color: '#ffffff',
+              },
+            }}
+            InputLabelProps={{ style: { color: '#ffffff' } }}
+            InputProps={{ style: { color: '#ffffff' } }}
           />
-          <IconButton
-            color="primary"
-            sx={{ ml: 1 }}
-            onClick={handleSearch}
-          >
+          <IconButton color="primary" sx={{ ml: 1 }} onClick={handleSearch}>
             <SearchIcon />
           </IconButton>
         </Box>
 
         <FormControl sx={{ minWidth: 200 }}>
-          <InputLabel id="category-filter-label">Filtruj według kategorii</InputLabel>
+          <InputLabel id="category-filter-label" sx={{ color: '#ffffff' }}>
+            Filtruj według kategorii
+          </InputLabel>
           <Select
             labelId="category-filter-label"
             id="category-filter"
             value={categoryFilter}
             label="Filtruj według kategorii"
             onChange={(e) => handleFilterChange(e.target.value)}
+            sx={{ color: '#ffffff' }}
           >
             <MenuItem value="All">Wszystkie</MenuItem>
             {categories.map((cat) => (
@@ -162,7 +177,7 @@ const MapPage = () => {
           whenReady={(map) => handleMapCreated(map.target)}
         >
           <TileLayer
-            attribution='&copy; OpenStreetMap contributors'
+            attribution="&copy; OpenStreetMap contributors"
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
 
@@ -183,22 +198,24 @@ const MapPage = () => {
         </MapContainer>
       </Box>
 
-      {/* "Add new incident" FAB in bottom-left corner */}
-     {!drawerOpen && (
-  <Fab
-    color="primary"
-    aria-label="add"
-    onClick={() => setDrawerOpen(true)}
-    sx={{
-      position: 'absolute',
-      bottom: 16,
-      left: 16,
-      zIndex: 9999,
-    }}
-  >
-    <AddIcon />
-  </Fab>
-)}
+      {/* "Add new incident" FAB in bottom-left corner with tooltip */}
+      {!drawerOpen && (
+        <Tooltip title="Dodaj zgłoszenie" placement="top">
+          <Fab
+            color="primary"
+            aria-label="add"
+            onClick={() => setDrawerOpen(true)}
+            sx={{
+              position: 'absolute',
+              bottom: 16,
+              left: 16,
+              zIndex: 9999,
+            }}
+          >
+            <AddIcon />
+          </Fab>
+        </Tooltip>
+      )}
 
       {/* Category selection drawer */}
       <Drawer
@@ -275,16 +292,10 @@ const MapPage = () => {
         </Box>
       </Drawer>
 
-      <Dialog
-        open={searchDialogOpen}
-        onClose={handleCloseDialog}
-        disableEnforceFocus
-      >
+      <Dialog open={searchDialogOpen} onClose={handleCloseDialog} disableEnforceFocus>
         <DialogTitle>Wyniki wyszukiwania</DialogTitle>
         <DialogContent>
-          <DialogContentText>
-            {searchDialogMessage}
-          </DialogContentText>
+          <DialogContentText>{searchDialogMessage}</DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog} autoFocus>
