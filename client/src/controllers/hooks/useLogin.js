@@ -1,3 +1,4 @@
+// client/src/controllers/hooks/useLogin.js
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "../../models/stores/useAuthStore";
@@ -9,7 +10,7 @@ import {
   NO_RESPONSE_ERROR,
   UNEXPECTED_ERROR,
 } from "../../constants/validationConstants";
-import { validateEmail } from "../../utils/validationUtils";
+import { validateEmail, validatePassword } from "../../utils/validationUtils";
 
 /**
  * Custom hook to handle login functionality.
@@ -44,11 +45,12 @@ const useLogin = () => {
       setEmailError("");
     }
 
-    // Validate Password
+    // Validate Password – dla logowania możesz chcieć tylko sprawdzić czy jest wpisane,
+    // ale jeśli chcesz również walidację wg nowych zasad:
     if (!password) {
       setPasswordError(PASSWORD_REQUIRED);
       isValid = false;
-    } else if (password.length < 6) {
+    } else if (!validatePassword(password)) {
       setPasswordError(PASSWORD_MIN_LENGTH);
       isValid = false;
     } else {

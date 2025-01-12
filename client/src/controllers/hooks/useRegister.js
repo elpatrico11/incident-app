@@ -1,3 +1,4 @@
+// client/src/controllers/hooks/useRegister.js
 import { useState } from "react";
 import { registerUser } from "../../api/services/authService";
 import {
@@ -12,7 +13,7 @@ import {
   NO_RESPONSE_ERROR,
   UNEXPECTED_ERROR,
 } from "../../constants/validationConstants";
-import { validateEmail } from "../../utils/validationUtils";
+import { validateEmail, validatePassword } from "../../utils/validationUtils";
 
 const useRegister = () => {
   // Form Fields
@@ -67,11 +68,11 @@ const useRegister = () => {
       setEmailError("");
     }
 
-    // Validate Password
+    // Validate Password – zmieniona walidacja:
     if (!password) {
       setPasswordError(PASSWORD_REQUIRED);
       isValid = false;
-    } else if (password.length < 6) {
+    } else if (!validatePassword(password)) {
       setPasswordError(PASSWORD_MIN_LENGTH);
       isValid = false;
     } else {
