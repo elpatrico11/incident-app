@@ -174,6 +174,11 @@ const IncidentSchema = new mongoose.Schema(
       enum: ["Rano", "Popołudnie", "Wieczór", "Noc"],
       required: false,
     },
+    changedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: false,
+    },
   },
   {
     timestamps: true,
@@ -248,6 +253,45 @@ IncidentSchema.pre("findOneAndUpdate", async function (next) {
   } else {
     next();
   }
+});
+
+IncidentSchema.pre("save", function (next) {
+  // If the incident is new, or if status hasn’t changed, do nothing
+  if (this.isNew || !this.isModified("status")) {
+    return next();
+  }
+
+  // We need to figure out the old status, so we can push it into statusLogs.
+  // Because .pre('save') doesn't give us the “previous” doc automatically,
+  // we’ll have to do an extra query to see what the old status was.
+  this.constructor
+    .findById(this._id)
+    .then((oldIncident) => {
+      if (!oldIncident) return next();
+
+      const oldStatus = oldIncident.status;
+      const newStatus = this.status;
+
+      // Only log if there's an actual change
+      if (oldStatus !== newStatus) {
+        // Make sure you have the user who changed the status.
+        // You can store it in the doc somehow, e.g. this._changedBy, or pass it in.
+        if (!this.changedBy) {
+          // If you have no changedBy from the request, you could throw an error
+          // or just skip pushing the log
+          console.warn("No changedBy user specified for this status change.");
+        } else {
+          this.statusLogs.push({
+            previousStatus: oldStatus,
+            newStatus,
+            changedAt: new Date(),
+            changedBy: this.changedBy,
+          });
+        }
+      }
+      next();
+    })
+    .catch(next);
 });
 
 // Export the Incident model

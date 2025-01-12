@@ -152,6 +152,7 @@ const updateIncidentStatus = async (req, res, next) => {
       console.log(`Incident with ID ${req.params.id} not found.`);
       return res.status(404).json({ msg: "Zgłoszenie nie znalezione" });
     }
+    incident.changedBy = req.user.id;
 
     // Update status
     incident.status = status;
@@ -163,7 +164,6 @@ const updateIncidentStatus = async (req, res, next) => {
       // If status is changed from 'Rozwiązane' to something else, unset resolvedAt
       incident.resolvedAt = null;
     }
-
     await incident.save();
 
     // Create a notification for the user
