@@ -133,7 +133,20 @@ const useAuthStore = create((set, get) => ({
       }));
     } catch (error) {
       console.error("Error marking notification as read:", error);
-      // Optionally, handle the error
+    }
+  },
+
+  markNotificationAsUnread: async (id) => {
+    try {
+      const response = await api.put(`/notifications/${id}/unread`);
+      const updatedNotification = response.data;
+      set((state) => ({
+        notifications: state.notifications.map((notif) =>
+          notif._id === id ? updatedNotification : notif
+        ),
+      }));
+    } catch (error) {
+      console.error("Error marking notification as unread:", error);
     }
   },
 

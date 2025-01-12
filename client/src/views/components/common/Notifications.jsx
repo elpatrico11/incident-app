@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useMemo } from 'react';
 import {
   Box,
@@ -11,10 +10,6 @@ import {
 import useAuthStore from '../../../models/stores/useAuthStore';
 import NotificationItem from './NotificationItem';
 
-/**
- * Component to display user notifications with pagination.
- * @returns {JSX.Element} - The rendered component.
- */
 const Notifications = () => {
   const {
     user,
@@ -22,6 +17,7 @@ const Notifications = () => {
     notificationsLoading,
     fetchNotifications,
     markNotificationAsRead,
+    markNotificationAsUnread
   } = useAuthStore();
 
   // Pagination states
@@ -34,19 +30,18 @@ const Notifications = () => {
     }
   }, [user, fetchNotifications]);
 
-  /**
-   * Handles toggling the read status of a notification.
-   * @param {string} id - The notification ID.
-   * @param {boolean} isRead - Current read status.
-   */
-  const handleToggleRead = (id, isRead) => {
-    if (!isRead) {
-      markNotificationAsRead(id);
+
+  const handleToggleRead = async (id, currentIsRead) => {
+    if (currentIsRead) {
+      await markNotificationAsUnread(id);
+    } else {
+      await markNotificationAsRead(id);
     }
   };
 
   /**
    * Handles pagination page change.
+   *
    * @param {object} event - The event object.
    * @param {number} value - The new page number.
    */
@@ -103,13 +98,7 @@ const Notifications = () => {
               />
             ))}
           </List>
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              mt: 3,
-            }}
-          >
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
             <Pagination
               count={totalPages}
               page={currentPage}

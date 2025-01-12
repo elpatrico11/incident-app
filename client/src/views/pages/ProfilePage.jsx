@@ -16,17 +16,20 @@ import AlertMessage from '../components/common/AlertMessage';
 import Notifications from '../components/common/Notifications';
 import Loader from '../components/common/Loader'; // Corrected import path
 
-// Create a dark theme
+// Adjust the theme to match the MyIncidentsPage
 const theme = createTheme({
   palette: {
     mode: 'dark',
     background: {
-      default: '#121212',  // Very dark background
-      paper: '#1e1e1e',    // Slightly lighter background for cards
+      default: '#1a202c', // Matches the dark blue-gray background
+      paper: '#2d3748',   // Slightly lighter for card backgrounds
     },
     text: {
-      primary: '#ffffff',
-      secondary: '#b0b0b0',
+      primary: '#e2e8f0', // Light text
+      secondary: '#a0aec0', // Muted text
+    },
+    primary: {
+      main: '#6366f1', // Indigo for buttons, similar to MyIncidentsPage
     },
   },
 });
@@ -34,7 +37,6 @@ const theme = createTheme({
 const ProfilePage = () => {
   // Utilize the custom hook
   const {
-    // Account Info
     accountData,
     accountError,
     accountSuccess,
@@ -42,7 +44,6 @@ const ProfilePage = () => {
     handleAccountSubmit,
     updatingProfile,
 
-    // Password Change
     passwordData,
     passwordError,
     passwordSuccess,
@@ -50,11 +51,9 @@ const ProfilePage = () => {
     handlePasswordSubmit,
     changingPassword,
 
-    // Loading
     loadingProfile,
   } = useProfile();
 
-  // Read ?tab=... from URL
   const [searchParams, setSearchParams] = useSearchParams();
   const initialTab = parseInt(searchParams.get('tab') || '0', 10);
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -65,24 +64,16 @@ const ProfilePage = () => {
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
-
-    // If newValue is 0, remove the query param; otherwise set ?tab=newValue
     if (newValue === 0) {
       setSearchParams({});
     } else {
       setSearchParams({ tab: newValue });
     }
-
-    // Clear out any success/error messages
-    // You might need to implement functions to clear messages based on activeTab
-    // For now, assuming messages are handled per form submission
   };
 
   return (
     <ThemeProvider theme={theme}>
-      {/* Outer Box with dark background and some vertical padding */}
       <Box sx={{ backgroundColor: 'background.default', minHeight: '100vh', py: 4 }}>
-        {/* Centered Container with 'paper' background and padding */}
         <Container
           maxWidth="md"
           sx={{
@@ -98,19 +89,22 @@ const ProfilePage = () => {
           </Typography>
 
           <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
-            <Tabs value={activeTab} onChange={handleTabChange} textColor="inherit" indicatorColor="primary">
+            <Tabs
+              value={activeTab}
+              onChange={handleTabChange}
+              textColor="inherit"
+              indicatorColor="primary"
+            >
               <Tab label="Informacje o Koncie" />
               <Tab label="Zmień Hasło" />
               <Tab label="Powiadomienia" />
             </Tabs>
           </Box>
 
-          {/* Conditional Rendering Based on Loading State */}
           {loadingProfile ? (
             <Loader />
           ) : (
             <>
-              {/* Tab #0 - Account Info */}
               {activeTab === 0 && (
                 <Box
                   component="form"
@@ -143,17 +137,17 @@ const ProfilePage = () => {
                     onChange={handleAccountChange}
                     required
                     type="email"
-                    disabled // Email is not editable
+                    disabled
                   />
 
-                  {/* Read-Only Field for Role */}
-                  <TextInput
+                 <TextInput
                     label="Rola"
                     name="role"
                     value={accountData.role}
                     disabled
                     required
-                  />
+                    onChange={() => {}}
+                />
 
                   <Button
                     type="submit"
@@ -166,7 +160,6 @@ const ProfilePage = () => {
                 </Box>
               )}
 
-              {/* Tab #1 - Change Password */}
               {activeTab === 1 && (
                 <Box
                   component="form"
@@ -214,7 +207,6 @@ const ProfilePage = () => {
                 </Box>
               )}
 
-              {/* Tab #2 - Notifications */}
               {activeTab === 2 && (
                 <Box sx={{ mt: 2 }}>
                   <Notifications />

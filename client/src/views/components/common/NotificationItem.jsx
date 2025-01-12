@@ -1,4 +1,3 @@
-
 import React from 'react';
 import PropTypes from 'prop-types';
 import {
@@ -6,48 +5,61 @@ import {
   ListItemText,
   Checkbox,
   Divider,
+  Typography,
 } from '@mui/material';
 
-/**
- * Formats a date string into a localized string.
- * @param {string} dateString - The date string to format.
- * @returns {string} - The formatted date string.
- */
 const formatDate = (dateString) => {
   const date = new Date(dateString);
   return date.toLocaleString('pl-PL');
 };
 
-/**
- * Component representing a single notification item.
- * @param {Object} props - The component props.
- * @param {string} props.id - The unique identifier of the notification.
- * @param {string} props.message - The notification message.
- * @param {string} props.createdAt - The creation date of the notification.
- * @param {boolean} props.isRead - The read status of the notification.
- * @param {Function} props.onToggleRead - Callback to toggle read status.
- * @returns {JSX.Element} - The rendered component.
- */
 const NotificationItem = React.memo(({ id, message, createdAt, isRead, onToggleRead }) => {
+  const handleToggle = (e) => {
+    e.stopPropagation();
+    onToggleRead(id, isRead);
+  };
+
   return (
     <React.Fragment>
       <ListItem
         alignItems="flex-start"
+        component="div"
+        onClick={handleToggle}
+        sx={{ cursor: 'pointer' }}
         secondaryAction={
-          <Checkbox
+         <Checkbox
             edge="end"
             checked={isRead}
-            onChange={() => onToggleRead(id, isRead)}
-            inputProps={{ 'aria-label': `Mark notification ${id} as read` }}
+            onChange={(e) => {
+              e.stopPropagation();
+              onToggleRead(id, isRead);
+            }}
+            onClick={(e) => e.stopPropagation()}
+            inputProps={{ 'aria-label': `Mark notification ${id} as ${isRead ? 'unread' : 'read'}` }}
           />
         }
       >
         <ListItemText
-          primary={message}
-          secondary={formatDate(createdAt)}
-          primaryTypographyProps={{
-            fontWeight: isRead ? 'regular' : 'bold',
-          }}
+          primary={
+            <Typography
+              variant="body1"
+              sx={{
+                fontWeight: isRead ? 'regular' : 'bold',
+                color: isRead ? 'text.secondary' : 'text.primary',
+                textDecoration: isRead ? 'line-through' : 'none',
+              }}
+            >
+              {message}
+            </Typography>
+          }
+          secondary={
+            <Typography
+              variant="body2"
+              color={isRead ? 'text.secondary' : 'text.primary'}
+            >
+              {formatDate(createdAt)}
+            </Typography>
+          }
         />
       </ListItem>
       <Divider component="li" />
