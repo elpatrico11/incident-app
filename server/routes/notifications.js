@@ -3,6 +3,7 @@ const router = express.Router();
 const {
   getNotifications,
   markAsRead,
+  markAsUnread,
 } = require("../controllers/notificationsController");
 const authMiddleware = require("../middlewares/auth");
 
@@ -22,5 +23,12 @@ router.get("/", getNotifications);
  * @access  Private
  */
 router.put("/:id/read", markAsRead);
+
+/**
+ * @route   PUT /api/notifications/:id/unread
+ * @desc    Mark a notification as unread
+ * @access  Private
+ */
+router.put("/:id/unread", markAsUnread);
 
 module.exports = router;
