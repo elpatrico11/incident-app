@@ -24,6 +24,7 @@ app.use("/api/incidents", require("./routes/incidents"));
 app.use("/api/categories", require("./routes/categories"));
 app.use("/api/admin", require("./routes/admin"));
 app.use("/api/notifications", require("./routes/notifications"));
+app.use("/api/contact", require("./routes/contact"));
 
 // Default Route
 app.get("/", (req, res) => {

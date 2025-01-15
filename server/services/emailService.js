@@ -23,7 +23,21 @@ const sendPasswordResetEmail = async (to, newPassword) => {
   await sendEmail(to, subject, html);
 };
 
+const sendContactEmail = async (name, from, subject, message) => {
+  const to = process.env.CONTACT_RECEIVER;
+
+  const html = `
+    <h1>Contact Message from ${name}</h1>
+    <p><strong>Sender Email:</strong> ${from}</p>
+    <hr>
+    <p>${message}</p>
+  `;
+
+  await sendEmail(to, subject, html);
+};
+
 module.exports = {
   sendVerificationEmail,
   sendPasswordResetEmail,
+  sendContactEmail,
 };
