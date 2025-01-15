@@ -31,9 +31,6 @@ const MarkerClusterGroup = ({ incidents }) => {
     // Initialize the marker cluster group with the custom iconCreateFunction
     const markerCluster = L.markerClusterGroup({
       iconCreateFunction,
-      // Add more options here if needed
-      // For example, disable spiderfy on click:
-      // spiderfyOnMaxZoom: false,
     });
 
     // Create markers and add them to the cluster group
@@ -64,7 +61,7 @@ const MarkerClusterGroup = ({ incidents }) => {
     };
   }, [map, incidents]);
 
-  return null; // This component doesn't render anything directly
+  return null; 
 };
 
 export default MarkerClusterGroup;

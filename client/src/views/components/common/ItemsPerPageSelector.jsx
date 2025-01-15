@@ -1,9 +1,7 @@
 
 import React from 'react';
 
-/**
- * ItemsPerPageSelector component for selecting number of items per page.
- */
+
 const ItemsPerPageSelector = ({
   itemsPerPage,
   setItemsPerPage,

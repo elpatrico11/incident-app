@@ -5,9 +5,7 @@ import SortBar from './SortBar';
 import SearchBar from './SearchBar';
 import ItemsPerPageSelector from './ItemsPerPageSelector';
 
-/**
- * ControlsBar component that includes filters, sorting, searching, and items per page selection.
- */
+
 const ControlsBar = ({
   filterStatus,
   setFilterStatus,

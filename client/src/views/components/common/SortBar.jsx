@@ -1,9 +1,7 @@
 
 import React from 'react';
 
-/**
- * SortBar component for sorting incidents.
- */
+
 const SortBar = ({ sortOption, setSortOption }) => {
   return (
     <select

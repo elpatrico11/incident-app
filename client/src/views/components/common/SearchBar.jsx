@@ -1,9 +1,7 @@
 
 import React from 'react';
 
-/**
- * SearchBar component for searching incidents.
- */
+
 const SearchBar = ({ searchQuery, setSearchQuery }) => {
   return (
     <input

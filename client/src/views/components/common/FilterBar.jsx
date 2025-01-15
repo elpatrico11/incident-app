@@ -1,9 +1,7 @@
 
 import React from 'react';
 
-/**
- * FilterBar component for filtering incidents by status and category.
- */
+
 const FilterBar = ({
   filterStatus,
   setFilterStatus,
@@ -23,7 +21,7 @@ const FilterBar = ({
         className="select select-bordered w-32 bg-gray-800 text-white"
       >
         <option value="All">Wszystkie</option>
-        <option value="Nowe">Nowe</option> {/* Capitalized */}
+        <option value="Nowe">Nowe</option> 
         <option value="Weryfikacja">Weryfikacja</option>
         <option value="Potwierdzone">Potwierdzone</option>
         <option value="Wstrzymane">Wstrzymane</option>

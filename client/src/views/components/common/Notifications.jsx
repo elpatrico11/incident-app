@@ -22,7 +22,7 @@ const Notifications = () => {
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5; // Customize the number of notifications per page
+  const itemsPerPage = 5; 
 
   useEffect(() => {
     if (user) {
@@ -39,12 +39,8 @@ const Notifications = () => {
     }
   };
 
-  /**
-   * Handles pagination page change.
-   *
-   * @param {object} event - The event object.
-   * @param {number} value - The new page number.
-   */
+// Handles pagination page change.
+
   const handlePageChange = (event, value) => {
     setCurrentPage(value);
   };

@@ -1,4 +1,3 @@
-// file: MyLocationControl.jsx
 import { useMap } from 'react-leaflet';
 import { useEffect } from 'react';
 import L from 'leaflet';
@@ -14,13 +13,11 @@ function MyLocationControl({ onLocate }) {
       // Create an element that will hold our custom button
       const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
 
-      // Create the <a> or <button> element
       const button = L.DomUtil.create('a', 'leaflet-bar-part', container);
       button.href = '#';
-      button.title = 'Zlokalizuj mnie'; // "Locate me" in Polish?
+      button.title = 'Zlokalizuj mnie'; // 
 
-      // Optionally add an icon from e.g. a CSS class or a small inline SVG
-      // For simplicity, just text or a simple emoji:
+
       button.innerHTML = '📍';
 
       // Prevent clicks on the button from propagating to the map
@@ -29,7 +26,7 @@ function MyLocationControl({ onLocate }) {
       // Handle the click event
       L.DomEvent.on(button, 'click', (e) => {
         e.preventDefault();
-        onLocate?.(); // call the callback prop
+        onLocate?.(); 
       });
 
       return container;
@@ -44,7 +41,6 @@ function MyLocationControl({ onLocate }) {
     };
   }, [map, onLocate]);
 
-  // This component doesn’t render anything of its own
   return null;
 }
 

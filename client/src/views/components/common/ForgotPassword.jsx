@@ -30,7 +30,7 @@ const ForgotPassword = ({ open, handleClose }) => {
 
   return (
     <Dialog open={open} onClose={handleDialogClose}>
-      <DialogTitle>Forgot Password</DialogTitle>
+      <DialogTitle>Zapomniałeś hasła</DialogTitle>
       <DialogContent>
         {successMessage ? (
           <Alert severity="success">{successMessage}</Alert>
@@ -38,7 +38,7 @@ const ForgotPassword = ({ open, handleClose }) => {
           <>
             {serverError && <Alert severity="error">{serverError}</Alert>}
             <Typography className="mb-4">
-              Enter your email address below, and we'll send you a new password.
+             Wpisz swój adres e-mail poniżej, a wyślemy Ci nowe hasło.
             </Typography>
             <div className="relative">
               <input
