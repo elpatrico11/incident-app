@@ -1,4 +1,3 @@
-// client/src/controllers/hooks/useRegister.js
 import { useState } from "react";
 import { registerUser } from "../../api/services/authService";
 import {
@@ -68,7 +67,7 @@ const useRegister = () => {
       setEmailError("");
     }
 
-    // Validate Password – zmieniona walidacja:
+    // Validate Password
     if (!password) {
       setPasswordError(PASSWORD_REQUIRED);
       isValid = false;

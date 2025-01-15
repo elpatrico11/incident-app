@@ -29,11 +29,11 @@ export const useMyIncidents = () => {
     } finally {
       setLoading(false);
     }
-  }, [user]); // Add user as dependency since it's used inside
+  }, [user]);
 
   useEffect(() => {
     fetchIncidents();
-  }, [fetchIncidents]); // Now fetchIncidents is memoized and can be safely used as a dependency
+  }, [fetchIncidents]);
 
   const handleDelete = async () => {
     try {

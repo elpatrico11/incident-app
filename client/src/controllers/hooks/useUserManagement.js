@@ -56,7 +56,7 @@ const useUserManagement = () => {
       const user = users.find((u) => u._id === userId);
       if (!user) return;
 
-      if (user.role === newRole) return; // No change
+      if (user.role === newRole) return;
 
       const confirmChange = window.confirm(
         `Czy na pewno chcesz zmienić rolę użytkownika ${user.email} na ${newRole}?`
@@ -72,7 +72,7 @@ const useUserManagement = () => {
           prevUsers.map((u) => (u._id === userId ? updatedUser : u))
         );
         setSuccess("Rola użytkownika została zaktualizowana.");
-        setError(""); // Clear any previous errors
+        setError("");
       } catch (err) {
         console.error(err);
         setError("Błąd podczas aktualizacji roli użytkownika.");
@@ -96,7 +96,7 @@ const useUserManagement = () => {
         await deleteUserAPI(userId);
         setUsers((prevUsers) => prevUsers.filter((u) => u._id !== userId));
         setSuccess("Użytkownik został usunięty.");
-        setError(""); // Clear any previous errors
+        setError("");
       } catch (err) {
         console.error(err);
         setError("Błąd podczas usuwania użytkownika.");

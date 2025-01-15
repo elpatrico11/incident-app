@@ -7,11 +7,8 @@ import {
 import { point, polygon, booleanPointInPolygon } from "@turf/turf";
 import useAuthStore from "../../models/stores/useAuthStore";
 
-/**
- * Custom hook to manage incident details, comments, and boundary data.
- * @param {string} id - The ID of the incident.
- * @returns {Object} - State and handler functions.
- */
+//Custom hook to manage incident details, comments, and boundary data.
+
 const useIncidentDetail = (id) => {
   const { user } = useAuthStore();
 
@@ -35,9 +32,8 @@ const useIncidentDetail = (id) => {
   const [loadingBoundary, setLoadingBoundary] = useState(true);
   const [boundaryError, setBoundaryError] = useState("");
 
-  /**
-   * Fetch incident details.
-   */
+  //Fetch incident details.
+
   const loadIncident = useCallback(async () => {
     setLoadingIncident(true);
     try {
@@ -52,25 +48,20 @@ const useIncidentDetail = (id) => {
     setLoadingIncident(false);
   }, [id]);
 
-  /**
-   * Fetch comments for the incident.
-   */
+  //Fetch comments for the incident.
+
   const loadComments = useCallback(async () => {
     setLoadingComments(true);
     try {
       const data = await fetchCommentsByIncidentId(id);
 
-      // Determine where the comments array is located based on response structure
       let commentsArray = [];
 
       if (Array.isArray(data)) {
-        // Direct array
         commentsArray = data;
       } else if (data.comments && Array.isArray(data.comments)) {
-        // Nested within 'comments' property
         commentsArray = data.comments;
       } else if (data.data && Array.isArray(data.data)) {
-        // Nested within 'data' property (common in pagination)
         commentsArray = data.data;
       } else {
         console.error("Unexpected comments data structure:", data);
@@ -104,9 +95,8 @@ const useIncidentDetail = (id) => {
     }
   }, []);
 
-  /**
-   * Submit a new comment.
-   */
+  //Submit a new comment.
+
   const handleCommentSubmit = useCallback(
     async (e) => {
       e.preventDefault();
@@ -119,12 +109,9 @@ const useIncidentDetail = (id) => {
       try {
         const data = await submitComment(id, { text: comment });
 
-        // Determine how to update comments based on API response
         if (Array.isArray(data)) {
-          // Option 2: API returns updated comments list
           setComments(data);
         } else if (typeof data === "object" && data !== null) {
-          // Option 1: API returns the new comment
           setComments((prevComments) => [...prevComments, data]);
         } else {
           console.error("Unexpected response from submitComment:", data);
@@ -147,9 +134,8 @@ const useIncidentDetail = (id) => {
     [id, comment]
   );
 
-  /**
-   * Determine if the incident is within the boundary.
-   */
+  //Determine if the incident is within the boundary.
+
   const isIncidentWithinBoundary = useCallback(() => {
     if (
       boundary &&
@@ -197,7 +183,7 @@ const useIncidentDetail = (id) => {
     loadingBoundary,
     boundaryError,
 
-    // Utility
+    // Utils
     isIncidentWithinBoundary,
     user,
   };

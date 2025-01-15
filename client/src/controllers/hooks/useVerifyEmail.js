@@ -7,10 +7,6 @@ import {
   VERIFICATION_FAILED,
 } from "../../constants/verificationConstants";
 
-/**
- * Custom hook to handle email verification.
- * @returns {Object} - State and handlers related to email verification.
- */
 const useVerifyEmail = () => {
   const location = useLocation();
   const [verificationStatus, setVerificationStatus] = useState({

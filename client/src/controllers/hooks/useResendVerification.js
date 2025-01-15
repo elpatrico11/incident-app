@@ -6,19 +6,13 @@ import {
 } from "../../constants/validationConstants";
 import { validateEmail as validateEmailUtil } from "../../utils/validationUtils";
 
-/**
- * Custom hook to handle resending verification emails.
- */
-
 const useResendVerification = () => {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  /**
-   * Validates the email input.
-   * @returns {boolean} - Whether the email is valid.
-   */
+  //Validates the email input.
+
   const validateEmail = () => {
     if (!email) {
       setError(EMAIL_REQUIRED);
@@ -32,10 +26,8 @@ const useResendVerification = () => {
     return true;
   };
 
-  /**
-   * Handles form submission for resending verification email.
-   * @param {Event} e - The form submission event.
-   */
+  //Handles form submission for resending verification email.
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -55,9 +47,8 @@ const useResendVerification = () => {
     }
   };
 
-  /**
-   * Resets the state to initial values.
-   */
+  //Resets the state to initial values.
+
   const resetState = () => {
     setEmail("");
     setError("");

@@ -7,10 +7,6 @@ import {
 import { VALIDATION_MESSAGES } from "../../constants/profileConstants";
 import useAuthStore from "../../models/stores/useAuthStore";
 
-/**
- * Custom hook to manage user profile.
- * @returns {Object} - Profile data and handlers.
- */
 const useProfile = () => {
   const { user, setUser } = useAuthStore();
 
@@ -19,7 +15,7 @@ const useProfile = () => {
     firstName: user?.firstName || "",
     lastName: user?.lastName || "",
     email: user?.email || "",
-    role: user?.role || "user", // Added role
+    role: user?.role || "user",
   });
   const [accountError, setAccountError] = useState("");
   const [accountSuccess, setAccountSuccess] = useState("");
@@ -47,7 +43,7 @@ const useProfile = () => {
         firstName: data.firstName || "",
         lastName: data.lastName || "",
         email: data.email || "",
-        role: data.role || "user", // Ensure role is included
+        role: data.role || "user",
       });
       setUser(data); // Update global user state
     } catch (err) {

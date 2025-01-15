@@ -1,4 +1,3 @@
-// file: useReportForm.js
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import * as turf from "@turf/turf";
@@ -15,10 +14,9 @@ import {
 } from "../../constants/reportIncidentConstants.js";
 import { fetchCategories } from "../../utils/categories";
 
-/**
- * Converts a Nominatim address object into a nice single-line string,
- * e.g. "Działkowców 19, 43-380, Bielsko-Biała, Polska"
- */
+//Converts a Nominatim address object into a nice single-line string,
+// "Działkowców 19, 43-380, Bielsko-Biała, Polska"
+
 function formatAddressSingleLine({ road, houseNum, postcode, city, country }) {
   const parts = [];
   const roadPart = houseNum ? `${road} ${houseNum}`.trim() : road;
@@ -34,9 +32,8 @@ function formatAddressSingleLine({ road, houseNum, postcode, city, country }) {
   return parts.join(", ");
 }
 
-/**
- * Reverse geocoding => lat/lng to single-line address
- */
+//Reverse geocoding => lat/lng to single-line address
+
 async function reverseGeocodeSingleLine(lat, lon) {
   const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`;
   const res = await fetch(url);
@@ -55,9 +52,8 @@ async function reverseGeocodeSingleLine(lat, lon) {
   return formatAddressSingleLine({ road, houseNum, postcode, city, country });
 }
 
-/**
- * Forward geocoding => text query to lat/lng, restricted to Bielsko-Biała area
- */
+//Forward geocoding => text query to lat/lng, restricted to Bielsko-Biała area
+
 async function forwardGeocodeSingleLine(query) {
   const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&addressdetails=1&bounded=1&viewbox=19.0,49.84,19.15,49.78&q=${encodeURIComponent(
     query
@@ -102,7 +98,7 @@ export function useReportForm() {
   const [formData, setFormData] = useState({
     category: "",
     description: "",
-    location: null, // { lat, lng }
+    location: null,
     address: "",
     image: null,
     dataZdarzenia: "",
@@ -130,7 +126,7 @@ export function useReportForm() {
   // Image preview
   const [preview, setPreview] = useState(null);
 
-  // 1) Fetch categories
+  // Fetch categories
   useEffect(() => {
     const getCats = async () => {
       try {
@@ -146,7 +142,7 @@ export function useReportForm() {
     getCats();
   }, []);
 
-  // 2) Fetch boundary for Bielsko-Biała
+  //Fetch boundary for Bielsko-Biała
   useEffect(() => {
     const fetchBoundaryData = async () => {
       try {
@@ -162,7 +158,7 @@ export function useReportForm() {
     fetchBoundaryData();
   }, []);
 
-  // 3) Possibly pre-select category from URL
+  //Possibly pre-select category from URL
   useEffect(() => {
     if (categories.length > 0) {
       const params = new URLSearchParams(location.search);
@@ -182,8 +178,6 @@ export function useReportForm() {
       if (preview) URL.revokeObjectURL(preview.url);
     };
   }, [preview]);
-
-  // ================== Handlers ==================
 
   const handleFormChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -249,9 +243,8 @@ export function useReportForm() {
     if (value) setCaptchaError("");
   };
 
-  /**
-   * Clicking the map => Reverse geocode => single-line address
-   */
+  //Clicking the map => Reverse geocode => single-line address
+
   const handleMapClick = async (latlng) => {
     if (!boundary) return;
     const { lat, lng } = latlng;
@@ -285,9 +278,8 @@ export function useReportForm() {
     }
   };
 
-  /**
-   * Searching by text => Forward geocode => single-line address => set marker
-   */
+  //Searching by text => Forward geocode => single-line address => set marker
+
   const handleSearchAddress = async () => {
     if (!formData.address) return;
 
@@ -323,7 +315,7 @@ export function useReportForm() {
     }
   };
 
-  // ===== NEW: Handle user geolocation =====
+  //Handle user geolocation
   const handleLocateUser = () => {
     if (!boundary) {
       setBoundaryError(
@@ -387,7 +379,6 @@ export function useReportForm() {
   // Close boundary error
   const handleSnackbarClose = () => setSnackbarOpen(false);
 
-  // ========== Submit ==========
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -447,7 +438,6 @@ export function useReportForm() {
         "Błąd podczas tworzenia zgłoszenia.";
       setError(errorMessage);
 
-      // if using captcha, reset on error
       if (!user && captchaRef.current) {
         captchaRef.current.reset();
         setCaptchaValue(null);
@@ -477,7 +467,6 @@ export function useReportForm() {
     DNI_TYGODNIA_OPTIONS,
     PORA_DNIA_OPTIONS,
 
-    // existing handlers
     handleFormChange,
     handleAddressChange,
     handleDniTygodniaChange,
@@ -489,8 +478,6 @@ export function useReportForm() {
     handleSubmit,
     handleSnackbarClose,
     handleSearchAddress,
-
-    // NEW:
     handleLocateUser,
   };
 }

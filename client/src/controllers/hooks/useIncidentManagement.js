@@ -161,7 +161,7 @@ const useIncidentManagement = () => {
         prev.map((i) => (i._id === incidentId ? detailedIncident : i))
       );
       setSuccess("Status zgłoszenia został zaktualizowany.");
-      setError(""); // Clear any previous errors
+      setError("");
     } catch (err) {
       console.error(err);
       if (err.response && err.response.data && err.response.data.msg) {

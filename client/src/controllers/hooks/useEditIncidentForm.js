@@ -31,7 +31,7 @@ async function forwardGeocodeSingleLine(query) {
   const lat = parseFloat(best.lat);
   const lon = parseFloat(best.lon);
 
-  // Basic single-line formatting
+  //Single-line formatting
   const a = best.address || {};
   const road = a.road || a.pedestrian || a.footway || query;
   const houseNum = a.house_number || "";
@@ -80,15 +80,12 @@ export function useEditIncidentForm(incidentId) {
   const navigate = useNavigate();
   const { user } = useAuthStore();
 
-  // ----------------------------
-  //        Form Data
-  // ----------------------------
   const [formData, setFormData] = useState({
     category: "",
     description: "",
     latitude: "",
     longitude: "",
-    address: "", // <--- new field to store textual address
+    address: "",
     image: null,
     dataZdarzenia: "",
     dniTygodnia: [],
@@ -117,11 +114,7 @@ export function useEditIncidentForm(incidentId) {
   // Snackbar for boundary errors
   const [snackbarOpen, setSnackbarOpen] = useState(false);
 
-  // ----------------------------
-  //     Fetching & Setup
-  // ----------------------------
-
-  // 1) Fetch categories
+  //Fetch categories
   useEffect(() => {
     const getCategories = async () => {
       try {
@@ -137,9 +130,9 @@ export function useEditIncidentForm(incidentId) {
     getCategories();
   }, []);
 
-  // 2) Fetch existing incident to edit
+  //Fetch existing incident to edit
   useEffect(() => {
-    if (!user) return; // only proceed if user is known (or you can omit this check)
+    if (!user) return;
 
     const getIncidentData = async () => {
       try {
@@ -157,7 +150,7 @@ export function useEditIncidentForm(incidentId) {
           dataZdarzenia,
           dniTygodnia,
           poraDnia,
-          address, // if the server returns 'address', we read it here
+          address,
         } = inc;
 
         // Permission check (non-admin can only edit if same user)
@@ -176,7 +169,7 @@ export function useEditIncidentForm(incidentId) {
           description: description || "",
           latitude: location?.coordinates[1]?.toString() || "",
           longitude: location?.coordinates[0]?.toString() || "",
-          address: address || "", // read from server
+          address: address || "",
           image: null,
           dataZdarzenia: dataZdarzenia ? dataZdarzenia.split("T")[0] : "",
           dniTygodnia: dniTygodnia || [],
@@ -192,7 +185,7 @@ export function useEditIncidentForm(incidentId) {
     getIncidentData();
   }, [incidentId, user]);
 
-  // 3) Fetch boundary data (Bielsko-Biała)
+  //Fetch boundary data (Bielsko-Biała)
   useEffect(() => {
     const getBoundary = async () => {
       try {
@@ -209,14 +202,10 @@ export function useEditIncidentForm(incidentId) {
     getBoundary();
   }, []);
 
-  // if boundaryError changes => open snack
   useEffect(() => {
     if (boundaryError) setSnackbarOpen(true);
   }, [boundaryError]);
 
-  // ----------------------------
-  //       Field Handlers
-  // ----------------------------
   const handleFormChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -240,7 +229,6 @@ export function useEditIncidentForm(incidentId) {
 
     setFormData((prev) => ({ ...prev, image: file }));
 
-    // Generate local preview
     const reader = new FileReader();
     reader.onloadend = () => setImagePreview(reader.result);
     reader.readAsDataURL(file);
@@ -253,9 +241,6 @@ export function useEditIncidentForm(incidentId) {
     setExistingImage(null);
   };
 
-  // ----------------------------
-  //   Map Click => Reverse Geocode
-  // ----------------------------
   const handleMapClick = async (latlng) => {
     if (!boundary) return;
     const { lat, lng } = latlng;
@@ -295,9 +280,7 @@ export function useEditIncidentForm(incidentId) {
     }
   };
 
-  // ----------------------------
-  //  Searching (Forward Geocode)
-  // ----------------------------
+  //Searching
   const handleSearchAddress = async () => {
     if (!formData.address) return;
     try {
@@ -335,9 +318,6 @@ export function useEditIncidentForm(incidentId) {
     }
   };
 
-  // ----------------------------
-  //        Submit Logic
-  // ----------------------------
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -356,14 +336,12 @@ export function useEditIncidentForm(incidentId) {
       poraDnia,
     } = formData;
 
-    // Basic validation
     if (!category || !description || !latitude || !longitude) {
       setError("Proszę wypełnić wszystkie wymagane pola.");
       setIsSubmitting(false);
       return;
     }
 
-    // Double-check boundary
     if (boundary) {
       const point = turf.point([parseFloat(longitude), parseFloat(latitude)]);
       const polygon = turf.polygon(boundary.features[0].geometry.coordinates);
@@ -374,7 +352,6 @@ export function useEditIncidentForm(incidentId) {
       }
     }
 
-    // Build FormData
     const dataToSend = new FormData();
     dataToSend.append("category", category);
     dataToSend.append("description", description);
@@ -385,10 +362,8 @@ export function useEditIncidentForm(incidentId) {
         coordinates: [parseFloat(longitude), parseFloat(latitude)],
       })
     );
-    // Single-line address
     dataToSend.append("address", address || "");
 
-    // Optional fields
     if (dataZdarzenia) dataToSend.append("dataZdarzenia", dataZdarzenia);
     if (dniTygodnia.length > 0) {
       dniTygodnia.forEach((day) => dataToSend.append("dniTygodnia", day));
@@ -435,14 +410,13 @@ export function useEditIncidentForm(incidentId) {
     DNI_TYGODNIA_OPTIONS,
     PORA_DNIA_OPTIONS,
 
-    // Handlers
     handleFormChange,
     handleDniTygodniaChange,
     handlePoraDniaChange,
     handleImageChange,
     handleRemoveImage,
     handleMapClick,
-    handleSearchAddress, // <--- new for forward geocoding
+    handleSearchAddress,
     handleSubmit,
     handleSnackbarClose,
   };

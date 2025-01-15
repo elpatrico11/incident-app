@@ -1,4 +1,3 @@
-// client/src/controllers/hooks/useLogin.js
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "../../models/stores/useAuthStore";
@@ -12,10 +11,6 @@ import {
 } from "../../constants/validationConstants";
 import { validateEmail, validatePassword } from "../../utils/validationUtils";
 
-/**
- * Custom hook to handle login functionality.
- * @returns {Object} - State and handlers related to login.
- */
 const useLogin = () => {
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
@@ -27,10 +22,8 @@ const useLogin = () => {
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
 
-  /**
-   * Validates the input fields.
-   * @returns {boolean} - Whether the inputs are valid.
-   */
+  //Validates the input fields.
+
   const validateInputs = () => {
     let isValid = true;
 
@@ -45,8 +38,7 @@ const useLogin = () => {
       setEmailError("");
     }
 
-    // Validate Password – dla logowania możesz chcieć tylko sprawdzić czy jest wpisane,
-    // ale jeśli chcesz również walidację wg nowych zasad:
+    // Validate Password
     if (!password) {
       setPasswordError(PASSWORD_REQUIRED);
       isValid = false;
@@ -60,10 +52,8 @@ const useLogin = () => {
     return isValid;
   };
 
-  /**
-   * Handles form submission for login.
-   * @param {Event} event - The form submission event.
-   */
+  //Handles form submission for login.
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setFormError("");
@@ -79,7 +69,6 @@ const useLogin = () => {
       if (error.response) {
         setFormError(error.response.data.msg || "Error during login.");
       } else if (error.request) {
-        // Request was made but no response received
         setFormError(NO_RESPONSE_ERROR);
       } else {
         setFormError(UNEXPECTED_ERROR);

@@ -15,7 +15,6 @@ const useEditUser = (userId) => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Current User (from Auth Store)
   const currentUser = useAuthStore((state) => state.user);
 
   // Fetch User Data
@@ -54,7 +53,7 @@ const useEditUser = (userId) => {
       setError(VALIDATION_MESSAGES.REQUIRED);
       return false;
     }
-    // Simple email regex for validation
+    // Email regex for validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(userData.email)) {
       setError(VALIDATION_MESSAGES.INVALID_EMAIL);
@@ -86,19 +85,14 @@ const useEditUser = (userId) => {
   );
 
   return {
-    // Data
     userData,
-
-    // State
     loading,
     error,
     success,
 
-    // Handlers
     handleChange,
     handleSubmit,
 
-    // Current User
     currentUser,
   };
 };

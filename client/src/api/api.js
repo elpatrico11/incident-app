@@ -29,7 +29,7 @@ export const authService = {
         lastName,
         email,
         password,
-        captcha: captchaToken, // Make sure to send the token with this exact name
+        captcha: captchaToken,
       });
       return response.data;
     } catch (error) {

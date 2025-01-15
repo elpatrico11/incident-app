@@ -42,10 +42,7 @@ const useForgotPassword = () => {
       const data = await forgotPassword(email);
       setSuccessMessage(data.msg);
     } catch (error) {
-      setServerError(
-        error.response?.data?.msg ||
-          "An error occurred while processing your request."
-      );
+      setServerError(error.response?.data?.msg || "Coś poszło nie tak.");
     }
   };
 

@@ -32,7 +32,7 @@ export function useMapPage() {
   const [searchDialogOpen, setSearchDialogOpen] = useState(false);
   const [searchDialogMessage, setSearchDialogMessage] = useState("");
 
-  // ---- LOAD INCIDENTS -----------------------------------------------------
+  // Load incidents
   useEffect(() => {
     const loadIncidents = async () => {
       try {
@@ -49,7 +49,7 @@ export function useMapPage() {
     loadIncidents();
   }, []);
 
-  // ---- LOAD CATEGORIES ----------------------------------------------------
+  // Load categories
   useEffect(() => {
     const loadCategories = async () => {
       try {
@@ -65,7 +65,7 @@ export function useMapPage() {
     loadCategories();
   }, []);
 
-  // ---- LOAD BOUNDARY GEOJSON ---------------------------------------------
+  // Load boundary
   useEffect(() => {
     const loadBoundary = async () => {
       try {
@@ -78,7 +78,7 @@ export function useMapPage() {
     loadBoundary();
   }, []);
 
-  // ---- FILTER INCIDENTS BY CATEGORY ---------------------------------------
+  // Filter by category
   const handleFilterChange = (value) => {
     setCategoryFilter(value);
     if (value === "All") {
@@ -89,12 +89,11 @@ export function useMapPage() {
     }
   };
 
-  // ---- LEAFLET MAP REFERENCE ---------------------------------------------
   const handleMapCreated = (map) => {
     mapInstance.current = map;
   };
 
-  // ---- SEARCH / GEOCODING ------------------------------------------------
+  // Search
   const handleSearchChange = (value) => {
     setSearchQuery(value);
   };
@@ -150,13 +149,13 @@ export function useMapPage() {
     }
   };
 
-  // ---- CLOSE DIALOG ------------------------------------------------------
+  // Clos window
   const handleCloseDialog = () => {
     setSearchDialogOpen(false);
     setSearchDialogMessage("");
   };
 
-  // ---- GET USER'S CURRENT LOCATION ---------------------------------------
+  // Get user current location
   const handleUserLocation = () => {
     // Check if map is ready
     if (!mapInstance.current) {

@@ -4,16 +4,10 @@ import {
   fetchCategories,
 } from "../../api/services/incidentService";
 
-/**
- * Helper function to capitalize the first letter of a string
- * @param {string} s
- * @returns {string}
- */
+//Helper function to capitalize the first letter of a string
+
 const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
 
-/**
- * Custom hook to manage incidents and categories, including filtering, sorting, searching, and pagination.
- */
 const useIncidents = () => {
   // State for incidents and categories
   const [incidents, setIncidents] = useState([]);
@@ -58,8 +52,8 @@ const useIncidents = () => {
 
     try {
       const params = {
-        page: 1, // Adjust as needed
-        limit: 1000, // Adjust as needed
+        page: 1,
+        limit: 1000,
         sort: sortOption,
       };
 
@@ -194,7 +188,7 @@ const useIncidents = () => {
     setItemsPerPage,
     itemsPerPageOptions,
 
-    // Misc
+    // Other
     statusColors,
     noIncidentsMessage,
   };
