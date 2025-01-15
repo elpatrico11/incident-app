@@ -25,6 +25,7 @@ import Reports from "./views/pages/ReportManagement";
 
 import useAuthStore from "./models/stores/useAuthStore";
 import Contact from "./views/pages/Contact";
+import PrivacyPolicy from "./views/pages/PrivacyPolicy";
 
 import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
@@ -59,6 +60,8 @@ const App = () => {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/polityka-prywatnosci" element={<PrivacyPolicy />} />
+
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/resend-verification" element={<ResendVerification />} />
         <Route path="/report" element={<ReportPage />} />

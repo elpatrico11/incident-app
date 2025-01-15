@@ -1,4 +1,5 @@
-import React from 'react';
+// client/src/views/pages/SignUp.jsx
+import React, { useState } from 'react';
 import {
   Box,
   Button,
@@ -13,15 +14,16 @@ import {
   Checkbox,
   Link,
   FormHelperText,
+  CssBaseline
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import MuiCard from '@mui/material/Card';
 import { useNavigate } from 'react-router-dom';
 import ReCAPTCHA from 'react-google-recaptcha';
-import CssBaseline from '@mui/material/CssBaseline';
 
 import AppTheme from '../../assets/shared-theme/AppTheme';
 import useRegister from '../../controllers/hooks/useRegister';
+import TermsPopup from '../components/common/TermsPopup'; 
 
 // Styled Components
 const Card = styled(MuiCard)(({ theme }) => ({
@@ -51,11 +53,10 @@ const SignUpContainer = styled(Stack)(({ theme }) => ({
   position: 'relative',
   display: 'flex',
   flexDirection: 'column',
-    minHeight: 0, 
-  flex: '1 1 auto', 
-
-  justifyContent: 'center', 
-  alignItems: 'center', 
+  minHeight: 0,
+  flex: '1 1 auto',
+  justifyContent: 'center',
+  alignItems: 'center',
   '&::before': {
     content: '""',
     display: 'block',
@@ -97,6 +98,9 @@ export default function SignUp(props) {
   } = useRegister();
 
   const navigate = useNavigate();
+
+  // Local state to control the visibility of the Terms popup
+  const [termsOpen, setTermsOpen] = useState(false);
 
   return (
     <AppTheme {...props}>
@@ -215,9 +219,8 @@ export default function SignUp(props) {
                       <Typography variant="body2" color="text.secondary">
                         Zapoznałem się z{' '}
                         <Link
-                          href="/regulamin"
-                          target="_blank"
-                          rel="noopener noreferrer"
+                          component="button"
+                          onClick={() => setTermsOpen(true)}
                           sx={{
                             textDecoration: 'none',
                             '&:hover': {
@@ -226,8 +229,8 @@ export default function SignUp(props) {
                           }}
                         >
                           regulaminem
-                        </Link>
-                        {' '}i{' '}
+                        </Link>{' '}
+                        i{' '}
                         <Link
                           href="/polityka-prywatnosci"
                           target="_blank"
@@ -253,12 +256,7 @@ export default function SignUp(props) {
                   {termsError && <FormHelperText>{termsError}</FormHelperText>}
                 </FormControl>
 
-                <Button
-                  type="submit"
-                  fullWidth
-                  variant="contained"
-                  disabled={loading}
-                >
+                <Button type="submit" fullWidth variant="contained" disabled={loading}>
                   {loading ? 'Rejestrowanie...' : 'Rejestracja'}
                 </Button>
               </Box>
@@ -282,6 +280,8 @@ export default function SignUp(props) {
             </>
           )}
         </Card>
+        {/* Terms popup component */}
+        <TermsPopup open={termsOpen} onClose={() => setTermsOpen(false)} />
       </SignUpContainer>
     </AppTheme>
   );
