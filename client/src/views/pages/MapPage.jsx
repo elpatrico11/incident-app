@@ -22,7 +22,7 @@ import {
   DialogActions,
   Button,
   Fab,
-  Tooltip, // <-- Imported Tooltip for hover text
+  Tooltip, 
 } from '@mui/material';
 
 import SearchIcon from '@mui/icons-material/Search';
@@ -41,7 +41,6 @@ import { setupLeafletMarkerIcons } from '../../utils/mapUtils';
 import { useMapPage } from '../../controllers/hooks/useMapPage';
 import MarkerClusterGroup from '../components/common/MarkerClusterGroup';
 
-// Import our custom control
 import MyLocationControl from '../components/common/MyLocationControl';
 
 const MapPage = () => {
@@ -198,7 +197,7 @@ const MapPage = () => {
         </MapContainer>
       </Box>
 
-      {/* "Add new incident" FAB in bottom-left corner with tooltip */}
+      {/* "Add new incident" FAB in bottom-left corner */}
       {!drawerOpen && (
         <Tooltip title="Dodaj zgłoszenie" placement="top">
           <Fab

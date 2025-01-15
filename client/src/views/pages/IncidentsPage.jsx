@@ -61,7 +61,7 @@ const IncidentsPage = () => {
   return (
     <Container className="mt-24 px-4 p-4 lg:px-8 bg-gray-900 min-h-screen mb-24">
       <Typography
-        variant="h4" // Changed from h2 to h4 for smaller text
+        variant="h4" 
         className="text-xl mb-6 text-center text-white mt-8"
       >
         Wszystkie Incydenty

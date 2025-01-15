@@ -64,12 +64,10 @@ const MyIncidentsPage = () => {
               key={incident._id}
               incident={incident}
               statusColors={STATUS_COLORS}
-              // Callback dla usuwania
               onDelete={() => {
                 setIncidentToDelete(incident);
                 setDeleteDialogOpen(true);
               }}
-              // Callback dla edycji
               onEdit={() => {
                 navigate(`/incidents/${incident._id}/edit`);
               }}

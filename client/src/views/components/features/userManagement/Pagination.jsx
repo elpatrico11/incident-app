@@ -12,14 +12,12 @@ const Pagination = ({ currentPage, totalPages, handlePageChange }) => {
 
   return (
     <div className="flex justify-between items-center mt-4">
-      {/* Informacja o stronie */}
       <div>
         <p className="text-white">
           Strona {currentPage} z {totalPages}
         </p>
       </div>
       
-      {/* Kontrolki Paginacji */}
       <div className="flex space-x-2">
         <button
           onClick={() => handlePageChange(currentPage - 1)}

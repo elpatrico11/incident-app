@@ -21,9 +21,8 @@ const ResendVerification = () => {
     resetState,
   } = useResendVerification();
 
-  /**
-   * Handles resetting the form state.
-   */
+//Handles resetting the form state.
+
   const handleReset = () => {
     resetState();
   };

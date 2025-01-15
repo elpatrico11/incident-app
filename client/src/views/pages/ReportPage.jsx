@@ -293,7 +293,7 @@ const ReportPage = () => {
                 Kliknij na mapie, aby wybrać lokalizację
               </Typography>
 
-              {/* NEW: "Locate Me" button */}
+              {/* "Locate Me" button */}
               <Box sx={{ mb: 1 }}>
                 <Button
                   variant="outlined"

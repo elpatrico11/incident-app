@@ -202,7 +202,7 @@ export default function LoginPage(props) {
           {/* Divider */}
           <Divider></Divider>
 
-          {/* Alternative Sign-In Methods */}
+ 
           <Box
               sx={{
                 display: 'flex',

@@ -14,28 +14,26 @@ import useProfile from '../../controllers/hooks/useProfile';
 import TextInput from '../components/features/profileManagement/TextInput';
 import AlertMessage from '../components/common/AlertMessage';
 import Notifications from '../components/common/Notifications';
-import Loader from '../components/common/Loader'; // Corrected import path
+import Loader from '../components/common/Loader'; 
 
-// Adjust the theme to match the MyIncidentsPage
 const theme = createTheme({
   palette: {
     mode: 'dark',
     background: {
-      default: '#1a202c', // Matches the dark blue-gray background
-      paper: '#2d3748',   // Slightly lighter for card backgrounds
+      default: '#1a202c', 
+      paper: '#2d3748',  
     },
     text: {
-      primary: '#e2e8f0', // Light text
-      secondary: '#a0aec0', // Muted text
+      primary: '#e2e8f0', 
+      secondary: '#a0aec0', 
     },
     primary: {
-      main: '#6366f1', // Indigo for buttons, similar to MyIncidentsPage
+      main: '#6366f1', 
     },
   },
 });
 
 const ProfilePage = () => {
-  // Utilize the custom hook
   const {
     accountData,
     accountError,

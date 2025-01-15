@@ -72,7 +72,7 @@ const ReportManagement = () => {
               value={totalIncidents || 0}
               description="Całkowita liczba wszystkich zgłoszeń."
               circular={false}
-              color="#63b3ed" // Blue
+              color="#63b3ed"
             />
           </Grid>
 
@@ -84,7 +84,7 @@ const ReportManagement = () => {
               description="Średni czas potrzebny na rozwiązanie zgłoszenia."
               circular={true}
               percentage={averageResolutionTime || 0}
-              color="#f6ad55" // Orange
+              color="#f6ad55" 
             />
           </Grid>
 
@@ -95,7 +95,7 @@ const ReportManagement = () => {
               value={averagePerDay || 0}
               description="Średnia liczba zgłoszeń dziennie."
               circular={false}
-              color="#68d391" // Green
+              color="#68d391" 
             />
           </Grid>
         </Grid>

@@ -61,7 +61,7 @@ const EditIncidentPage = () => {
     handleImageChange,
     handleRemoveImage,
     handleMapClick,
-    handleSearchAddress, // Calls forward geocoding
+    handleSearchAddress, 
     handleSubmit,
     handleSnackbarClose,
   } = useEditIncidentForm(id);
@@ -75,7 +75,7 @@ const EditIncidentPage = () => {
   // when user is typing in “Lokalizacja”.
   const handleAddressKeyDown = (e) => {
     if (e.key === 'Enter') {
-      e.preventDefault();  // Stop the form from submitting
+      e.preventDefault();  
       handleSearchAddress(); 
     }
   };
@@ -252,7 +252,7 @@ const EditIncidentPage = () => {
               name="address"
               value={formData.address}
               onChange={handleFormChange}
-              onKeyDown={handleAddressKeyDown}  // <--- handle Enter
+              onKeyDown={handleAddressKeyDown}  
               fullWidth
               placeholder="np. Działkowców 15, Bielsko-Biała"
               InputProps={{

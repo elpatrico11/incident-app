@@ -12,7 +12,7 @@ const EditUser = () => {
   const { id } = useParams(); // Get user ID from URL
   const navigate = useNavigate();
 
-  // Utilize the custom hook
+
   const {
     userData,
     loading,
@@ -20,7 +20,7 @@ const EditUser = () => {
     success,
     handleChange,
     handleSubmit,
-    currentUser, // Now used for RBAC
+    currentUser, 
   } = useEditUser(id);
 
   // Define role options

@@ -99,7 +99,6 @@ export default function SignUp(props) {
 
   const navigate = useNavigate();
 
-  // Local state to control the visibility of the Terms popup
   const [termsOpen, setTermsOpen] = useState(false);
 
   return (
@@ -280,7 +279,6 @@ export default function SignUp(props) {
             </>
           )}
         </Card>
-        {/* Terms popup component */}
         <TermsPopup open={termsOpen} onClose={() => setTermsOpen(false)} />
       </SignUpContainer>
     </AppTheme>
