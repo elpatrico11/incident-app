@@ -24,6 +24,7 @@ import IncidentManagement from "./views/pages/IncidentManagement";
 import Reports from "./views/pages/ReportManagement";
 
 import useAuthStore from "./models/stores/useAuthStore";
+import Contact from "./views/pages/Contact";
 
 import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
@@ -57,6 +58,7 @@ const App = () => {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/contact" element={<Contact />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/resend-verification" element={<ResendVerification />} />
         <Route path="/report" element={<ReportPage />} />
