@@ -150,7 +150,7 @@ const IncidentSchema = new mongoose.Schema(
     },
     resolvedAt: { type: Date },
     comments: [CommentSchema], // Embed comments
-    statusLogs: [StatusLogSchema], // New: Embed status logs
+    statusLogs: [StatusLogSchema],
 
     dataZdarzenia: {
       type: Date,
@@ -261,9 +261,6 @@ IncidentSchema.pre("save", function (next) {
     return next();
   }
 
-  // We need to figure out the old status, so we can push it into statusLogs.
-  // Because .pre('save') doesn't give us the “previous” doc automatically,
-  // we’ll have to do an extra query to see what the old status was.
   this.constructor
     .findById(this._id)
     .then((oldIncident) => {
@@ -274,11 +271,7 @@ IncidentSchema.pre("save", function (next) {
 
       // Only log if there's an actual change
       if (oldStatus !== newStatus) {
-        // Make sure you have the user who changed the status.
-        // You can store it in the doc somehow, e.g. this._changedBy, or pass it in.
         if (!this.changedBy) {
-          // If you have no changedBy from the request, you could throw an error
-          // or just skip pushing the log
           console.warn("No changedBy user specified for this status change.");
         } else {
           this.statusLogs.push({
@@ -294,5 +287,4 @@ IncidentSchema.pre("save", function (next) {
     .catch(next);
 });
 
-// Export the Incident model
 module.exports = mongoose.model("Incident", IncidentSchema);

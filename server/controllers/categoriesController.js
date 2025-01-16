@@ -1,9 +1,8 @@
 const path = require("path");
 const fs = require("fs");
 
-/**
- * Get All Categories
- */
+//Get All Categories
+
 const getCategories = async (req, res, next) => {
   const categoriesPath = path.join(__dirname, "../data/categories.json");
   fs.readFile(categoriesPath, "utf8", (err, data) => {

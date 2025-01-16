@@ -1,5 +1,4 @@
 module.exports = function (roles = []) {
-  // roles param może być pojedynczą rolą lub tablicą ról
   if (typeof roles === "string") {
     roles = [roles];
   }

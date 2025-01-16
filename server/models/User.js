@@ -1,4 +1,3 @@
-// server/models/User.js
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
@@ -33,7 +32,7 @@ const UserSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
-    minlength: 12, // zwiększona minimalna długość
+    minlength: 12,
     validate: {
       validator: function (v) {
         return passwordRegex.test(v);

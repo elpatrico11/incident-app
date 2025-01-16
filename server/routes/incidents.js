@@ -63,25 +63,16 @@ router.delete(
   incidentsController.deleteIncident
 );
 
-/**
- * @route   POST /api/incidents/:id/comments
- * @desc    Add a Comment to an Incident
- * @access  Private
- */
+//Add a Comment to an Incident
+
 router.post("/:id/comments", authMiddleware, incidentsController.addComment);
 
-/**
- * @route   GET /api/incidents/:id/comments
- * @desc    Get Comments for an Incident
- * @access  Public
- */
+//Get Comments for an Incident
+
 router.get("/:id/comments", incidentsController.getComments);
 
-/**
- * @route   PUT /api/incidents/:id/status
- * @desc    Update Incident Status
- * @access  Private (Admin only)
- */
+//Update Incident Status
+
 router.put(
   "/:id/status",
   authMiddleware,

@@ -8,25 +8,16 @@ const authorize = require("../middlewares/authorize");
 // Middleware: auth + authorize admin
 router.use(authMiddleware, authorize("admin"));
 
-/**
- * @route   GET /api/admin/users
- * @desc    Pobranie wszystkich użytkowników
- * @access  Admin
- */
+//Pobranie wszystkich użytkowników
+
 router.get("/users", adminController.getAllUsers);
 
-/**
- * @route   GET /api/admin/users/:id
- * @desc    Pobranie pojedynczego użytkownika
- * @access  Admin
- */
+//Pobranie pojedynczego użytkownika
+
 router.get("/users/:id", adminController.getUserById);
 
-/**
- * @route   PUT /api/admin/users/:id
- * @desc    Aktualizacja użytkownika (np. zmiana roli)
- * @access  Admin
- */
+//Aktualizacja użytkownika (np. zmiana roli)
+
 router.put(
   "/users/:id",
   [
@@ -50,7 +41,6 @@ router.put(
       .withMessage("Nieprawidłowa rola"),
   ],
   (req, res, next) => {
-    // Handle validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -60,25 +50,16 @@ router.put(
   }
 );
 
-/**
- * @route   DELETE /api/admin/users/:id
- * @desc    Usunięcie użytkownika
- * @access  Admin
- */
+//Usunięcie użytkownika
+
 router.delete("/users/:id", adminController.deleteUser);
 
-/**
- * @route   GET /api/admin/incidents
- * @desc    Pobranie wszystkich zgłoszeń z opcjonalnym filtrowaniem
- * @access  Admin
- */
+//Pobranie wszystkich zgłoszeń z opcjonalnym filtrowaniem
+
 router.get("/incidents", adminController.getAllIncidents);
 
-/**
- * @route   PUT /api/admin/incidents/:id/status
- * @desc    Zmiana statusu zgłoszenia
- * @access  Admin
- */
+//Zmiana statusu zgłoszenia
+
 router.put(
   "/incidents/:id/status",
   [
@@ -97,7 +78,6 @@ router.put(
       .withMessage("Nieprawidłowy status"),
   ],
   (req, res, next) => {
-    // Handle validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       console.log("Validation errors:", errors.array());
@@ -108,25 +88,16 @@ router.put(
   }
 );
 
-/**
- * @route   DELETE /api/admin/incidents/:id
- * @desc    Usunięcie zgłoszenia
- * @access  Admin
- */
+//Usunięcie zgłoszenia
+
 router.delete("/incidents/:id", adminController.deleteIncident);
 
-/**
- * @route   GET /api/admin/download
- * @desc    Pobranie raportów jako CSV
- * @access  Admin
- */
+//Pobranie raportów jako CSV
+
 router.get("/download", adminController.downloadReports);
 
-/**
- * @route   GET /api/admin/reports
- * @desc    Pobranie raportów administracyjnych
- * @access  Admin
- */
-router.get("/reports", adminController.getReports); // Newly added route
+// Pobranie raportów administracyjnych
+
+router.get("/reports", adminController.getReports);
 
 module.exports = router;

@@ -2,29 +2,23 @@ const User = require("../models/User");
 const Incident = require("../models/Incident");
 const Notification = require("../models/Notification");
 
-/**
- * @desc    Get all users
- * @route   GET /api/admin/users
- * @access  Admin
- */
+//Get all users
+
 const getAllUsers = async (req, res, next) => {
   try {
-    const users = await User.find().select("-password"); // Exclude password field
+    const users = await User.find().select("-password");
     res.json(users);
   } catch (error) {
     console.error("Error in getAllUsers:", error.message);
-    next(error); // Pass error to centralized error handler
+    next(error);
   }
 };
 
-/**
- * @desc    Get single user
- * @route   GET /api/admin/users/:id
- * @access  Admin
- */
+//Get single user
+
 const getUserById = async (req, res, next) => {
   try {
-    const user = await User.findById(req.params.id).select("-password"); // Exclude password field
+    const user = await User.findById(req.params.id).select("-password");
     if (!user) {
       return res.status(404).json({ msg: "Użytkownik nie znaleziony" });
     }
@@ -38,11 +32,8 @@ const getUserById = async (req, res, next) => {
   }
 };
 
-/**
- * @desc    Update user (e.g., change role)
- * @route   PUT /api/admin/users/:id
- * @access  Admin
- */
+//Update user
+
 const updateUser = async (req, res, next) => {
   try {
     const { firstName, lastName, email, role } = req.body;
@@ -62,7 +53,7 @@ const updateUser = async (req, res, next) => {
       req.params.id,
       { $set: updateFields },
       { new: true, runValidators: true }
-    ).select("-password"); // Exclude password field
+    ).select("-password");
 
     res.json(user);
   } catch (error) {
@@ -71,11 +62,8 @@ const updateUser = async (req, res, next) => {
   }
 };
 
-/**
- * @desc    Delete user
- * @route   DELETE /api/admin/users/:id
- * @access  Admin
- */
+//Delete user
+
 const deleteUser = async (req, res, next) => {
   try {
     let user = await User.findById(req.params.id);
@@ -102,11 +90,8 @@ const deleteUser = async (req, res, next) => {
   }
 };
 
-/**
- * @desc    Get all incidents with optional filtering
- * @route   GET /api/admin/incidents
- * @access  Admin
- */
+//Get all incidents with optional filtering
+
 const getAllIncidents = async (req, res, next) => {
   try {
     const { status, category } = req.query;
@@ -133,11 +118,8 @@ const getAllIncidents = async (req, res, next) => {
   }
 };
 
-/**
- * @desc    Update incident status
- * @route   PUT /api/admin/incidents/:id/status
- * @access  Admin
- */
+//Update incident status
+
 const updateIncidentStatus = async (req, res, next) => {
   try {
     const { status } = req.body;
@@ -192,11 +174,8 @@ const updateIncidentStatus = async (req, res, next) => {
   }
 };
 
-/**
- * @desc    Delete incident
- * @route   DELETE /api/admin/incidents/:id
- * @access  Admin
- */
+//Delete incident
+
 const deleteIncident = async (req, res, next) => {
   try {
     let incident = await Incident.findById(req.params.id);
@@ -217,11 +196,8 @@ const deleteIncident = async (req, res, next) => {
   }
 };
 
-/**
- * @desc    Download reports as CSV
- * @route   GET /api/admin/download
- * @access  Admin
- */
+// Download reports as CSV
+
 const downloadReports = async (req, res, next) => {
   try {
     const statusTranslations = {
@@ -281,7 +257,7 @@ const downloadReports = async (req, res, next) => {
       },
     ]);
 
-    // Status Count with Polish translations
+    // Status Count
     const statusCountRaw = await Incident.aggregate([
       {
         $group: {
@@ -329,7 +305,7 @@ const downloadReports = async (req, res, next) => {
     // Construct CSV content
     let csvContent = "";
 
-    // Add BOM for UTF-8 to ensure proper encoding in Excel
+    // Add UTF-8 to ensure proper encoding in Excel
     csvContent += "\uFEFF";
 
     // 1. Main Metrics
@@ -375,11 +351,8 @@ const downloadReports = async (req, res, next) => {
   }
 };
 
-/**
- * @desc    Get administrative reports
- * @route   GET /api/admin/reports
- * @access  Admin
- */
+//Get administrative reports
+
 const getReports = async (req, res, next) => {
   try {
     // Total number of incidents
@@ -497,5 +470,5 @@ module.exports = {
   updateIncidentStatus,
   deleteIncident,
   downloadReports,
-  getReports, // Export the new function
+  getReports,
 };

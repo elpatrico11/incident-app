@@ -6,9 +6,8 @@ const User = require("../models/User");
 const sendEmail = require("../utils/sendEmail");
 const recaptchaService = require("../services/recaptchaService");
 
-/**
- * Register a new user
- */
+//Register a new user
+
 const register = async (req, res, next) => {
   // Validate input
   const errors = validationResult(req);
@@ -71,13 +70,12 @@ const register = async (req, res, next) => {
     });
   } catch (err) {
     console.error(err.message);
-    next(err); // Pass to error handling middleware
+    next(err);
   }
 };
 
-/**
- * Login a user
- */
+//Login a user
+
 const login = async (req, res, next) => {
   // Validate input
   const errors = validationResult(req);
@@ -125,20 +123,18 @@ const login = async (req, res, next) => {
       { expiresIn },
       async (err, token) => {
         if (err) throw err;
-        // Fetch user data without password
         const userData = await User.findById(user.id).select("-password");
-        res.json({ token, user: userData }); // Return token and user data
+        res.json({ token, user: userData });
       }
     );
   } catch (err) {
     console.error(err.message);
-    next(err); // Pass to error handling middleware
+    next(err);
   }
 };
 
-/**
- * Verify user's email
- */
+//Verify user's email
+
 const verifyEmail = async (req, res, next) => {
   const { token, email } = req.query;
 
@@ -180,17 +176,15 @@ const verifyEmail = async (req, res, next) => {
     user.verificationTokenExpiry = null;
     await user.save();
 
-    // Send success response
     res.status(200).json({ msg: "Email verified successfully." });
   } catch (err) {
     console.error("Verification error:", err);
-    next(err); // Pass to error handling middleware
+    next(err);
   }
 };
 
-/**
- * Resend verification email
- */
+//Resend verification email
+
 const resendVerification = async (req, res, next) => {
   const { email } = req.body;
 
@@ -229,19 +223,17 @@ const resendVerification = async (req, res, next) => {
     // Send verification email
     await sendEmail(email, "Email Verification", message);
 
-    // Respond to client
     res
       .status(200)
       .json({ msg: "Verification email resent. Please check your email." });
   } catch (err) {
     console.error(err.message);
-    next(err); // Pass to error handling middleware
+    next(err);
   }
 };
 
-/**
- * Forgot Password - Reset Password
- */
+//Forgot Password - Reset Password
+
 const forgotPassword = async (req, res, next) => {
   const { email } = req.body;
 
@@ -278,13 +270,12 @@ const forgotPassword = async (req, res, next) => {
     });
   } catch (err) {
     console.error("Forgot Password Error:", err.message);
-    next(err); // Pass to error handling middleware
+    next(err);
   }
 };
 
-/**
- * Change Password - Protected Route
- */
+//Change Password - Protected Route
+
 const changePassword = async (req, res, next) => {
   const { oldPassword, newPassword, confirmNewPassword } = req.body;
 
@@ -313,26 +304,24 @@ const changePassword = async (req, res, next) => {
     res.status(200).json({ msg: "Hasło zostało zmienione pomyślnie." });
   } catch (err) {
     console.error("Change Password Error:", err.message);
-    next(err); // Pass to error handling middleware
+    next(err);
   }
 };
 
-/**
- * Get Logged-in User Data
- */
+//Get Logged-in User Data
+
 const getMe = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
     res.json(user);
   } catch (err) {
     console.error(err.message);
-    next(err); // Pass to error handling middleware
+    next(err);
   }
 };
 
-/**
- * Update User Profile
- */
+//Update User Profile
+
 const updateProfile = async (req, res, next) => {
   const { firstName, lastName } = req.body;
 
@@ -355,13 +344,12 @@ const updateProfile = async (req, res, next) => {
     res.json(user);
   } catch (err) {
     console.error(err.message);
-    next(err); // Pass to error handling middleware
+    next(err);
   }
 };
 
-/**
- * Create Initial Admin (Optional)
- */
+//Create Initial Admin (Optional)
+
 const createAdmin = async (req, res, next) => {
   const { firstName, lastName, email, password } = req.body;
 
@@ -400,14 +388,13 @@ const createAdmin = async (req, res, next) => {
       { expiresIn },
       async (err, token) => {
         if (err) throw err;
-        // Fetch admin data without password
         const adminData = await User.findById(admin.id).select("-password");
-        res.json({ token, user: adminData }); // Return token and admin data
+        res.json({ token, user: adminData });
       }
     );
   } catch (err) {
     console.error(err.message);
-    next(err); // Pass to error handling middleware
+    next(err);
   }
 };
 

@@ -1,9 +1,8 @@
-// tests/auth.test.js
 const request = require("supertest");
 const mongoose = require("mongoose");
 require("dotenv").config({ path: "./.env.test" });
 
-const app = require("../app"); // Używamy app.js (czysta instancja Express)
+const app = require("../app");
 const User = require("../models/User");
 
 // Mocks:
@@ -32,7 +31,7 @@ describe("Auth Controller - Register", () => {
       firstName: "Jan",
       lastName: "Kowalski",
       email: "jan.kowalski@example.com",
-      password: "SuperBezpieczneHaslo1!", // Zgodne z regułami
+      password: "SuperBezpieczneHaslo1!",
       captcha: "dummy-captcha-token",
     };
 

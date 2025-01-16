@@ -13,7 +13,6 @@ module.exports = async function (req, res, next) {
       req.user = await User.findById(decoded.user.id).select("-password");
     } catch (err) {
       console.error("Invalid token in optionalAuth");
-      // Nie ustawiamy req.user, kontynuujemy bez autoryzacji
     }
   }
   next();

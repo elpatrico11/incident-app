@@ -2,11 +2,8 @@ const Incident = require("../models/Incident");
 const Notification = require("../models/Notification");
 const { verifyRecaptcha } = require("../services/recaptchaService");
 
-/**
- * @desc    Add a New Incident
- * @route   POST /api/incidents
- * @access  Public (with optional authentication)
- */
+//Add a New Incident
+
 const addIncident = async (req, res, next) => {
   try {
     // If user is not authenticated, verify reCAPTCHA
@@ -99,11 +96,8 @@ const addIncident = async (req, res, next) => {
   }
 };
 
-/**
- * @desc    Get All Incidents
- * @route   GET /api/incidents
- * @access  Public
- */
+// Get All Incidents
+
 const getAllIncidents = async (req, res, next) => {
   try {
     const {
@@ -156,11 +150,8 @@ const getAllIncidents = async (req, res, next) => {
   }
 };
 
-/**
- * @desc    Get My Incidents
- * @route   GET /api/incidents/my
- * @access  Private
- */
+//Get My Incidents
+
 const getMyIncidents = async (req, res, next) => {
   try {
     const incidents = await Incident.find({ user: req.user.id }).populate(
@@ -174,11 +165,8 @@ const getMyIncidents = async (req, res, next) => {
   }
 };
 
-/**
- * @desc    Get Single Incident
- * @route   GET /api/incidents/:id
- * @access  Public
- */
+//Get Single Incident
+
 const getSingleIncident = async (req, res, next) => {
   try {
     const incident = await Incident.findById(req.params.id)
@@ -189,12 +177,7 @@ const getSingleIncident = async (req, res, next) => {
       return res.status(404).json({ msg: "Incident not found." });
     }
 
-    // Format createdAt
     const formattedIncident = incident.toObject();
-    formattedIncident.createdAt = incident.createdAt.toLocaleString("pl-PL", {
-      dateStyle: "short",
-      timeStyle: "short",
-    });
 
     res.json(formattedIncident);
   } catch (error) {
@@ -206,11 +189,8 @@ const getSingleIncident = async (req, res, next) => {
   }
 };
 
-/**
- * @desc    Update an Incident
- * @route   PUT /api/incidents/:id
- * @access  Private (Admin or Incident Creator)
- */
+// Update an Incident
+
 const updateIncident = async (req, res, next) => {
   try {
     const {
@@ -218,9 +198,9 @@ const updateIncident = async (req, res, next) => {
       description,
       location,
       status,
-      dataZdarzenia, // New field
-      dniTygodnia, // New field
-      poraDnia, // New field
+      dataZdarzenia,
+      dniTygodnia,
+      poraDnia,
     } = req.body;
 
     const incidentFields = {};
@@ -229,7 +209,6 @@ const updateIncident = async (req, res, next) => {
     if (description) incidentFields.description = description;
     if (status) incidentFields.status = status;
 
-    // Handle new fields
     if (dataZdarzenia) incidentFields.dataZdarzenia = new Date(dataZdarzenia);
     if (dniTygodnia && Array.isArray(dniTygodnia) && dniTygodnia.length > 0) {
       incidentFields.dniTygodnia = dniTygodnia;
@@ -302,11 +281,8 @@ const updateIncident = async (req, res, next) => {
   }
 };
 
-/**
- * @desc    Delete an Incident
- * @route   DELETE /api/incidents/:id
- * @access  Private (Admin or Incident Creator)
- */
+//Delete an Incident
+
 const deleteIncident = async (req, res, next) => {
   try {
     const incident = await Incident.findById(req.params.id);
@@ -334,11 +310,8 @@ const deleteIncident = async (req, res, next) => {
   }
 };
 
-/**
- * @desc    Add a Comment to an Incident
- * @route   POST /api/incidents/:id/comments
- * @access  Private
- */
+//Add a Comment to an Incident
+
 const addComment = async (req, res, next) => {
   const { text } = req.body;
 
@@ -373,11 +346,8 @@ const addComment = async (req, res, next) => {
   }
 };
 
-/**
- * @desc    Get Comments for an Incident
- * @route   GET /api/incidents/:id/comments
- * @access  Public
- */
+//Get Comments for an Incident
+
 const getComments = async (req, res, next) => {
   try {
     const incident = await Incident.findById(req.params.id).populate(
@@ -396,11 +366,8 @@ const getComments = async (req, res, next) => {
   }
 };
 
-/**
- * @desc    Update Incident Status
- * @route   PUT /api/incidents/:id/status
- * @access  Private (Admin only)
- */
+//Update Incident Status
+
 const updateIncidentStatus = async (req, res, next) => {
   let { status } = req.body;
 
@@ -441,7 +408,7 @@ const updateIncidentStatus = async (req, res, next) => {
     // Update status and handle resolvedAt
     const updateData = {
       status,
-      changedBy: req.user.id, // Add the user ID here
+      changedBy: req.user.id,
     };
 
     const finalStatuses = [
@@ -456,7 +423,6 @@ const updateIncidentStatus = async (req, res, next) => {
       updateData.resolvedAt = undefined; // Remove resolvedAt if status is not final
     }
 
-    // Perform the update using findOneAndUpdate to trigger middleware
     incident = await Incident.findOneAndUpdate(
       { _id: req.params.id },
       { $set: updateData },

@@ -10,25 +10,16 @@ const authMiddleware = require("../middlewares/auth");
 // Apply authentication middleware to all routes in this router
 router.use(authMiddleware);
 
-/**
- * @route   GET /api/notifications
- * @desc    Get all notifications for the logged-in user
- * @access  Private
- */
+//Get all notifications for the logged-in user
+
 router.get("/", getNotifications);
 
-/**
- * @route   PUT /api/notifications/:id/read
- * @desc    Mark a notification as read
- * @access  Private
- */
+//Mark a notification as read
+
 router.put("/:id/read", markAsRead);
 
-/**
- * @route   PUT /api/notifications/:id/unread
- * @desc    Mark a notification as unread
- * @access  Private
- */
+//Mark a notification as unread
+
 router.put("/:id/unread", markAsUnread);
 
 module.exports = router;
